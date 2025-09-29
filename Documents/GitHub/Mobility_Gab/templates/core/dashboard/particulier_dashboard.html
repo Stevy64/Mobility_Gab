@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Espace Particulier - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+.particulier-welcome {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.action-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.quick-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+    color: white;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .particulier-welcome {
+        padding: 1.5rem;
+    }
+    
+    .action-icon {
+        font-size: 2.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de bienvenue -->
+    <div class="particulier-welcome">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">
+                    <i class="bi bi-house-heart me-2"></i>
+                    Bienvenue dans votre espace particulier
+                </h1>
+                <p class="mb-0 opacity-90">
+                    {{ user.get_full_name|default:user.username }}, gérez vos courses et demandes en toute simplicité
+                </p>
+            </div>
+            <div class="col-md-4">
+                <div class="quick-stats">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <div class="stat-number">3</div>
+                                <small>Courses ce mois</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <div class="stat-number">4.8</div>
+                                <small>Note moyenne</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <div class="stat-number">0</div>
+                                <small>En cours</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions principales -->
+    <div class="row">
+        <!-- Nouvelle course -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card action-card">
+                <div class="card-body text-center p-4">
+                    <div class="action-icon text-primary">
+                        <i class="bi bi-plus-circle"></i>
+                    </div>
+                    <h4 class="card-title mb-3">Nouvelle Course</h4>
+                    <p class="card-text text-muted mb-4">
+                        Demandez un chauffeur avec nos critères avancés
+                    </p>
+                    <a href="{% url 'subscriptions:ride_request_advanced' %}" 
+                       class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-car-front me-2"></i>
+                        Demander une course
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mes demandes temps réel -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card action-card">
+                <div class="card-body text-center p-4">
+                    <div class="action-icon text-warning">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <h4 class="card-title mb-3">Demandes en Cours</h4>
+                    <p class="card-text text-muted mb-4">
+                        Suivez vos demandes en temps réel
+                    </p>
+                    <a href="{% url 'core:parent_dashboard' %}" 
+                       class="btn btn-warning btn-lg w-100">
+                        <i class="bi bi-bell me-2"></i>
+                        Voir mes demandes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestion complète -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card action-card">
+                <div class="card-body text-center p-4">
+                    <div class="action-icon text-success">
+                        <i class="bi bi-gear"></i>
+                    </div>
+                    <h4 class="card-title mb-3">Gestion Courses</h4>
+                    <p class="card-text text-muted mb-4">
+                        Menu complet : demandes, historique, SOS
+                    </p>
+                    <a href="{% url 'courses:menu' %}" 
+                       class="btn btn-success btn-lg w-100">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Accéder au menu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations utiles -->
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Conseils d'utilisation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Utilisez <strong>"Nouvelle Course"</strong> pour des demandes ponctuelles
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>"Demandes en Cours"</strong> affiche le suivi temps réel
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>"Gestion Courses"</strong> donne accès à toutes les fonctionnalités
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Le chat est disponible avec l'abonnement <strong>Mobility Plus</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-headset me-2"></i>
+                        Support et Assistance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-circle me-2"></i>
+                            Mon Profil
+                        </a>
+                        <button class="btn btn-outline-info" onclick="showHelpModal()">
+                            <i class="bi bi-question-circle me-2"></i>
+                            Aide & FAQ
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="showSOSInfo()">
+                            <i class="bi bi-shield-exclamation me-2"></i>
+                            Urgence / SOS
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal d'aide -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-question-circle me-2"></i>
+                    Aide & Questions Fréquentes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                Comment demander une course ?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Cliquez sur "Nouvelle Course", remplissez le formulaire avec vos critères (lieu de départ, destination, heure souhaitée), puis validez. Les chauffeurs éligibles recevront votre demande.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Comment suivre ma course en temps réel ?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Une fois votre course acceptée, vous recevrez une notification avec un lien vers la page de suivi. Vous pourrez voir la position du chauffeur et communiquer avec lui si vous avez Mobility Plus.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Qu'est-ce que Mobility Plus ?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Mobility Plus est notre abonnement premium qui vous donne accès au chat en temps réel avec votre chauffeur, des notifications prioritaires et des fonctionnalités avancées de suivi.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showHelpModal() {
+    const modal = new bootstrap.Modal(document.getElementById('helpModal'));
+    modal.show();
+}
+
+function showSOSInfo() {
+    alert('En cas d\'urgence, utilisez le bouton SOS dans le menu "Gestion Courses" ou contactez directement les secours au 17 (Police) ou 18 (Pompiers).');
+}
+</script>
+{% endblock %}
+
+

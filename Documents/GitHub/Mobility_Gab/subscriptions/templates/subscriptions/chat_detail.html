@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat avec {{ other_user.get_full_name }} - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-detail-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        height: calc(100vh - 100px);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+    }
+    
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        margin-right: 15px;
+    }
+    
+    .user-details h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .user-details p {
+        margin: 5px 0 0 0;
+        opacity: 0.8;
+        font-size: 14px;
+    }
+    
+    .mobility-plus-badge {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: bold;
+        margin-left: 8px;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        background: #f8f9fa;
+        padding: 20px;
+        overflow-y: auto;
+        border-left: 1px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+    }
+    
+    .message {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .message.sent {
+        justify-content: flex-end;
+    }
+    
+    .message.received {
+        justify-content: flex-start;
+    }
+    
+    .message-bubble {
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        position: relative;
+        word-wrap: break-word;
+    }
+    
+    .message.sent .message-bubble {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .message.received .message-bubble {
+        background: white;
+        color: #333;
+        border: 1px solid #dee2e6;
+        border-bottom-left-radius: 4px;
+    }
+    
+    .message-text {
+        margin: 0;
+        line-height: 1.4;
+    }
+    
+    .message-time {
+        font-size: 11px;
+        opacity: 0.7;
+        margin-top: 5px;
+        text-align: right;
+    }
+    
+    .message.received .message-time {
+        text-align: left;
+    }
+    
+    .mobility-plus-indicator {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+    }
+    
+    .chat-input-container {
+        background: white;
+        padding: 20px;
+        border-radius: 0 0 10px 10px;
+        border: 1px solid #dee2e6;
+        border-top: none;
+    }
+    
+    .chat-input-form {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+    
+    .message-input {
+        flex: 1;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        padding: 12px 16px;
+        resize: none;
+        min-height: 40px;
+        max-height: 100px;
+    }
+    
+    .message-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+    
+    .send-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .send-button:hover:not(:disabled) {
+        transform: scale(1.05);
+    }
+    
+    .send-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .mobility-plus-restriction {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .mobility-plus-restriction i {
+        margin-right: 8px;
+    }
+    
+    .back-button {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .back-button:hover {
+        background: rgba(255,255,255,0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-detail-container">
+    <div class="chat-header">
+        <div class="user-info">
+            <a href="{% url 'subscriptions:chat_list' %}" class="back-button me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="user-avatar">
+                {{ other_user.first_name|first }}{{ other_user.last_name|first }}
+            </div>
+            <div class="user-details">
+                <h5>
+                    {{ other_user.get_full_name }}
+                    {% if other_user.role == 'CHAUFFEUR' %}
+                        <span class="badge bg-primary ms-1">Chauffeur</span>
+                    {% elif other_user.role == 'PARENT' %}
+                        <span class="badge bg-success ms-1">Parent</span>
+                    {% endif %}
+                </h5>
+                <p>
+                    {% if other_user_has_mobility_plus %}
+                        <i class="bi bi-star-fill text-warning me-1"></i>Mobility Plus
+                    {% else %}
+                        Utilisateur standard
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="chat-messages" id="chatMessages">
+        {% for message in messages %}
+        <div class="message {% if message.sender == user %}sent{% else %}received{% endif %}">
+            <div class="message-bubble">
+                {% if message.sender_has_mobility_plus %}
+                    <div class="mobility-plus-indicator">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                {% endif %}
+                <p class="message-text">{{ message.message }}</p>
+                <div class="message-time">{{ message.created_at|date:"H:i" }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="chat-input-container">
+        {% if not user_has_mobility_plus %}
+        <div class="mobility-plus-restriction">
+            <i class="bi bi-star-fill"></i>
+            <strong>Abonnement Mobility Plus requis</strong> pour envoyer des messages
+            <a href="{% url 'subscriptions:new_subscription_system' %}" class="btn btn-light btn-sm ms-2">
+                <i class="bi bi-star me-1"></i>S'abonner
+            </a>
+        </div>
+        {% endif %}
+        
+        <form class="chat-input-form" id="messageForm">
+            {% csrf_token %}
+            <input type="hidden" name="recipient_id" value="{{ other_user.id }}">
+            <textarea 
+                name="message" 
+                class="message-input" 
+                placeholder="Tapez votre message..."
+                id="messageInput"
+                {% if not user_has_mobility_plus %}disabled{% endif %}
+                rows="1"
+            ></textarea>
+            <button 
+                type="submit" 
+                class="send-button"
+                {% if not user_has_mobility_plus %}disabled{% endif %}
+            >
+                <i class="bi bi-send"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const chatMessages = document.getElementById('chatMessages');
+    
+    // Auto-resize textarea
+    messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+    
+    // Send message
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const message = messageInput.value.trim();
+        if (!message) return;
+        
+        const formData = new FormData(this);
+        
+        fetch('{% url "subscriptions:send_message" %}', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Add message to chat
+                addMessageToChat(data.message, true);
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                scrollToBottom();
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    });
+    
+    // Add message to chat
+    function addMessageToChat(messageData, isSent) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+        
+        const mobilityPlusIndicator = messageData.sender_has_mobility_plus ? 
+            '<div class="mobility-plus-indicator"><i class="bi bi-star-fill"></i></div>' : '';
+        
+        messageDiv.innerHTML = `
+            <div class="message-bubble">
+                ${mobilityPlusIndicator}
+                <p class="message-text">${messageData.text}</p>
+                <div class="message-time">${messageData.created_at}</div>
+            </div>
+        `;
+        
+        chatMessages.appendChild(messageDiv);
+    }
+    
+    // Scroll to bottom
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Initial scroll to bottom
+    scrollToBottom();
+});
+</script>
+{% endblock %}
+

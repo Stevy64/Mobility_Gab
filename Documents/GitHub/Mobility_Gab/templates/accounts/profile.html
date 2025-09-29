@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Profil - Mobility Gab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center">
+                {% if object.profile.photo %}
+                    <img src="{{ object.profile.photo.url }}" alt="Photo de profil" class="rounded-circle mb-3" width="120" height="120">
+                {% else %}
+                    <i class="bi bi-person-circle text-muted display-1"></i>
+                {% endif %}
+                <h5 class="fw-bold">{{ object.get_full_name|default:object.email }}</h5>
+                <p class="text-muted mb-0">{{ object.get_role_display }}</p>
+                {% if object.is_suspended %}
+                    <span class="badge bg-danger mt-2">Compte suspendu</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold">Notifications</h6>
+                <p class="small text-muted">Push activées : {{ object.profile.push_notifications_enabled|yesno:"Oui,Non" }}</p>
+                <p class="small text-muted">SMS activés : {{ object.profile.sms_notifications_enabled|yesno:"Oui,Non" }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="h5 fw-bold mb-0">Informations principales</h4>
+                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-primary btn-sm">Modifier</a>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <span class="text-muted small">Email</span>
+                        <p class="mb-0">{{ object.email }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small">Téléphone</span>
+                        <p class="mb-0">{{ object.profile.phone|default:"Non renseigné" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small">Date d'inscription</span>
+                        <p class="mb-0">{{ object.date_joined|date:"d F Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if object.role == 'parent' %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h4 class="h5 fw-bold mb-3">Contacts d'urgence</h4>
+                <p class="mb-1"><strong>Nom :</strong> {{ object.parent_profile.emergency_contact_name|default:"Non renseigné" }}</p>
+                <p class="mb-0"><strong>Téléphone :</strong> {{ object.parent_profile.emergency_contact_phone|default:"Non renseigné" }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if object.role == 'chauffeur' %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h4 class="h5 fw-bold mb-3">Véhicule</h4>
+                <p class="mb-1"><strong>Immatriculation :</strong> {{ object.chauffeur_profile.vehicle_plate|default:"Non renseigné" }}</p>
+                <p class="mb-1"><strong>Marque :</strong> {{ object.chauffeur_profile.vehicle_make|default:"-" }}</p>
+                <p class="mb-1"><strong>Modèle :</strong> {{ object.chauffeur_profile.vehicle_model|default:"-" }}</p>
+                <p class="mb-0"><strong>Zone :</strong> {{ object.chauffeur_profile.zone|default:"Non renseigné" }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+

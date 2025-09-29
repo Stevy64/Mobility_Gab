@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Détail course{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 col-xl-7 mx-auto">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="h4 fw-bold">Demande de course</h2>
+                <p class="text-muted">{{ ride_request.requested_at|date:'d/m/Y H:i' }}</p>
+
+                <div class="mb-3">
+                    <h5 class="fw-semibold">Trajet</h5>
+                    <p class="mb-1">Départ : {{ ride_request.pickup_location }}</p>
+                    <p class="mb-0">Destination : {{ ride_request.dropoff_location }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <h5 class="fw-semibold">Chauffeur</h5>
+                    <p class="mb-1">{{ ride_request.chauffeur.get_full_name|default:ride_request.chauffeur.username }}</p>
+                    <p class="text-muted mb-0">Zone : {{ ride_request.chauffeur.chauffeur_profile.zone|default:'Non renseigné' }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <h5 class="fw-semibold">Statut</h5>
+                    <span class="badge bg-light text-dark">{{ ride_request.get_status_display }}</span>
+                    {% if ride_request.trip and ride_request.status == 'accepted' %}
+                    <div class="alert alert-info mt-3" role="alert">
+                        Suivi GPS en direct prochainement disponible.
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if ride_request.notes %}
+                <div class="mb-3">
+                    <h5 class="fw-semibold">Notes</h5>
+                    <p>{{ ride_request.notes }}</p>
+                </div>
+                {% endif %}
+
+                <a href="{% url 'subscriptions:ride_requests_parent' %}" class="btn btn-outline-secondary">Retour</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

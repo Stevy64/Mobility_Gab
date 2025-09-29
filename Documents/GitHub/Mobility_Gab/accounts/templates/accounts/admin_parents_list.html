@@ -1,0 +1,45 @@
+{% extends 'core/dashboard/base.html' %}
+
+{% block dashboard_title %}Particuliers{% endblock %}
+{% block dashboard_subtitle %}Gestion des abonnés et accès rapide{% endblock %}
+
+{% block dashboard_content %}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead class="text-muted">
+                    <tr>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Dernière connexion</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for parent in parents %}
+                    <tr>
+                        <td>{{ parent.get_full_name|default:parent.username }}</td>
+                        <td>{{ parent.email }}</td>
+                        <td>{{ parent.profile.phone|default:'-' }}</td>
+                        <td>{{ parent.last_login|date:'d/m/Y H:i'|default:'-' }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'core:dashboard' %}?view=parent&user_id={{ parent.id }}" class="btn btn-outline-primary btn-sm">Voir dashboard</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Aucun particulier enregistré.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

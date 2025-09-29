@@ -1,0 +1,674 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}Mes Abonnements - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Styles pour le nouveau système d'abonnements */
+.subscription-dashboard {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(180deg); }
+}
+
+.subscription-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.subscription-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.subscription-card.mobility-plus {
+    border: 2px solid #ffc107;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), white);
+}
+
+.subscription-card.mobility-plus::before {
+    content: '⭐ MOBILITY PLUS';
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(135deg, #ffc107, #ffb300);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border-bottom-left-radius: 0.5rem;
+}
+
+.subscription-card.pending {
+    border-left: 5px solid #ffc107;
+}
+
+.subscription-card.active {
+    border-left: 5px solid var(--mg-secondary);
+}
+
+.subscription-card.cancelled {
+    border-left: 5px solid #dc3545;
+    opacity: 0.7;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.stat-icon.mobility { color: #ffc107; }
+.stat-icon.active { color: var(--mg-secondary); }
+.stat-icon.pending { color: var(--mg-primary); }
+.stat-icon.revenue { color: #28a745; }
+
+.action-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: linear-gradient(135deg, #0f4aa6, var(--mg-primary));
+    color: white;
+    transform: scale(1.05);
+}
+
+.action-btn.premium {
+    background: linear-gradient(135deg, #ffc107, #ffb300);
+    color: #333;
+}
+
+.action-btn.premium:hover {
+    background: linear-gradient(135deg, #ffb300, #ffc107);
+    color: #333;
+    transform: scale(1.05);
+}
+
+.action-btn.danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.action-btn.danger:hover {
+    background: linear-gradient(135deg, #c82333, #dc3545);
+    color: white;
+    transform: scale(1.05);
+}
+
+.subscription-details {
+    padding: 1.5rem;
+}
+
+.subscription-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.subscription-meta {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.subscription-price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--mg-primary);
+}
+
+.subscription-actions {
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.request-card {
+    background: white;
+    border-radius: 0.5rem;
+    border-left: 4px solid #ffc107;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.request-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.request-actions {
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .subscription-details {
+        padding: 1rem;
+    }
+    
+    .action-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="subscription-dashboard">
+    <div class="container-fluid">
+        <!-- En-tête du tableau de bord -->
+        <div class="dashboard-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="h3 mb-2">
+                        <i class="bi bi-card-checklist me-3"></i>
+                        Mes Abonnements
+                    </h1>
+                    <p class="mb-0 opacity-90">
+                        Gérez vos abonnements Mobility Plus et chauffeurs
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-flex gap-2 justify-content-end flex-wrap">
+                        {% if user.role == 'parent' %}
+                        <a href="{% url 'subscriptions:chauffeur_subscription_request' %}" class="action-btn primary">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Nouvelle demande
+                        </a>
+                        {% if not has_mobility_plus %}
+                        <a href="{% url 'subscriptions:mobility_plus_subscribe' %}" class="action-btn premium">
+                            <i class="bi bi-star-fill me-2"></i>
+                            Mobility Plus
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="stats-grid">
+            {% if user.role == 'parent' %}
+            <div class="stat-card">
+                <i class="bi bi-star-fill stat-icon mobility"></i>
+                <div class="h3 mb-1">
+                    {% if has_mobility_plus %}Actif{% else %}Inactif{% endif %}
+                </div>
+                <div class="text-muted small">Mobility Plus</div>
+            </div>
+            <div class="stat-card">
+                <i class="bi bi-check-circle stat-icon active"></i>
+                <div class="h3 mb-1">{{ active_subscriptions_count|default:0 }}</div>
+                <div class="text-muted small">Abonnements actifs</div>
+            </div>
+            <div class="stat-card">
+                <i class="bi bi-clock-history stat-icon pending"></i>
+                <div class="h3 mb-1">{{ pending_requests_count|default:0 }}</div>
+                <div class="text-muted small">Demandes en attente</div>
+            </div>
+            {% else %}
+            <div class="stat-card">
+                <i class="bi bi-people stat-icon active"></i>
+                <div class="h3 mb-1">{{ active_clients_count|default:0 }}</div>
+                <div class="text-muted small">Clients actifs</div>
+            </div>
+            <div class="stat-card">
+                <i class="bi bi-bell stat-icon pending"></i>
+                <div class="h3 mb-1">{{ pending_requests_count|default:0 }}</div>
+                <div class="text-muted small">Demandes reçues</div>
+            </div>
+            <div class="stat-card">
+                <i class="bi bi-currency-exchange stat-icon revenue"></i>
+                <div class="h3 mb-1">---</div>
+                <div class="text-muted small">Revenus mensuels</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="row">
+            <!-- Colonne principale -->
+            <div class="col-lg-8">
+                {% if user.role == 'parent' %}
+                <!-- Abonnement Mobility Plus -->
+                {% if mobility_plus %}
+                <div class="subscription-card mobility-plus position-relative">
+                    <div class="subscription-details">
+                        <div class="subscription-title">Mobility Plus</div>
+                        <div class="subscription-meta">
+                            <i class="bi bi-calendar me-2"></i>
+                            Prochain paiement : {{ mobility_plus.next_billing_date|date:"d/m/Y" }}
+                        </div>
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Chat en temps réel</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>GPS avancé</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Notifications push</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Support prioritaire</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="subscription-price">5 000 FCFA</div>
+                                <div class="text-muted small">par mois</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subscription-actions">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-success">
+                                {% if mobility_plus.is_active %}Actif{% else %}Inactif{% endif %}
+                            </span>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'subscriptions:subscription_cancel' 'mobility_plus' mobility_plus.id %}" 
+                                   class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Annuler
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Abonnements chauffeur -->
+                <h5 class="mb-3">
+                    <i class="bi bi-car-front me-2"></i>
+                    Mes Abonnements Chauffeur
+                </h5>
+                
+                {% for subscription in chauffeur_subscriptions %}
+                <div class="subscription-card {{ subscription.status }}">
+                    <div class="subscription-details">
+                        <div class="subscription-title">{{ subscription.title }}</div>
+                        <div class="subscription-meta">
+                            <i class="bi bi-person me-2"></i>
+                            Chauffeur : {{ subscription.chauffeur.get_full_name }}
+                            <span class="ms-3">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                {{ subscription.pickup_location }} → {{ subscription.dropoff_location }}
+                            </span>
+                        </div>
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="mb-2">
+                                    <i class="bi bi-clock me-2"></i>
+                                    Départ : {{ subscription.pickup_time }}
+                                    {% if subscription.return_time %}
+                                        | Retour : {{ subscription.return_time }}
+                                    {% endif %}
+                                </div>
+                                <div class="mb-2">
+                                    <i class="bi bi-calendar-week me-2"></i>
+                                    {{ subscription.get_frequency_display }}
+                                </div>
+                                {% if subscription.special_requirements %}
+                                <div class="text-muted small">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    {{ subscription.special_requirements }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="subscription-price">{{ subscription.price_monthly|floatformat:0 }} FCFA</div>
+                                <div class="text-muted small">par mois</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subscription-actions">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-{% if subscription.status == 'active' %}success{% elif subscription.status == 'payment_pending' %}warning{% else %}secondary{% endif %}">
+                                {{ subscription.get_status_display }}
+                            </span>
+                            <div class="d-flex gap-2">
+                                {% if subscription.status == 'payment_pending' %}
+                                <a href="{% url 'subscriptions:payment_page' subscription.payments.latest.id %}" 
+                                   class="btn btn-success btn-sm">
+                                    <i class="bi bi-credit-card me-1"></i>
+                                    Payer
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'subscriptions:subscription_cancel' 'chauffeur' subscription.id %}" 
+                                   class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Annuler
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="bi bi-car-front"></i>
+                    <h5>Aucun abonnement chauffeur</h5>
+                    <p class="text-muted">Créez votre première demande d'abonnement pour commencer.</p>
+                    <a href="{% url 'subscriptions:chauffeur_subscription_request' %}" class="action-btn primary">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Créer une demande
+                    </a>
+                </div>
+                {% endfor %}
+
+                {% else %}
+                <!-- Vue chauffeur -->
+                <h5 class="mb-3">
+                    <i class="bi bi-people me-2"></i>
+                    Mes Clients
+                </h5>
+                
+                {% for subscription in my_subscriptions %}
+                <div class="subscription-card {{ subscription.status }}">
+                    <div class="subscription-details">
+                        <div class="subscription-title">{{ subscription.title }}</div>
+                        <div class="subscription-meta">
+                            <i class="bi bi-person me-2"></i>
+                            Client : {{ subscription.parent.get_full_name }}
+                            <span class="ms-3">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                {{ subscription.pickup_location }} → {{ subscription.dropoff_location }}
+                            </span>
+                        </div>
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="mb-2">
+                                    <i class="bi bi-clock me-2"></i>
+                                    Départ : {{ subscription.pickup_time }}
+                                    {% if subscription.return_time %}
+                                        | Retour : {{ subscription.return_time }}
+                                    {% endif %}
+                                </div>
+                                {% if subscription.child_name %}
+                                <div class="mb-2">
+                                    <i class="bi bi-person-heart me-2"></i>
+                                    Enfant : {{ subscription.child_name }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="subscription-price">{{ subscription.price_monthly|floatformat:0 }} FCFA</div>
+                                <div class="text-muted small">par mois</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subscription-actions">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-{% if subscription.status == 'active' %}success{% elif subscription.status == 'payment_pending' %}warning{% else %}secondary{% endif %}">
+                                {{ subscription.get_status_display }}
+                            </span>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm" onclick="contactClient({{ subscription.parent.id }})">
+                                    <i class="bi bi-chat-dots me-1"></i>
+                                    Contacter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="bi bi-people"></i>
+                    <h5>Aucun client</h5>
+                    <p class="text-muted">Vous n'avez pas encore de clients. Les demandes d'abonnement apparaîtront dans la section suivante.</p>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                {% if user.role == 'parent' %}
+                <!-- Demandes en attente -->
+                <h6 class="mb-3">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Demandes en Attente
+                </h6>
+                
+                {% for request in pending_requests %}
+                <div class="request-card">
+                    <div class="fw-semibold">{{ request.title }}</div>
+                    <div class="request-meta">
+                        Envoyée à {{ request.chauffeur.get_full_name }} le {{ request.created_at|date:"d/m/Y" }}
+                    </div>
+                    <div class="request-meta">
+                        Prix proposé : {{ request.proposed_price_monthly|floatformat:0 }} FCFA/mois
+                    </div>
+                    <div class="request-actions">
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'subscriptions:chauffeur_subscription_request_detail' request.id %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                Voir
+                            </a>
+                            <button class="btn btn-outline-danger btn-sm" 
+                                    onclick="deleteRequest({{ request.id }})">
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-inbox display-6"></i>
+                    <p class="mb-0">Aucune demande en attente</p>
+                </div>
+                {% endfor %}
+
+                {% else %}
+                <!-- Demandes reçues (chauffeur) -->
+                <h6 class="mb-3">
+                    <i class="bi bi-bell me-2"></i>
+                    Demandes Reçues
+                </h6>
+                
+                {% for request in received_requests %}
+                <div class="request-card">
+                    <div class="fw-semibold">{{ request.title }}</div>
+                    <div class="request-meta">
+                        De {{ request.parent.get_full_name }} le {{ request.created_at|date:"d/m/Y" }}
+                    </div>
+                    <div class="request-meta">
+                        Prix proposé : {{ request.proposed_price_monthly|floatformat:0 }} FCFA/mois
+                    </div>
+                    <div class="request-actions">
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'subscriptions:chauffeur_response' request.id %}" 
+                               class="btn btn-success btn-sm">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Répondre
+                            </a>
+                            <a href="{% url 'subscriptions:chauffeur_subscription_request_detail' request.id %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                Voir
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-inbox display-6"></i>
+                    <p class="mb-0">Aucune demande reçue</p>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <!-- Actions rapides -->
+                <div class="mt-4">
+                    <h6 class="mb-3">Actions Rapides</h6>
+                    <div class="d-grid gap-2">
+                        {% if user.role == 'parent' %}
+                        <a href="{% url 'subscriptions:subscription_search' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-search me-2"></i>
+                            Rechercher des chauffeurs
+                        </a>
+                        <a href="{% url 'subscriptions:my_subscriptions' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-list-ul me-2"></i>
+                            Tous mes abonnements
+                        </a>
+                        {% else %}
+                        <a href="{% url 'subscriptions:my_subscriptions' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-people me-2"></i>
+                            Tous mes clients
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Fonction pour supprimer une demande d'abonnement
+function deleteRequest(requestId) {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette demande d\'abonnement ?')) {
+        fetch(`/subscriptions/requests/${requestId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Succès', data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification('Erreur', data.error || 'Une erreur est survenue.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur', 'Une erreur de connexion est survenue.', 'error');
+        });
+    }
+}
+
+// Fonction pour contacter un client (chauffeur)
+function contactClient(clientId) {
+    // TODO: Implémenter le système de chat
+    showNotification('Information', 'Fonctionnalité de chat en développement', 'info');
+}
+
+// Fonction pour afficher les notifications
+function showNotification(title, message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                     type === 'error' ? 'alert-danger' : 
+                     type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <strong>${title}</strong><br>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove après 5 secondes
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Charger les statistiques en temps réel
+document.addEventListener('DOMContentLoaded', function() {
+    // TODO: Implémenter le chargement des statistiques via API
+});
+</script>
+{% endblock %}
+
+

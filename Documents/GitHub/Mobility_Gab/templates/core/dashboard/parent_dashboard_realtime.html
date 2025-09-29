@@ -1,0 +1,467 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Dashboard Particulier - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+.ride-status-card {
+    border-left: 4px solid var(--mg-primary);
+    transition: all 0.3s ease;
+}
+
+.ride-status-card.accepted {
+    border-left-color: var(--mg-secondary);
+    background: linear-gradient(135deg, rgba(27, 187, 138, 0.05), white);
+}
+
+.ride-status-card.pending {
+    border-left-color: #ffc107;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.05), white);
+}
+
+.ride-status-card.cancelled {
+    border-left-color: #dc3545;
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), white);
+}
+
+.status-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+}
+
+.status-pending {
+    background: rgba(255, 193, 7, 0.2);
+    color: #856404;
+}
+
+.status-accepted {
+    background: rgba(27, 187, 138, 0.2);
+    color: #0c9b6f;
+}
+
+.status-cancelled {
+    background: rgba(220, 53, 69, 0.2);
+    color: #721c24;
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.notification-dot {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background: #dc3545;
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête du dashboard -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="h4 mb-1">👋 Bonjour {{ user.get_full_name|default:user.username }}</h2>
+                    <p class="text-muted mb-0">
+                        Dernière mise à jour: <span id="last-update">Chargement...</span>
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="refreshStatus()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        Actualiser
+                    </button>
+                    <a href="{% url 'subscriptions:ride_request_advanced' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Nouvelle course
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demandes de course récentes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>
+                            Mes demandes récentes
+                        </h5>
+                        <span class="badge bg-primary" id="requests-count">0</span>
+                    </div>
+                </div>
+                <div class="card-body" id="requests-container">
+                    <!-- Les demandes seront chargées ici -->
+                    <div class="text-center py-4 text-muted">
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <p>Chargement de vos demandes...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row">
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="display-6 text-primary mb-2">
+                        <i class="bi bi-car-front"></i>
+                    </div>
+                    <h6 class="card-title">Nouvelle course</h6>
+                    <p class="card-text small text-muted">Demander un chauffeur maintenant</p>
+                    <a href="{% url 'subscriptions:ride_request_advanced' %}" class="btn btn-outline-primary btn-sm">
+                        Demander
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="display-6 text-secondary mb-2">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <h6 class="card-title">Historique</h6>
+                    <p class="card-text small text-muted">Voir vos courses passées</p>
+                    <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-outline-secondary btn-sm">
+                        Consulter
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="display-6 text-info mb-2">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <h6 class="card-title">Mon profil</h6>
+                    <p class="card-text small text-muted">Modifier mes informations</p>
+                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-info btn-sm">
+                        Modifier
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="display-6 text-warning mb-2">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h6 class="card-title">Support</h6>
+                    <p class="card-text small text-muted">Besoin d'aide ?</p>
+                    <a href="#" class="btn btn-outline-warning btn-sm">
+                        Contacter
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container pour les notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+let pollingInterval;
+let lastUpdateTime = new Date();
+let currentRequests = [];
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    startPolling();
+});
+
+function startPolling() {
+    // Polling toutes les 5 secondes
+    pollingInterval = setInterval(refreshStatus, 5000);
+    
+    // Vérifier immédiatement
+    refreshStatus();
+}
+
+function refreshStatus() {
+    fetch('/subscriptions/api/parent/ride-requests/status/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.requests) {
+                updateRequestsDisplay(data.requests);
+                checkForUpdates(data.requests);
+            }
+            
+            lastUpdateTime = new Date();
+            document.getElementById('last-update').textContent = lastUpdateTime.toLocaleTimeString();
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération:', error);
+            document.getElementById('last-update').textContent = 'Erreur de connexion';
+        });
+}
+
+function updateRequestsDisplay(requests) {
+    const container = document.getElementById('requests-container');
+    const countBadge = document.getElementById('requests-count');
+    
+    countBadge.textContent = requests.length;
+    
+    if (requests.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-inbox display-4 mb-3"></i>
+                <h6>Aucune demande récente</h6>
+                <p class="small">Vos demandes de course apparaîtront ici</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const requestsHTML = requests.map(request => createRequestCard(request)).join('');
+    container.innerHTML = requestsHTML;
+}
+
+function createRequestCard(request) {
+    const statusClass = `status-${request.status}`;
+    const cardClass = `ride-status-card ${request.status}`;
+    
+    let statusText = 'En attente';
+    let statusIcon = 'bi-clock';
+    
+    if (request.status === 'accepted') {
+        statusText = 'Acceptée';
+        statusIcon = 'bi-check-circle-fill';
+    } else if (request.status === 'cancelled') {
+        statusText = 'Annulée';
+        statusIcon = 'bi-x-circle-fill';
+    }
+    
+    const trackingButton = request.trip_id ? 
+        `<a href="/courses/particulier/${request.trip_id}/" class="btn btn-success btn-sm">
+            <i class="bi bi-geo-alt me-1"></i>
+            Suivre
+         </a>` : '';
+    
+    return `
+        <div class="card ${cardClass} mb-3" data-request-id="${request.id}">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="status-badge ${statusClass} me-2">
+                                <i class="${statusIcon} me-1"></i>
+                                ${statusText}
+                            </span>
+                            <small class="text-muted">
+                                Il y a ${request.created_ago} min
+                            </small>
+                        </div>
+                        
+                        <h6 class="mb-2">
+                            <i class="bi bi-geo-alt text-primary me-2"></i>
+                            ${request.pickup_location}
+                        </h6>
+                        <p class="text-muted mb-2">
+                            <i class="bi bi-arrow-down text-muted me-2"></i>
+                            ${request.dropoff_location}
+                        </p>
+                        
+                        ${request.chauffeur_name ? `
+                            <div class="d-flex align-items-center text-success">
+                                <i class="bi bi-person-check me-2"></i>
+                                <strong>Chauffeur: ${request.chauffeur_name}</strong>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="col-md-4 text-end">
+                        <div class="mb-2">
+                            <strong>Heure souhaitée:</strong><br>
+                            <span class="text-muted">${request.pickup_time}</span>
+                        </div>
+                        
+                        <div class="d-flex gap-2 justify-content-end">
+                            ${trackingButton}
+                            
+                            ${request.status === 'pending' ? `
+                                <button class="btn btn-outline-danger btn-sm" onclick="cancelRequest(${request.id})">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Annuler
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function checkForUpdates(newRequests) {
+    // Vérifier les changements de statut
+    newRequests.forEach(newReq => {
+        const oldReq = currentRequests.find(r => r.id === newReq.id);
+        
+        if (oldReq && oldReq.status !== newReq.status) {
+            // Statut changé
+            handleStatusChange(newReq, oldReq.status);
+        } else if (!oldReq) {
+            // Nouvelle demande (ne devrait pas arriver ici mais au cas où)
+            showNotification('Nouvelle demande créée', 'info');
+        }
+    });
+    
+    currentRequests = newRequests;
+}
+
+function handleStatusChange(request, oldStatus) {
+    if (request.status === 'accepted') {
+        showNotification(
+            '🎉 Course acceptée !', 
+            `${request.chauffeur_name} a accepté votre demande. Vous pouvez maintenant suivre votre course.`,
+            'success'
+        );
+        
+        // Faire clignoter la carte
+        const card = document.querySelector(`[data-request-id="${request.id}"]`);
+        if (card) {
+            card.classList.add('pulse-animation');
+            setTimeout(() => card.classList.remove('pulse-animation'), 3000);
+        }
+        
+    } else if (request.status === 'cancelled') {
+        showNotification(
+            'Demande annulée', 
+            'Votre demande de course a été annulée.',
+            'warning'
+        );
+    }
+}
+
+function cancelRequest(requestId) {
+    if (!confirm('Êtes-vous sûr de vouloir annuler cette demande ?')) {
+        return;
+    }
+    
+    const button = document.querySelector(`[onclick="cancelRequest(${requestId})"]`);
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Annulation...';
+    }
+    
+    fetch(`/subscriptions/api/ride-requests/${requestId}/cancel/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Demande annulée', 'Votre demande a été annulée avec succès.', 'success');
+            refreshStatus(); // Actualiser l'affichage
+        } else {
+            showNotification('Erreur', data.error || 'Une erreur est survenue', 'error');
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = '<i class="bi bi-x-circle me-1"></i>Annuler';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        showNotification('Erreur de connexion', 'Impossible de contacter le serveur', 'error');
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-x-circle me-1"></i>Annuler';
+        }
+    });
+}
+
+function showNotification(title, message, type = 'info') {
+    const toastContainer = document.querySelector('.toast-container');
+    
+    const toastId = 'toast-' + Date.now();
+    const bgClass = type === 'success' ? 'bg-success' : 
+                   type === 'error' ? 'bg-danger' : 
+                   type === 'warning' ? 'bg-warning' : 'bg-info';
+    
+    const icon = type === 'success' ? 'bi-check-circle-fill' :
+                type === 'error' ? 'bi-x-circle-fill' :
+                type === 'warning' ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill';
+    
+    const toastHTML = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi ${icon} me-2"></i>
+                    <strong>${title}</strong><br>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 6000 });
+    toast.show();
+    
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+// Gérer la visibilité de la page
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        // Page masquée, réduire la fréquence
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = setInterval(refreshStatus, 15000); // 15 secondes
+        }
+    } else {
+        // Page visible, reprendre le polling normal
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = setInterval(refreshStatus, 5000); // 5 secondes
+        }
+        refreshStatus(); // Vérifier immédiatement
+    }
+});
+
+// Nettoyer avant fermeture
+window.addEventListener('beforeunload', function() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+});
+</script>
+{% endblock %}

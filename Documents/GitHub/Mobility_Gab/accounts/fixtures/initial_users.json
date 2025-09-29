@@ -1,0 +1,30 @@
+[
+  {
+    "model": "accounts.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$demo$B3yYWvGyvXoC2EhpD0w0NRGJfNDI8KyQ2NvUReMv2eE=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "Admin",
+      "last_name": "Mobility",
+      "email": "admin@mobilitygab.local",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2025-09-27T00:00:00Z",
+      "role": "admin",
+      "is_email_verified": true,
+      "suspended_until": null,
+      "is_suspended": false,
+      "suspended_reason": "",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]
+
+
+
+
+

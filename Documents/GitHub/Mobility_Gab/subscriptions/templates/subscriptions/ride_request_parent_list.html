@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Mes demandes de course{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-9 mx-auto">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4">Mes demandes de course</h2>
+            <a href="{% url 'subscriptions:ride_request_create' %}" class="btn btn-primary">Nouvelle demande</a>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-2">
+                    <div class="col-sm-4">
+                        {{ filter_form.status.label_tag }}
+                        {{ filter_form.status }}
+                    </div>
+                    <div class="col-sm-3 align-self-end">
+                        <button class="btn btn-outline-primary btn-sm" type="submit">Filtrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% for request in ride_requests %}
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="fw-bold mb-1">{{ request.pickup_location }} ➜ {{ request.dropoff_location }}</h5>
+                        <p class="text-muted mb-1">Chauffeur : {{ request.chauffeur.get_full_name|default:request.chauffeur.username }}</p>
+                        <p class="text-muted small mb-0">Demandée le {{ request.requested_at|date:'d/m/Y H:i' }}</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-light text-dark">{{ request.get_status_display }}</span>
+                        <div class="mt-2">
+                            <a href="{% url 'subscriptions:ride_request_parent_detail' request.id %}" class="btn btn-outline-secondary btn-sm">Détails</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">Aucune demande pour le moment.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+
+

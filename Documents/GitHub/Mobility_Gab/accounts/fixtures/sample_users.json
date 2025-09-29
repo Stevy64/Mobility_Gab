@@ -1,0 +1,30 @@
+[
+  {
+    "model": "accounts.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$demo$B3yYWvGyvXoC2EhpD0w0NRGJfNDI8KyQ2NvUReMv2eE=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "parent1",
+      "first_name": "Aline",
+      "last_name": "Mba",
+      "email": "aline.parent@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-09-20T00:00:00Z",
+      "role": "parent",
+      "is_email_verified": true,
+      "suspended_until": null,
+      "is_suspended": false,
+      "suspended_reason": "",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]
+
+
+
+
+

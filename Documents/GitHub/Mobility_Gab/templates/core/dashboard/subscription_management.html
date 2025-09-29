@@ -1,0 +1,880 @@
+{% extends 'core/dashboard/base.html' %}
+
+{% block dashboard_title %}Bonjour {{ user.first_name|default:user.username }}{% endblock %}
+{% block dashboard_subtitle %}Vos abonnés, trajets et performances.{% endblock %}
+
+{% block dashboard_actions %}
+<div class="btn-group" role="group">
+    {% if user.role == 'parent' %}
+    <a href="{% url 'subscriptions:ride_request_advanced' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouvelle course
+    </a>
+    {% else %}
+    <a href="/subscriptions/chauffeur_ride_requests_realtime/" class="btn btn-primary">
+        <i class="bi bi-bell"></i> Demandes temps réel
+    </a>
+    {% endif %}
+    <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-clock-history"></i> Historique
+    </a>
+    <a href="#" class="btn btn-danger" onclick="triggerSOS()">
+        <i class="bi bi-shield-exclamation"></i> SOS
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+/* Styles pour la gestion des abonnements */
+.subscription-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.subscription-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.subscription-card.premium {
+    border: 2px solid #ffc107;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 255, 255, 1));
+}
+
+.subscription-card.premium::before {
+    content: '⭐ MOBILITY PLUS';
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(135deg, #ffc107, #ffb300);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border-bottom-left-radius: 0.5rem;
+}
+
+.badge-item {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    color: white;
+    border-radius: 1rem;
+    padding: 1rem;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.badge-item:hover {
+    transform: scale(1.05);
+}
+
+.badge-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.upgrade-btn {
+    background: linear-gradient(135deg, #ffc107, #ffb300);
+    border: none;
+    color: #333;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    transition: all 0.3s ease;
+}
+
+.upgrade-btn:hover {
+    background: linear-gradient(135deg, #ffb300, #ffc107);
+    color: #333;
+    transform: scale(1.05);
+}
+
+.downgrade-btn {
+    background: #6c757d;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 1.5rem;
+    font-size: 0.875rem;
+}
+
+.section-header {
+    background: linear-gradient(135deg, rgba(var(--mg-primary-rgb), 0.1), rgba(var(--mg-primary-rgb), 0.05));
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 5px solid var(--mg-primary);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.clickable-stat {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.clickable-stat::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s ease;
+}
+
+.clickable-stat:hover::before {
+    left: 100%;
+}
+
+.stat-click-hint {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    color: var(--mg-primary);
+    opacity: 0;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.clickable-stat:hover .stat-click-hint {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.stat-icon.active { color: var(--mg-secondary); }
+.stat-icon.rating { color: #ffc107; }
+.stat-icon.badges { color: var(--mg-primary); }
+
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .subscription-card {
+        margin-bottom: 1rem;
+    }
+    
+    .section-header {
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<!-- Section du haut conservée (KPI) -->
+<div class="stats-grid">
+    {% if user.role == 'parent' %}
+    <div class="stat-card clickable-stat" onclick="showSubscriptionsDetails()" data-action="subscriptions">
+        <i class="bi bi-calendar-check stat-icon active"></i>
+        <div class="h3 mb-1">{{ active_subscriptions|default:0 }}</div>
+        <div class="text-muted small">Abonnés actifs</div>
+        <div class="stat-click-hint">
+            <i class="bi bi-cursor-fill"></i>
+            Cliquez pour voir
+        </div>
+    </div>
+    <div class="stat-card clickable-stat" onclick="showBadgesDetails()" data-action="badges">
+        <i class="bi bi-award stat-icon badges"></i>
+        <div class="h3 mb-1">{{ user_badges|length|default:0 }}</div>
+        <div class="text-muted small">Badges</div>
+        <div class="stat-click-hint">
+            <i class="bi bi-cursor-fill"></i>
+            Cliquez pour voir
+        </div>
+    </div>
+    {% else %}
+    <div class="stat-card clickable-stat" onclick="showSubscriptionsDetails()" data-action="subscriptions">
+        <i class="bi bi-people stat-icon active"></i>
+        <div class="h3 mb-1">{{ active_subscribers|default:0 }}</div>
+        <div class="text-muted small">Abonnés actifs</div>
+        <div class="stat-click-hint">
+            <i class="bi bi-cursor-fill"></i>
+            Cliquez pour voir
+        </div>
+    </div>
+    <div class="stat-card clickable-stat" onclick="showBadgesDetails()" data-action="badges">
+        <i class="bi bi-award stat-icon badges"></i>
+        <div class="h3 mb-1">{{ user_badges|length|default:0 }}</div>
+        <div class="text-muted small">Badges</div>
+        <div class="stat-click-hint">
+            <i class="bi bi-cursor-fill"></i>
+            Cliquez pour voir
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Nouveau contenu de gestion des abonnements -->
+<div class="row g-4">
+    <!-- Section Abonnements/Souscriptions -->
+    <div class="col-lg-8">
+        <!-- Gestion des abonnements -->
+        <div class="section-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1">
+                        <i class="bi bi-card-checklist me-2"></i>
+                        Gestion des Abonnements
+                    </h4>
+                    <p class="text-muted mb-0">Gérez vos abonnements et souscriptions</p>
+                </div>
+                {% if user.role == 'parent' %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'subscriptions:new_subscription_system' %}" class="btn btn-primary">
+                        <i class="bi bi-credit-card me-2"></i>
+                        Nouveaux abonnements
+                    </a>
+                    <a href="{% url 'subscriptions:new_subscription_system' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-gear me-2"></i>
+                        Gérer mes abonnements
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Liste des abonnements -->
+        <div class="row g-3 mb-4">
+            <!-- Anciens abonnements (legacy) -->
+            {% if subscriptions %}
+                {% for subscription in subscriptions %}
+                <div class="col-md-6">
+                    <div class="subscription-card card position-relative">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="fw-bold">{{ subscription.plan.name }}</h6>
+                                    <p class="text-muted small mb-1">
+                                        {% if user.role == 'parent' %}
+                                            Chauffeur: {{ subscription.chauffeur.get_full_name|default:"Non assigné" }}
+                                        {% else %}
+                                            Client: {{ subscription.parent.get_full_name }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <span class="badge bg-success rounded-pill">
+                                    Actif
+                                </span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small">
+                                    <span>Prix mensuel:</span>
+                                    <strong>{{ subscription.price_monthly }} FCFA</strong>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span>Prochain paiement:</span>
+                                    <strong>{{ subscription.next_due_date|date:"d/m/Y" }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                {% if not subscription.has_mobility_plus %}
+                                <button class="btn upgrade-btn btn-sm flex-fill" onclick="upgradeToPremium({{ subscription.id }})">
+                                    <i class="bi bi-arrow-up-circle me-1"></i>
+                                    Upgrade Mobility Plus
+                                </button>
+                                {% else %}
+                                <button class="btn downgrade-btn btn-sm" onclick="downgradeFromPremium({{ subscription.id }})">
+                                    <i class="bi bi-arrow-down-circle me-1"></i>
+                                    Downgrade
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-outline-primary btn-sm" onclick="manageSubscription({{ subscription.id }})">
+                                    <i class="bi bi-gear"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="deleteSubscription({{ subscription.id }}, '{{ subscription.plan.name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="col-12">
+                <div class="card subscription-card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h5 class="mt-3">Aucun abonnement legacy actif</h5>
+                        <p class="text-muted">
+                            Utilisez le nouveau système d'abonnements pour une meilleure expérience.
+                        </p>
+                        <a href="{% url 'subscriptions:new_subscription_system' %}" class="btn btn-primary">
+                            <i class="bi bi-credit-card me-2"></i>
+                            Nouveaux abonnements
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Nouveaux abonnements -->
+        {% if user.role == 'parent' %}
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-star me-2"></i>
+                    Nouveaux abonnements
+                </h5>
+            </div>
+            
+            <!-- Mobility Plus -->
+            <div class="col-md-6">
+                <div class="subscription-card card {% if has_mobility_plus %}mobility-plus{% endif %} position-relative">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="fw-bold">Mobility Plus</h6>
+                                <p class="text-muted small mb-1">Abonnement premium</p>
+                            </div>
+                            {% if has_mobility_plus %}
+                            <span class="badge bg-success rounded-pill">Actif</span>
+                            {% else %}
+                            <span class="badge bg-secondary rounded-pill">Inactif</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="fw-bold text-primary">5 000 FCFA/mois</div>
+                            <small class="text-muted">Fonctionnalités premium</small>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            {% if has_mobility_plus %}
+                            <button class="btn btn-outline-danger btn-sm" onclick="unsubscribeMobilityPlus()">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Se désabonner
+                            </button>
+                            {% else %}
+                            <button class="btn btn-warning btn-sm" onclick="subscribeMobilityPlus()">
+                                <i class="bi bi-star me-1"></i>
+                                S'abonner
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Abonnements Chauffeur -->
+            <div class="col-md-6">
+                <div class="subscription-card card chauffeur">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="fw-bold">Abonnements Chauffeur</h6>
+                                <p class="text-muted small mb-1">Abonnements personnalisés</p>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ chauffeur_subscriptions|length }} actif(s)</span>
+                        </div>
+                        
+                        {% if chauffeur_subscriptions %}
+                        <div class="mb-3">
+                            {% for subscription in chauffeur_subscriptions %}
+                            <div class="small mb-2">
+                                <strong>{{ subscription.title }}</strong><br>
+                                <span class="text-muted">{{ subscription.chauffeur.get_full_name }} - {{ subscription.price_monthly|floatformat:0 }} FCFA/mois</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-2">
+                            <i class="bi bi-person-plus text-muted"></i>
+                            <p class="text-muted small mb-0">Aucun abonnement chauffeur</p>
+                        </div>
+                        {% endif %}
+                        
+                        <button class="btn btn-success btn-sm w-100" onclick="requestChauffeur()">
+                            <i class="bi bi-person-plus me-1"></i>
+                            Demander un chauffeur
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Section Badges et Récompenses -->
+    <div class="col-lg-4">
+        <div class="section-header">
+            <h4 class="mb-1">
+                <i class="bi bi-award me-2"></i>
+                Badges & Récompenses
+            </h4>
+            <p class="text-muted mb-0">Vos accomplissements</p>
+        </div>
+
+        {% if user_badges %}
+        <div class="row g-2 mb-4">
+            {% for badge in user_badges %}
+            <div class="col-6">
+                <div class="badge-item">
+                    <i class="bi bi-{{ badge.icon }} badge-icon"></i>
+                    <div class="fw-bold small">{{ badge.name }}</div>
+                    <div class="text-white-50 small">{{ badge.description }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card subscription-card mb-4">
+            <div class="card-body text-center py-4">
+                <i class="bi bi-award display-4 text-muted"></i>
+                <h6 class="mt-3">Pas encore de badge</h6>
+                <p class="text-muted small">Effectuez des trajets pour débloquer vos premiers badges !</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Mobility Plus Info -->
+        <div class="card subscription-card {% if has_mobility_plus %}premium{% endif %}">
+            <div class="card-body">
+                {% if has_mobility_plus %}
+                <div class="text-center">
+                    <i class="bi bi-star-fill display-4 text-warning"></i>
+                    <h5 class="mt-3">Mobility Plus Actif</h5>
+                    <p class="text-muted">Profitez de tous les avantages premium</p>
+                    <ul class="list-unstyled text-start mt-3">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Chat en temps réel</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Suivi GPS avancé</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Notifications push</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Support prioritaire</li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <i class="bi bi-star display-4 text-warning"></i>
+                    <h5 class="mt-3">Mobility Plus</h5>
+                    <p class="text-muted">Débloquez des fonctionnalités premium</p>
+                    <ul class="list-unstyled text-start mt-3">
+                        <li><i class="bi bi-star text-warning me-2"></i>Chat en temps réel</li>
+                        <li><i class="bi bi-star text-warning me-2"></i>Suivi GPS avancé</li>
+                        <li><i class="bi bi-star text-warning me-2"></i>Notifications push</li>
+                        <li><i class="bi bi-star text-warning me-2"></i>Support prioritaire</li>
+                    </ul>
+                    <button class="btn upgrade-btn w-100 mt-3" onclick="upgradeToPremium()">
+                        <i class="bi bi-arrow-up-circle me-2"></i>
+                        Passer à Mobility Plus
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nouvel Abonnement -->
+<div class="modal fade" id="newSubscriptionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouvel Abonnement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newSubscriptionForm">
+                    <div class="mb-3">
+                        <label class="form-label">Type d'abonnement</label>
+                        <select class="form-select" name="plan_id" required>
+                            <option value="">Choisir un plan...</option>
+                            <option value="1">Standard - 45 000 FCFA/mois</option>
+                            <option value="2">Scolaire - 35 000 FCFA/mois</option>
+                            <option value="3">Sur-mesure - Prix négocié</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Chauffeur préféré (optionnel)</label>
+                        <select class="form-select" name="chauffeur_id">
+                            <option value="">Assignation automatique</option>
+                            <!-- Options de chauffeurs -->
+                        </select>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="mobilityPlus" name="mobility_plus">
+                        <label class="form-check-label" for="mobilityPlus">
+                            Inclure Mobility Plus (+5 000 FCFA/mois)
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="createSubscription()">Créer l'abonnement</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Fonctions pour les tuiles cliquables
+function showSubscriptionsDetails() {
+    // Scroll vers la section des abonnements avec animation fluide
+    const subscriptionsSection = document.querySelector('.section-header');
+    if (subscriptionsSection) {
+        subscriptionsSection.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+        
+        // Effet de highlight sur la section
+        const subscriptionCards = document.querySelectorAll('.subscription-card');
+        subscriptionCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.transform = 'scale(1.02)';
+                card.style.boxShadow = '0 8px 30px rgba(0, 123, 255, 0.2)';
+                
+                setTimeout(() => {
+                    card.style.transform = '';
+                    card.style.boxShadow = '';
+                }, 500);
+            }, index * 100);
+        });
+        
+        showNotification('Abonnements', 'Voici vos abonnements actifs', 'info');
+    }
+}
+
+function showBadgesDetails() {
+    // Scroll vers la section des badges
+    const badgesSection = document.querySelector('.col-lg-4');
+    if (badgesSection) {
+        badgesSection.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+        
+        // Effet sur les badges
+        const badgeItems = document.querySelectorAll('.badge-item');
+        if (badgeItems.length > 0) {
+            badgeItems.forEach((badge, index) => {
+                setTimeout(() => {
+                    badge.style.transform = 'scale(1.1) rotate(5deg)';
+                    setTimeout(() => {
+                        badge.style.transform = '';
+                    }, 300);
+                }, index * 100);
+            });
+            showNotification('Badges', `Vous avez ${badgeItems.length} badge${badgeItems.length > 1 ? 's' : ''} !`, 'success');
+        } else {
+            showNotification('Badges', 'Effectuez des trajets pour débloquer vos premiers badges !', 'info');
+        }
+    }
+}
+
+// Fonctions pour la gestion des abonnements
+function upgradeToPremium(subscriptionId = null) {
+    if (subscriptionId) {
+        // Upgrade d'un abonnement existant
+        if (confirm('Passer cet abonnement à Mobility Plus pour 5 000 FCFA supplémentaires par mois ?')) {
+            fetch(`/subscriptions/upgrade-premium/${subscriptionId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Upgrade réussi !', 'Votre abonnement a été mis à niveau vers Mobility Plus.', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('Erreur', data.error || 'Une erreur est survenue.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showNotification('Erreur', 'Une erreur de connexion est survenue.', 'error');
+            });
+        }
+    } else {
+        // Upgrade général vers Mobility Plus
+        showMobilityPlusModal();
+    }
+}
+
+function downgradeFromPremium(subscriptionId) {
+    if (confirm('Êtes-vous sûr de vouloir rétrograder cet abonnement ? Vous perdrez les fonctionnalités Mobility Plus.')) {
+        fetch(`/subscriptions/downgrade-premium/${subscriptionId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Downgrade réussi', 'Votre abonnement a été rétrogradé.', 'info');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Erreur', data.error || 'Une erreur est survenue.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur', 'Une erreur de connexion est survenue.', 'error');
+        });
+    }
+}
+
+function manageSubscription(subscriptionId) {
+    // Rediriger vers la page de gestion détaillée
+    window.location.href = `/subscriptions/manage/${subscriptionId}/`;
+}
+
+function createSubscription() {
+    const form = document.getElementById('newSubscriptionForm');
+    const formData = new FormData(form);
+    
+    fetch('/subscriptions/create/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('newSubscriptionModal')).hide();
+            showNotification('Succès !', 'Votre abonnement a été créé avec succès.', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('Erreur', data.error || 'Une erreur est survenue.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        showNotification('Erreur', 'Une erreur de connexion est survenue.', 'error');
+    });
+}
+
+function showMobilityPlusModal() {
+    // Afficher une modal d'information sur Mobility Plus
+    const modalHtml = `
+        <div class="modal fade" id="mobilityPlusInfoModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="bi bi-star-fill me-2"></i>
+                            Mobility Plus Premium
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-star-fill display-1 text-warning"></i>
+                            <h4 class="mt-3">Débloquez le Premium</h4>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-chat-dots text-primary me-3"></i>
+                                    <span>Chat temps réel</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-geo-alt text-success me-3"></i>
+                                    <span>GPS avancé</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-bell text-info me-3"></i>
+                                    <span>Push notifications</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-headset text-warning me-3"></i>
+                                    <span>Support prioritaire</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-warning mt-4">
+                            <strong>Prix :</strong> +5 000 FCFA par mois par abonnement
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Plus tard</button>
+                        <button type="button" class="btn upgrade-btn" onclick="confirmUpgrade()">
+                            Passer à Premium
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('mobilityPlusInfoModal'));
+    modal.show();
+    
+    // Nettoyer après fermeture
+    document.getElementById('mobilityPlusInfoModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+function confirmUpgrade() {
+    bootstrap.Modal.getInstance(document.getElementById('mobilityPlusInfoModal')).hide();
+    // Logique pour upgrade global
+    showNotification('Information', 'Contactez le support pour activer Mobility Plus sur tous vos abonnements.', 'info');
+}
+
+function showNotification(title, message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                     type === 'error' ? 'alert-danger' : 
+                     type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <strong>${title}</strong><br>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove après 5 secondes
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Fonction pour supprimer un abonnement
+function deleteSubscription(subscriptionId, subscriptionName) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer l'abonnement "${subscriptionName}" ? Cette action est irréversible.`)) {
+        fetch(`/subscriptions/delete/${subscriptionId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Succès', 'Abonnement supprimé avec succès', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Erreur', data.error || 'Une erreur est survenue.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur', 'Une erreur de connexion est survenue.', 'error');
+        });
+    }
+}
+
+// Fonctions pour les nouveaux abonnements
+function subscribeMobilityPlus() {
+    fetch('{% url "subscriptions:mobility_plus_subscribe" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        } else {
+            showNotification('Erreur', data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Erreur', 'Une erreur est survenue', 'error');
+    });
+}
+
+function unsubscribeMobilityPlus() {
+    if (confirm('Êtes-vous sûr de vouloir vous désabonner de Mobility Plus ?')) {
+        fetch('{% url "subscriptions:mobility_plus_unsubscribe" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Succès', data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Erreur', data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Erreur', 'Une erreur est survenue', 'error');
+        });
+    }
+}
+
+function requestChauffeur() {
+    window.location.href = '{% url "subscriptions:new_subscription_system" %}';
+}
+
+// SOS function (conservée du template original)
+function triggerSOS() {
+    if (confirm('Déclencher une alerte SOS ? Cette action alertera immédiatement les services d\'urgence et vos contacts.')) {
+        showNotification('SOS Déclenché', 'Les services d\'urgence ont été alertés. Restez calme.', 'warning');
+        // Logique SOS ici
+    }
+}
+</script>
+{% endblock %}

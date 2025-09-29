@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Demandes reçues{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-8 mx-auto">
+        <h2 class="h4 mb-4">Demandes de course</h2>
+        {% for request in ride_requests %}
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mb-1">{{ request.pickup_location }} ➜ {{ request.dropoff_location }}</h5>
+                    <p class="text-muted mb-0">Client : {{ request.parent.get_full_name|default:request.parent.username }}</p>
+                </div>
+                {% if request.status == 'pending' %}
+                <div class="btn-group">
+                    <a href="{% url 'subscriptions:ride_request_chauffeur_action' request.id 'accept' %}" class="btn btn-success btn-sm">Accepter</a>
+                    <a href="{% url 'subscriptions:ride_request_chauffeur_action' request.id 'decline' %}" class="btn btn-outline-danger btn-sm">Refuser</a>
+                </div>
+                {% else %}
+                <span class="badge bg-light text-dark">{{ request.get_status_display }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">Aucune demande pour le moment.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+
+

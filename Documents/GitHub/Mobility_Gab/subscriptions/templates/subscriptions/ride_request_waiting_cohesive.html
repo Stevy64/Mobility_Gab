@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Recherche de chauffeurs - Mobility Gab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7 col-xl-6">
+        <!-- Bannière de notification -->
+        <div class="alert alert-success alert-dismissible fade d-none" id="notification-banner" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <span id="notification-text">Un chauffeur a accepté votre demande !</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Carte principale -->
+        <div class="card border-0 shadow-sm">
+            <!-- En-tête de statut -->
+            <div class="card-header text-white text-center py-4" id="status-header" style="background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);">
+                <div class="mb-3">
+                    <i class="bi bi-search" id="status-icon" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="mb-2" id="status-title">Recherche en cours</h4>
+                <p class="mb-0 opacity-90" id="status-subtitle">Nous contactons les chauffeurs disponibles</p>
+            </div>
+
+            <!-- Résumé de la demande -->
+            <div class="card-body bg-light border-bottom">
+                <h6 class="text-primary mb-3">
+                    <i class="bi bi-clipboard-check me-2"></i>
+                    Votre demande
+                </h6>
+                <div class="row g-2 small">
+                    <div class="col-12">
+                        <i class="bi bi-geo-alt text-primary me-2"></i>
+                        <strong>Départ :</strong> {{ ride_request.pickup_location }}
+                    </div>
+                    <div class="col-12">
+                        <i class="bi bi-flag text-success me-2"></i>
+                        <strong>Destination :</strong> {{ ride_request.dropoff_location }}
+                    </div>
+                    <div class="col-md-6">
+                        <i class="bi bi-clock text-info me-2"></i>
+                        <strong>Heure :</strong> {{ ride_request.requested_pickup_time|date:"H:i" }}
+                    </div>
+                    {% if ride_request.get_estimated_distance %}
+                    <div class="col-md-6">
+                        <i class="bi bi-arrows-fullscreen text-warning me-2"></i>
+                        <strong>Distance :</strong> {{ ride_request.get_estimated_distance|floatformat:1 }} km
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Section chauffeurs -->
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-primary mb-0">
+                        <i class="bi bi-people me-2"></i>
+                        Chauffeurs disponibles
+                    </h6>
+                    <span class="badge bg-primary rounded-pill">{{ eligible_chauffeurs|length }}</span>
+                </div>
+
+                <div id="chauffeurs-list">
+                    {% for chauffeur in eligible_chauffeurs %}
+                    <div class="card mb-3 border" data-chauffeur-id="{{ chauffeur.id }}">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-start">
+                                <!-- Avatar -->
+                                <div class="me-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                         style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);">
+                                        {{ chauffeur.first_name.0|default:chauffeur.username.0|upper }}
+                                    </div>
+                                    <!-- Indicateur de disponibilité -->
+                                    <div class="position-relative">
+                                        <div class="position-absolute bg-success rounded-circle" 
+                                             style="width: 12px; height: 12px; top: -45px; right: -5px; border: 2px solid white;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Informations chauffeur -->
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                {{ chauffeur.get_full_name|default:chauffeur.username }}
+                                                {% if chauffeur.distance_km %}
+                                                <span class="badge bg-info ms-2">{{ chauffeur.distance_km|floatformat:1 }}km</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if chauffeur.eta_minutes %}
+                                            <span class="badge bg-success">ETA: {{ chauffeur.eta_minutes }}min</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Note -->
+                                    <div class="mb-2">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= chauffeur.chauffeur_profile.reliability_score %}
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            {% else %}
+                                                <i class="bi bi-star text-muted"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="small text-muted ms-1">({{ chauffeur.chauffeur_profile.reliability_score }}/5)</span>
+                                    </div>
+
+                                    <!-- Informations de contact et zone -->
+                                    <div class="row g-2 small text-muted">
+                                        <div class="col-md-6">
+                                            <i class="bi bi-telephone me-1"></i>
+                                            {{ chauffeur.profile.phone|default:"Non renseigné" }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <i class="bi bi-geo me-1"></i>
+                                            {{ chauffeur.chauffeur_profile.zone|default:"Zone générale" }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Informations véhicule -->
+                                    {% if chauffeur.chauffeur_profile.vehicle_make %}
+                                    <div class="mt-2 p-2 bg-light rounded small">
+                                        <i class="bi bi-car-front text-primary me-1"></i>
+                                        <strong>{{ chauffeur.chauffeur_profile.vehicle_make }} {{ chauffeur.chauffeur_profile.vehicle_model }}</strong>
+                                        {% if chauffeur.chauffeur_profile.vehicle_color %}
+                                        - {{ chauffeur.chauffeur_profile.vehicle_color }}
+                                        {% endif %}
+                                        {% if chauffeur.chauffeur_profile.vehicle_plate %}
+                                        <span class="badge bg-secondary ms-2">{{ chauffeur.chauffeur_profile.vehicle_plate }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                        <h6 class="mt-3">Aucun chauffeur disponible</h6>
+                        <p class="text-muted">Veuillez réessayer ou modifier vos critères</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Indicateur de rafraîchissement -->
+                <div class="text-center pt-3 border-top">
+                    <small class="text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <span id="refresh-status">Mise à jour automatique...</span>
+                    </small>
+                </div>
+            </div>
+
+            <!-- Actions utilisateur -->
+            <div class="card-footer bg-light">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100" onclick="modifyRequest()">
+                            <i class="bi bi-pencil me-2"></i>
+                            Modifier ma demande
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-danger w-100" onclick="cancelRequest()">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Annuler la demande
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+let pollingInterval;
+let requestId = {{ ride_request.id }};
+let lastUpdateTime = new Date();
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    startPolling();
+    updateLastSeen();
+});
+
+// Démarrer le polling
+function startPolling() {
+    // Polling toutes les 5 secondes
+    pollingInterval = setInterval(checkRequestStatus, 5000);
+}
+
+// Vérifier le statut de la demande
+function checkRequestStatus() {
+    fetch(`/subscriptions/api/ride-requests/${requestId}/status/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'accepted') {
+                showAcceptedNotification(data);
+                clearInterval(pollingInterval);
+                // Rediriger vers le tracking après 3 secondes
+                setTimeout(() => {
+                    if (data.tracking_url) {
+                        window.location.href = data.tracking_url;
+                    } else {
+                        window.location.href = '/dashboard/';
+                    }
+                }, 3000);
+            } else if (data.status === 'cancelled') {
+                // Rediriger vers le dashboard
+                window.location.href = '/dashboard/';
+            } else {
+                // Mettre à jour la liste des chauffeurs si nécessaire
+                updateChauffeursList(data.eligible_chauffeurs);
+            }
+            
+            lastUpdateTime = new Date();
+        })
+        .catch(error => {
+            console.error('Erreur lors de la vérification du statut:', error);
+            updateRefreshStatus('Erreur de connexion');
+        });
+}
+
+// Afficher la notification d'acceptation
+function showAcceptedNotification(data) {
+    const banner = document.getElementById('notification-banner');
+    const text = document.getElementById('notification-text');
+    const statusHeader = document.getElementById('status-header');
+    const statusIcon = document.getElementById('status-icon');
+    const statusTitle = document.getElementById('status-title');
+    const statusSubtitle = document.getElementById('status-subtitle');
+    
+    if (banner && text) {
+        text.textContent = `🎉 ${data.chauffeur_name || 'Un chauffeur'} a accepté votre demande !`;
+        banner.classList.remove('d-none');
+        banner.classList.add('show');
+    }
+    
+    // Mettre à jour le statut
+    if (statusHeader && statusIcon && statusTitle && statusSubtitle) {
+        statusHeader.style.background = 'linear-gradient(135deg, var(--mg-secondary), #0c9b6f)';
+        statusIcon.className = 'bi bi-check-circle';
+        statusTitle.textContent = 'Course acceptée !';
+        statusSubtitle.textContent = 'Redirection vers le suivi...';
+    }
+}
+
+// Mettre à jour la liste des chauffeurs
+function updateChauffeursList(chauffeurs) {
+    // Pour l'instant, on ne fait rien car la liste est générée côté serveur
+    // En production, on pourrait mettre à jour dynamiquement
+}
+
+// Modifier la demande
+function modifyRequest() {
+    if (confirm('Voulez-vous modifier votre demande ? Cela annulera la recherche actuelle.')) {
+        window.location.href = `/subscriptions/ride-requests/advanced/?modify=${requestId}`;
+    }
+}
+
+// Annuler la demande
+function cancelRequest() {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette demande ?')) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Annulation...';
+        button.disabled = true;
+        
+        fetch(`/subscriptions/api/ride-requests/${requestId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Demande annulée avec succès', 'success');
+                setTimeout(() => {
+                    window.location.href = '/dashboard/';
+                }, 1000);
+            } else {
+                showToast('Erreur lors de l\'annulation: ' + data.error, 'error');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showToast('Erreur de connexion', 'error');
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+}
+
+// Mettre à jour l'indicateur de dernière mise à jour
+function updateLastSeen() {
+    setInterval(() => {
+        const now = new Date();
+        const diff = Math.floor((now - lastUpdateTime) / 1000);
+        updateRefreshStatus(diff < 10 ? 'Mise à jour automatique...' : `Dernière mise à jour: il y a ${diff}s`);
+    }, 1000);
+}
+
+function updateRefreshStatus(message) {
+    const status = document.getElementById('refresh-status');
+    if (status) {
+        status.textContent = message;
+    }
+}
+
+function showToast(message, type = 'info') {
+    // Créer un toast Bootstrap
+    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+    
+    const toastId = 'toast-' + Date.now();
+    const bgClass = type === 'success' ? 'bg-success' : type === 'warning' ? 'bg-warning' : type === 'error' ? 'bg-danger' : 'bg-info';
+    
+    const toastHTML = `
+        <div id="${toastId}" class="toast ${bgClass} text-white" role="alert">
+            <div class="toast-body">
+                <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'error' ? 'x-circle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1080';
+    document.body.appendChild(container);
+    return container;
+}
+
+// Nettoyer avant fermeture
+window.addEventListener('beforeunload', function() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+});
+
+// Gérer la perte de focus/retour
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        // Page masquée, réduire la fréquence de polling
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = setInterval(checkRequestStatus, 30000); // 30 secondes
+        }
+    } else {
+        // Page visible, reprendre le polling normal
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = setInterval(checkRequestStatus, 5000); // 5 secondes
+        }
+        // Vérifier immédiatement
+        checkRequestStatus();
+    }
+});
+</script>
+{% endblock %}
+
+

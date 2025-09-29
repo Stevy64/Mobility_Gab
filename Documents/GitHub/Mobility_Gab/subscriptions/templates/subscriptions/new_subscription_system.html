@@ -1,0 +1,651 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Gestion des Abonnements - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+.subscription-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.subscription-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.subscription-card.mobility-plus {
+    border: 2px solid #ffc107;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 255, 255, 1));
+}
+
+.subscription-card.mobility-plus::before {
+    content: '⭐ MOBILITY PLUS';
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(135deg, #ffc107, #ffb300);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border-bottom-left-radius: 0.5rem;
+}
+
+.subscription-card.chauffeur {
+    border: 2px solid #0d6efd;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(255, 255, 255, 1));
+}
+
+.request-card {
+    border: 2px solid #6c757d;
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.1), rgba(255, 255, 255, 1));
+}
+
+.action-btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+}
+
+.chauffeur-info {
+    background: rgba(13, 110, 253, 0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.price-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+@media (max-width: 768px) {
+    .subscription-card {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="bi bi-credit-card me-2"></i>
+                        Gestion des Abonnements
+                    </h1>
+                    <p class="text-muted mb-0">Gérez vos abonnements Mobility Plus et chauffeurs</p>
+                </div>
+                {% if user.role == 'parent' %}
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary action-btn" data-bs-toggle="modal" data-bs-target="#mobilityPlusModal">
+                        <i class="bi bi-star me-2"></i>
+                        Mobility Plus
+                    </button>
+                    <button class="btn btn-success action-btn" data-bs-toggle="modal" data-bs-target="#chauffeurRequestModal">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Demander un chauffeur
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Abonnements actifs -->
+    <div class="row g-4">
+        <!-- Mobility Plus -->
+        <div class="col-lg-6">
+            <div class="card subscription-card mobility-plus position-relative">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Mobility Plus</h5>
+                            <p class="text-muted small mb-0">Abonnement premium</p>
+                        </div>
+                        {% if has_mobility_plus %}
+                        <span class="badge bg-success status-badge">Actif</span>
+                        {% else %}
+                        <span class="badge bg-secondary status-badge">Inactif</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if has_mobility_plus %}
+                    <div class="mb-3">
+                        <div class="price-display">{{ mobility_plus.price_monthly|floatformat:0 }} FCFA/mois</div>
+                        <small class="text-muted">Prochaine facturation: {{ mobility_plus.next_billing_date|date:"d/m/Y" }}</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-2">Fonctionnalités incluses:</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Chat temps réel</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>GPS avancé</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Notifications push</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Support prioritaire</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-danger btn-sm" onclick="unsubscribeMobilityPlus()">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Se désabonner
+                        </button>
+                    </div>
+                    {% elif mobility_plus and not has_mobility_plus %}
+                    <div class="mb-3">
+                        <div class="price-display">5 000 FCFA/mois</div>
+                        <small class="text-muted">Prix mensuel</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-2">Fonctionnalités incluses:</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Chat temps réel</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>GPS avancé</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Notifications push</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Support prioritaire</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-sm" onclick="activateMobilityPlus()">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Activer
+                        </button>
+                        {% if mobility_plus.status != 'cancelled' %}
+                        <button class="btn btn-outline-danger btn-sm" onclick="unsubscribeMobilityPlus()">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Supprimer
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <div class="price-display">5 000 FCFA/mois</div>
+                        <small class="text-muted">Prix mensuel</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-2">Fonctionnalités incluses:</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Chat temps réel</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>GPS avancé</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Notifications push</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Support prioritaire</li>
+                        </ul>
+                    </div>
+                    
+                    <button class="btn btn-warning action-btn w-100" onclick="subscribeMobilityPlus()">
+                        <i class="bi bi-star me-2"></i>
+                        S'abonner à Mobility Plus
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Abonnements Chauffeur -->
+        <div class="col-lg-6">
+            <div class="card subscription-card chauffeur">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Abonnements Chauffeur</h5>
+                            <p class="text-muted small mb-0">Abonnements personnalisés</p>
+                        </div>
+                        <span class="badge bg-primary status-badge">{{ chauffeur_subscriptions|length }} actif(s)</span>
+                    </div>
+                    
+                    {% if chauffeur_subscriptions %}
+                    <div class="mb-3">
+                        {% for subscription in chauffeur_subscriptions %}
+                        <div class="chauffeur-info">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ subscription.title }}</h6>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-person me-1"></i>
+                                        {{ subscription.chauffeur.get_full_name }}
+                                    </p>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-geo-alt me-1"></i>
+                                        {{ subscription.pickup_location }} → {{ subscription.dropoff_location }}
+                                    </p>
+                                    <p class="text-muted small mb-0">
+                                        <i class="bi bi-clock me-1"></i>
+                                        {{ subscription.pickup_time|time:"H:i" }}
+                                        {% if subscription.return_time %}
+                                        / {{ subscription.return_time|time:"H:i" }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="text-end">
+                                    <div class="price-display">{{ subscription.price_monthly|floatformat:0 }} FCFA</div>
+                                    <small class="text-muted">/mois</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-person-plus text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Aucun abonnement chauffeur actif</p>
+                        <p class="text-muted small">Demandez un abonnement personnalisé à un chauffeur</p>
+                    </div>
+                    {% endif %}
+                    
+                    <button class="btn btn-success action-btn w-100" data-bs-toggle="modal" data-bs-target="#chauffeurRequestModal">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Demander un chauffeur
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demandes en attente (pour les particuliers) -->
+    {% if user.role == 'parent' and pending_requests %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Demandes en attente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for request in pending_requests %}
+                    <div class="request-card card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ request.title }}</h6>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-person me-1"></i>
+                                        {{ request.chauffeur.get_full_name }}
+                                    </p>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-geo-alt me-1"></i>
+                                        {{ request.pickup_location }} → {{ request.dropoff_location }}
+                                    </p>
+                                    <p class="text-muted small mb-0">
+                                        <i class="bi bi-currency-exchange me-1"></i>
+                                        {{ request.proposed_price_monthly|floatformat:0 }} FCFA/mois
+                                    </p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-warning">En attente</span>
+                                    <p class="text-muted small mt-1">
+                                        Expire le {{ request.expires_at|date:"d/m/Y" }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Demandes reçues (pour les chauffeurs) -->
+    {% if user.role == 'chauffeur' and pending_requests %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bell me-2"></i>
+                        Demandes reçues
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for request in pending_requests %}
+                    <div class="request-card card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ request.title }}</h6>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-person me-1"></i>
+                                        {{ request.parent.get_full_name }}
+                                    </p>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-geo-alt me-1"></i>
+                                        {{ request.pickup_location }} → {{ request.dropoff_location }}
+                                    </p>
+                                    <p class="text-muted small mb-0">
+                                        <i class="bi bi-currency-exchange me-1"></i>
+                                        {{ request.proposed_price_monthly|floatformat:0 }} FCFA/mois
+                                    </p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-warning">En attente</span>
+                                    <p class="text-muted small mt-1">
+                                        Expire le {{ request.expires_at|date:"d/m/Y" }}
+                                    </p>
+                                    <div class="mt-2">
+                                        <button class="btn btn-success btn-sm me-2" onclick="respondToRequest({{ request.id }}, 'accept')">
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            Accepter
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="respondToRequest({{ request.id }}, 'reject')">
+                                            <i class="bi bi-x-circle me-1"></i>
+                                            Refuser
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Mobility Plus -->
+<div class="modal fade" id="mobilityPlusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-star me-2"></i>
+                    Abonnement Mobility Plus
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-star-fill text-warning" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Mobility Plus</h4>
+                    <p class="text-muted">Accédez aux fonctionnalités premium</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h6 class="fw-bold">Fonctionnalités incluses:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Chat temps réel avec votre chauffeur</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Suivi GPS avancé</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Notifications push prioritaires</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Support client prioritaire</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Historique détaillé des courses</li>
+                    </ul>
+                </div>
+                
+                <div class="text-center">
+                    <div class="price-display">5 000 FCFA/mois</div>
+                    <small class="text-muted">Facturation mensuelle</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-warning" onclick="subscribeMobilityPlus()">
+                    <i class="bi bi-credit-card me-2"></i>
+                    S'abonner maintenant
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Demande Chauffeur -->
+<div class="modal fade" id="chauffeurRequestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-plus me-2"></i>
+                    Demander un abonnement chauffeur
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="chauffeurRequestForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="chauffeur" class="form-label">Chauffeur souhaité</label>
+                            <select class="form-select" id="chauffeur" name="chauffeur" required>
+                                <option value="">Sélectionnez un chauffeur</option>
+                                {% for chauffeur in chauffeurs_available %}
+                                <option value="{{ chauffeur.id }}">{{ chauffeur.get_full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="title" class="form-label">Titre de la demande</label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   placeholder="Ex: Transport scolaire matin/soir" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description détaillée</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  placeholder="Décrivez vos besoins spécifiques..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="pickup_location" class="form-label">Point de départ</label>
+                            <input type="text" class="form-control" id="pickup_location" name="pickup_location" 
+                                   placeholder="Ex: Bastos, Yaoundé" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="dropoff_location" class="form-label">Destination</label>
+                            <input type="text" class="form-control" id="dropoff_location" name="dropoff_location" 
+                                   placeholder="Ex: Melen, Yaoundé" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="pickup_time" class="form-label">Heure de départ</label>
+                            <input type="time" class="form-control" id="pickup_time" name="pickup_time" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="return_time" class="form-label">Heure de retour (optionnel)</label>
+                            <input type="time" class="form-control" id="return_time" name="return_time">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="frequency" class="form-label">Fréquence</label>
+                            <select class="form-select" id="frequency" name="frequency">
+                                <option value="weekdays">Jours de semaine</option>
+                                <option value="daily">Quotidien</option>
+                                <option value="weekly">Hebdomadaire</option>
+                                <option value="custom">Personnalisé</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="proposed_price_monthly" class="form-label">Prix mensuel proposé (FCFA)</label>
+                            <input type="number" class="form-control" id="proposed_price_monthly" name="proposed_price_monthly" 
+                                   min="10000" step="1000" placeholder="50000" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="child_name" class="form-label">Nom de l'enfant (optionnel)</label>
+                            <input type="text" class="form-control" id="child_name" name="child_name" 
+                                   placeholder="Nom de l'enfant qui sera transporté">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="special_requirements" class="form-label">Exigences spéciales</label>
+                        <textarea class="form-control" id="special_requirements" name="special_requirements" rows="2" 
+                                  placeholder="Siège enfant, climatisation, musique, etc."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" onclick="submitChauffeurRequest()">
+                    <i class="bi bi-send me-2"></i>
+                    Envoyer la demande
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function subscribeMobilityPlus() {
+    fetch('{% url "subscriptions:mobility_plus_subscribe" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        } else {
+            alert('Erreur: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue');
+    });
+}
+
+function unsubscribeMobilityPlus() {
+    if (confirm('Êtes-vous sûr de vouloir vous désabonner de Mobility Plus ?')) {
+        fetch('{% url "subscriptions:mobility_plus_unsubscribe" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    }
+}
+
+function submitChauffeurRequest() {
+    const form = document.getElementById('chauffeurRequestForm');
+    const formData = new FormData(form);
+    
+    fetch('{% url "subscriptions:new_subscription_system" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue');
+    });
+}
+
+function activateMobilityPlus() {
+    if (confirm('Voulez-vous activer votre abonnement Mobility Plus ?')) {
+        fetch('{% url "subscriptions:mobility_plus_activate" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    }
+}
+
+function respondToRequest(requestId, action) {
+    const message = prompt(action === 'accept' ? 'Message d\'acceptation (optionnel):' : 'Message de refus (optionnel):');
+    const counterOffer = action === 'accept' ? prompt('Contre-proposition (FCFA, optionnel):') : null;
+    
+    const formData = new FormData();
+    formData.append('action', action);
+    formData.append('response_message', message || '');
+    if (counterOffer) {
+        formData.append('counter_offer', counterOffer);
+    }
+    
+    fetch(`/subscriptions/chauffeur-respond/${requestId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue');
+    });
+}
+</script>
+{% endblock %}

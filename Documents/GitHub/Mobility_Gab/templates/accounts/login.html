@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Connexion - Mobility Gab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="h4 text-center mb-4">Connexion</h2>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Nom d'utilisateur</label>
+                        {{ form.username }}
+                        {{ form.username.errors }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">Mot de passe</label>
+                        {{ form.password }}
+                        {{ form.password.errors }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+                </form>
+                <p class="text-center mt-3 mb-0 small">Pas encore de compte ? <a href="{% url 'accounts:register' %}">Inscrivez-vous</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

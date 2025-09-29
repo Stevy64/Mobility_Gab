@@ -1,0 +1,29 @@
+[
+  {
+    "model": "subscriptions.subscriptionplan",
+    "pk": 1,
+    "fields": {
+      "name": "Standard 2 trajets/jour",
+      "description": "Aller-retour quotidien pour domicile & travail",
+      "price_monthly": "50000.00",
+      "trips_per_day": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "subscriptions.subscriptionplan",
+    "pk": 2,
+    "fields": {
+      "name": "Scolaire",
+      "description": "Transport scolaire matin + soir",
+      "price_monthly": "65000.00",
+      "trips_per_day": 2,
+      "is_active": true
+    }
+  }
+]
+
+
+
+
+

@@ -1,0 +1,313 @@
+<!-- Template pour les détails d'une course dans la modal -->
+<div class="trip-details-modal">
+    <!-- En-tête de la course -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5 class="text-primary">
+                <i class="bi bi-car-front me-2"></i>
+                Course #{{ trip.id }}
+            </h5>
+            <p class="text-muted mb-0">
+                {{ trip.scheduled_date|date:"d F Y" }}
+                {% if trip.started_at %}
+                    à {{ trip.started_at|date:"H:i" }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-6 text-end">
+            <span class="badge bg-{{ trip.status }} fs-6">
+                {% if trip.status == 'completed' %}
+                    <i class="bi bi-check-circle me-1"></i>
+                {% elif trip.status == 'cancelled' %}
+                    <i class="bi bi-x-circle me-1"></i>
+                {% elif trip.status == 'in_progress' %}
+                    <i class="bi bi-play-circle me-1"></i>
+                {% endif %}
+                {{ trip.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Informations du trajet -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-geo-alt text-primary me-2"></i>
+                        Itinéraire
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-geo-alt-fill text-success me-2"></i>
+                                <div>
+                                    <strong>Départ</strong>
+                                    <div class="text-muted small">
+                                        {{ trip.pickup_location|default:"Point de départ non spécifié" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-flag-fill text-danger me-2"></i>
+                                <div>
+                                    <strong>Destination</strong>
+                                    <div class="text-muted small">
+                                        {{ trip.dropoff_location|default:"Destination non spécifiée" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Participants -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-person text-primary me-2"></i>
+                        Particulier
+                    </h6>
+                    {% if trip.parent %}
+                    <div class="d-flex align-items-center">
+                        {% if trip.parent.profile.photo %}
+                        <img src="{{ trip.parent.profile.photo.url }}" class="rounded-circle me-3" width="40" height="40">
+                        {% else %}
+                        <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-person text-white"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <div class="fw-bold">{{ trip.parent.get_full_name }}</div>
+                            {% if user.role == 'admin' %}
+                            <div class="text-muted small">{{ trip.parent.profile.phone }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Particulier non assigné</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-person-gear text-primary me-2"></i>
+                        Chauffeur
+                    </h6>
+                    {% if trip.chauffeur %}
+                    <div class="d-flex align-items-center">
+                        {% if trip.chauffeur.profile.photo %}
+                        <img src="{{ trip.chauffeur.profile.photo.url }}" class="rounded-circle me-3" width="40" height="40">
+                        {% else %}
+                        <div class="bg-success rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-person text-white"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <div class="fw-bold">{{ trip.chauffeur.get_full_name }}</div>
+                            {% if trip.chauffeur.chauffeur_profile.vehicle_plate %}
+                            <div class="text-muted small">{{ trip.chauffeur.chauffeur_profile.vehicle_plate }}</div>
+                            {% endif %}
+                            {% if user.role == 'admin' %}
+                            <div class="text-muted small">{{ trip.chauffeur.profile.phone }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Chauffeur non assigné</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques de la course -->
+    {% if trip.distance_km or trip.duration_minutes or duration %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-speedometer text-primary me-2"></i>
+                        Statistiques
+                    </h6>
+                    <div class="row text-center">
+                        {% if trip.distance_km %}
+                        <div class="col-md-4">
+                            <div class="stat-item">
+                                <div class="h4 text-primary">{{ trip.distance_km|floatformat:1 }} km</div>
+                                <div class="text-muted small">Distance parcourue</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if duration %}
+                        <div class="col-md-4">
+                            <div class="stat-item">
+                                <div class="h4 text-success">{{ duration.total_seconds|floatformat:0 }}s</div>
+                                <div class="text-muted small">Durée totale</div>
+                            </div>
+                        </div>
+                        {% elif trip.duration_minutes %}
+                        <div class="col-md-4">
+                            <div class="stat-item">
+                                <div class="h4 text-success">{{ trip.duration_minutes }} min</div>
+                                <div class="text-muted small">Durée estimée</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if trip.rating %}
+                        <div class="col-md-4">
+                            <div class="stat-item">
+                                <div class="h4 text-warning">{{ trip.rating.score }}/5</div>
+                                <div class="text-muted small">
+                                    <div class="rating-stars">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= trip.rating.score %}★{% else %}☆{% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Checkpoints/Étapes -->
+    {% if checkpoints %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-list-check text-primary me-2"></i>
+                        Étapes de la course
+                    </h6>
+                    <div class="timeline">
+                        {% for checkpoint in checkpoints %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                {% if checkpoint.checkpoint_type == 'en_route' %}
+                                    <i class="bi bi-play-circle-fill text-info"></i>
+                                {% elif checkpoint.checkpoint_type == 'arrived' %}
+                                    <i class="bi bi-geo-alt-fill text-primary"></i>
+                                {% elif checkpoint.checkpoint_type == 'picked_up' %}
+                                    <i class="bi bi-person-up text-success"></i>
+                                {% elif checkpoint.checkpoint_type == 'completed' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-circle-fill text-secondary"></i>
+                                {% endif %}
+                            </div>
+                            <div class="timeline-content">
+                                <div class="fw-bold">{{ checkpoint.get_checkpoint_type_display }}</div>
+                                <div class="text-muted small">
+                                    {{ checkpoint.timestamp|date:"H:i" }} - {{ checkpoint.timestamp|date:"d/m/Y" }}
+                                </div>
+                                {% if checkpoint.notes %}
+                                <div class="small mt-1">{{ checkpoint.notes }}</div>
+                                {% endif %}
+                                {% if checkpoint.latitude and checkpoint.longitude %}
+                                <div class="text-muted small">
+                                    <i class="bi bi-geo me-1"></i>
+                                    {{ checkpoint.latitude|floatformat:6 }}, {{ checkpoint.longitude|floatformat:6 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-end gap-2">
+                {% if trip.status == 'in_progress' %}
+                <a href="{% url 'subscriptions:trip_tracking' pk=trip.id %}" class="btn btn-primary">
+                    <i class="bi bi-geo-alt me-2"></i>
+                    Suivre en temps réel
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Styles pour la timeline */
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 2rem;
+    height: 2rem;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 1rem;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 3px solid var(--mg-primary);
+}
+
+.stat-item {
+    padding: 0.5rem;
+}
+
+.rating-stars {
+    color: #ffc107;
+    font-size: 1rem;
+}
+</style>

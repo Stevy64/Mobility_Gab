@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Créer un compte - Mobility Gab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6 col-xl-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <h2 class="h4 text-center mb-3">Créer un compte</h2>
+                <p class="text-muted text-center mb-4">Sélectionnez votre profil pour personnaliser l'inscription.</p>
+
+                <div class="btn-group mb-4 w-100" role="group">
+                    <a href="?role=parent" class="btn btn-outline-primary {% if form.initial.role == 'parent' or form.fields.role.initial == 'parent' %}active{% endif %}">
+                        <i class="bi bi-people"></i> Particulier
+                    </a>
+                    <a href="?role=chauffeur" class="btn btn-outline-primary {% if form.initial.role == 'chauffeur' or form.fields.role.initial == 'chauffeur' %}active{% endif %}">
+                        <i class="bi bi-steering-wheel"></i> Chauffeur
+                    </a>
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ form.role }}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+                            {{ form.username }}
+                            {{ form.username.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                            {{ form.first_name }}
+                            {{ form.first_name.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                            {{ form.last_name }}
+                            {{ form.last_name.errors }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {{ form.email.errors }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+                            {{ form.phone }}
+                            {{ form.phone.errors }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.address.id_for_label }}">{{ form.address.label }}</label>
+                            {{ form.address }}
+                            {{ form.address.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
+                            {{ form.password1 }}
+                            {{ form.password1.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
+                            {{ form.password2 }}
+                            {{ form.password2.errors }}
+                        </div>
+
+                        {% if form.fields.vehicle_placeholder %}
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.vehicle_placeholder.id_for_label }}">{{ form.vehicle_placeholder.label }}</label>
+                            {{ form.vehicle_placeholder }}
+                            {% if form.vehicle_placeholder.help_text %}
+                                <div class="form-text">{{ form.vehicle_placeholder.help_text }}</div>
+                            {% endif %}
+                            {{ form.vehicle_placeholder.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 mt-4">Créer mon compte</button>
+                </form>
+                <p class="text-center mt-3 mb-0 small">Déjà inscrit ? <a href="{% url 'accounts:login' %}">Connexion</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

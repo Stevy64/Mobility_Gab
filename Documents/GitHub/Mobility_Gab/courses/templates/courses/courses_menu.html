@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Gestion des Courses - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+.courses-menu-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.courses-menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.menu-btn-realtime {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    border: none;
+    color: white;
+}
+
+.menu-btn-realtime:hover {
+    background: linear-gradient(135deg, #0f4aa6, var(--mg-primary));
+    color: white;
+    transform: scale(1.02);
+}
+
+.menu-btn-historique {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    border: none;
+    color: white;
+}
+
+.menu-btn-historique:hover {
+    background: linear-gradient(135deg, #495057, #6c757d);
+    color: white;
+    transform: scale(1.02);
+}
+
+.menu-btn-sos {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    border: none;
+    color: white;
+}
+
+.menu-btn-sos:hover {
+    background: linear-gradient(135deg, #c82333, #dc3545);
+    color: white;
+    transform: scale(1.02);
+}
+
+.menu-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.badge-count {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.menu-card-body {
+    padding: 2rem;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .menu-card-body {
+        padding: 1.5rem;
+    }
+    
+    .menu-icon {
+        font-size: 2.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="h3 mb-2">
+                <i class="bi bi-car-front me-2"></i>
+                Gestion des Courses
+            </h2>
+            <p class="text-muted">
+                {% if is_chauffeur %}
+                    Gérez vos courses et communiquez avec vos passagers
+                {% else %}
+                    Suivez vos courses et communiquez avec vos chauffeurs
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Courses actives en premier -->
+    {% if active_trips_count > 0 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success border-0 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-play-circle me-3" style="font-size: 2rem;"></i>
+                    <div class="flex-grow-1">
+                        <h4 class="alert-heading mb-1">
+                            <i class="bi bi-car-front me-2"></i>
+                            Course{{ active_trips_count|pluralize }} en cours
+                        </h4>
+                        <p class="mb-2">
+                            Vous avez {{ active_trips_count }} course{{ active_trips_count|pluralize }} active{{ active_trips_count|pluralize }}.
+                            {% if is_chauffeur %}
+                                Gérez vos courses en cours.
+                            {% else %}
+                                Suivez vos courses en temps réel.
+                            {% endif %}
+                        </p>
+                        <a href="{% url 'courses:active_trips' %}" class="btn btn-success">
+                            <i class="bi bi-eye me-1"></i>
+                            Voir les courses en cours
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Trio de boutons -->
+    <div class="row justify-content-center">
+        <!-- Demandes temps réel -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card courses-menu-card">
+                <div class="menu-card-body position-relative">
+                    {% if pending_requests_count > 0 %}
+                        <span class="badge-count">{{ pending_requests_count }}</span>
+                    {% endif %}
+                    
+                    <div class="menu-icon text-primary">
+                        <i class="bi bi-bell"></i>
+                    </div>
+                    
+                    <h4 class="card-title mb-3">Demandes temps réel</h4>
+                    
+                    <p class="card-text text-muted mb-4">
+                        {% if is_chauffeur %}
+                            Nouvelles demandes de course à accepter
+                        {% else %}
+                            Vos demandes en cours de traitement
+                        {% endif %}
+                    </p>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            {% if pending_requests_count > 0 %}
+                                {{ pending_requests_count }} demande{{ pending_requests_count|pluralize }} en attente
+                            {% else %}
+                                Aucune demande en attente
+                            {% endif %}
+                        </small>
+                    </div>
+                    
+                    {% if is_chauffeur %}
+                        <a href="{% url 'subscriptions:chauffeur_ride_requests_realtime' %}" 
+                           class="btn menu-btn-realtime btn-lg w-100">
+                            <i class="bi bi-bell-fill me-2"></i>
+                            Voir les demandes
+                        </a>
+                    {% else %}
+                        <a href="{% url 'core:particulier_dashboard' %}" 
+                           class="btn menu-btn-realtime btn-lg w-100">
+                            <i class="bi bi-bell-fill me-2"></i>
+                            Mes demandes
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Historique -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card courses-menu-card">
+                <div class="menu-card-body">
+                    <div class="menu-icon text-secondary">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    
+                    <h4 class="card-title mb-3">Historique</h4>
+                    
+                    <p class="card-text text-muted mb-4">
+                        Consultez l'historique de vos courses terminées
+                    </p>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            {{ completed_trips_count }} course{{ completed_trips_count|pluralize }} terminée{{ completed_trips_count|pluralize }}
+                        </small>
+                    </div>
+                    
+                    <a href="{% url 'subscriptions:trip_history' %}" 
+                       class="btn menu-btn-historique btn-lg w-100">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Voir l'historique
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOS (discret) -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card courses-menu-card" style="opacity: 0.8;">
+                <div class="menu-card-body">
+                    <div class="menu-icon text-muted" style="font-size: 2rem;">
+                        <i class="bi bi-shield-exclamation"></i>
+                    </div>
+                    
+                    <h5 class="card-title mb-3 text-muted">Assistance d'urgence</h5>
+                    
+                    <p class="card-text text-muted mb-4 small">
+                        En cas d'urgence uniquement
+                    </p>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            Utilisation responsable requise
+                        </small>
+                    </div>
+                    
+                    <button type="button" 
+                            class="btn btn-outline-secondary btn-sm w-100" 
+                            onclick="triggerSOS()">
+                        <i class="bi bi-shield-exclamation me-2"></i>
+                        SOS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal SOS -->
+<div class="modal fade" id="sosModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Alerte SOS
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Important:</strong> Utilisez SOS uniquement en cas d'urgence réelle.
+                </div>
+                
+                <form id="sosForm">
+                    <div class="mb-3">
+                        <label for="sosType" class="form-label">Type d'urgence</label>
+                        <select class="form-select" id="sosType" required>
+                            <option value="">Sélectionner le type</option>
+                            <option value="accident">Accident</option>
+                            <option value="panne">Panne véhicule</option>
+                            <option value="security">Problème de sécurité</option>
+                            <option value="medical">Urgence médicale</option>
+                            <option value="other">Autre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sosMessage" class="form-label">Description (optionnelle)</label>
+                        <textarea class="form-control" id="sosMessage" rows="3" 
+                                  placeholder="Décrivez brièvement la situation..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" onclick="sendSOSAlert()">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Envoyer SOS
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function triggerSOS() {
+    // Afficher le modal SOS
+    const modal = new bootstrap.Modal(document.getElementById('sosModal'));
+    modal.show();
+}
+
+function sendSOSAlert() {
+    const type = document.getElementById('sosType').value;
+    const message = document.getElementById('sosMessage').value;
+    
+    if (!type) {
+        alert('Veuillez sélectionner le type d\'urgence');
+        return;
+    }
+    
+    // Désactiver le bouton pendant l'envoi
+    const btn = document.querySelector('[onclick="sendSOSAlert()"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Envoi...';
+    
+    // Envoyer l'alerte SOS
+    fetch('/core/api/sos/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+            'type': type,
+            'message': message,
+            'latitude': '', // TODO: Récupérer la géolocalisation
+            'longitude': ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fermer le modal
+            bootstrap.Modal.getInstance(document.getElementById('sosModal')).hide();
+            
+            // Afficher le succès
+            showAlert('SOS envoyé avec succès ! Les secours ont été alertés.', 'success');
+        } else {
+            showAlert('Erreur lors de l\'envoi du SOS: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        showAlert('Erreur de connexion lors de l\'envoi du SOS', 'danger');
+    })
+    .finally(() => {
+        // Réactiver le bouton
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Envoyer SOS';
+    });
+}
+
+function showAlert(message, type) {
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 1080; min-width: 300px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', alertHTML);
+    
+    // Auto-suppression après 5 secondes
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            if (alert.textContent.includes(message.substring(0, 20))) {
+                alert.remove();
+            }
+        });
+    }, 5000);
+}
+</script>
+{% endblock %}

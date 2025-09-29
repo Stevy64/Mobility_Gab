@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Nouvelle demande de course{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 col-xl-6 mx-auto">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4 p-md-5">
+                <h2 class="h4 fw-bold">Planifier une course</h2>
+                <p class="text-muted">Renseignez votre trajet, nous vous assignerons un chauffeur disponible.</p>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {{ field.errors }}
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-success w-100">Envoyer la demande</button>
+                </form>
+            </div>
+        </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="fw-bold">Chauffeurs disponibles</h5>
+                <ul class="list-group list-group-flush small">
+                    {% for chauffeur in chauffeurs %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ chauffeur.get_full_name|default:chauffeur.username }}</strong>
+                            <div class="text-muted">Zone : {{ chauffeur.chauffeur_profile.zone|default:'-' }}</div>
+                        </div>
+                        <span class="badge bg-light text-dark">Score {{ chauffeur.chauffeur_profile.reliability_score }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">Aucun chauffeur connecté pour le moment.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}Mobility Gab - Abonnements transport sécurisés{% endblock %}
+
+{% block content %}
+<section class="py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold text-primary">Transport scolaire &amp; personnel simplifié</h1>
+            <p class="lead text-muted">Mobility Gab connecte parents et chauffeurs fiables pour des trajets quotidiens sécurisés, avec suivi temps réel, notifications et paiements automatisés.</p>
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">Commencer maintenant</a>
+                <a href="#features" class="btn btn-outline-primary btn-lg">Découvrir les fonctionnalités</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="py-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-geo-alt-fill text-success display-6"></i>
+                    <h5 class="mt-3">Suivi temps réel</h5>
+                    <p class="text-muted">Visualisez la position du chauffeur et recevez des checkpoints en direct.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-credit-card text-primary display-6"></i>
+                    <h5 class="mt-3">Paiements sécurisés</h5>
+                    <p class="text-muted">Mobile Money &amp; Stripe avec relances automatiques en cas de retard.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-award text-warning display-6"></i>
+                    <h5 class="mt-3">Notation &amp; badges</h5>
+                    <p class="text-muted">Évaluez vos chauffeurs, attribuez des badges et suivez la fiabilité.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-white rounded-4 shadow-sm">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold">Pensé pour vos besoins quotidiens</h2>
+            <ul class="list-unstyled mt-4 text-muted">
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Alertes SOS prioritaires et partage de trajet</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Admin dashboard avec KPIs temps réel</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> API REST prête pour votre future app mobile</li>
+            </ul>
+        </div>
+        <div class="col-md-6 text-center">
+            <img src="{% static 'core/img/hero-mobility.svg' %}" alt="Mobility Gab" class="img-fluid">
+        </div>
+    </div>
+</section>
+
+<section class="py-5 text-center">
+    <div class="col-lg-8 mx-auto">
+        <h3 class="fw-bold">Rejoignez la communauté Mobility Gab</h3>
+        <p class="text-muted">Gérez vos trajets, assurez la sécurité de vos proches et optimisez votre flotte de chauffeurs.</p>
+        <a href="{% url 'accounts:register' %}" class="btn btn-success btn-lg">Créer mon compte</a>
+    </div>
+</section>
+{% endblock %}
+

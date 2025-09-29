@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Demander une course - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Utilisation des variables CSS existantes de l'application */
+.ride-request-header {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6) !important;
+}
+
+.ride-request-section-title {
+    color: var(--mg-primary) !important;
+}
+
+.ride-request-value {
+    color: var(--mg-primary) !important;
+}
+
+.ride-request-estimation {
+    background: linear-gradient(135deg, rgba(22, 105, 201, 0.08), rgba(27, 187, 138, 0.08));
+    border: 1px solid rgba(22, 105, 201, 0.15);
+}
+
+.ride-request-btn-success {
+    background: linear-gradient(135deg, var(--mg-secondary), #0c9b6f) !important;
+    border: none !important;
+}
+
+.ride-request-btn-success:hover {
+    background: linear-gradient(135deg, #0c9b6f, var(--mg-secondary)) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(27, 187, 138, 0.3);
+}
+
+/* Cohérence avec les nav-pills existants */
+.priority-option {
+    transition: all 0.2s ease-in-out;
+}
+
+.priority-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(22, 105, 201, 0.15);
+}
+
+/* Cohérence avec les cartes existantes */
+.option-card {
+    background: rgba(22, 105, 201, 0.04);
+    border: 1px solid rgba(22, 105, 201, 0.15);
+    transition: all 0.2s ease-in-out;
+}
+
+.option-card:hover {
+    background: rgba(22, 105, 201, 0.08);
+    border-color: rgba(22, 105, 201, 0.25);
+}
+
+/* Toast personnalisé avec les couleurs de l'app */
+.toast-mg-success {
+    background: linear-gradient(135deg, var(--mg-secondary), #0c9b6f) !important;
+}
+
+.toast-mg-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800) !important;
+}
+
+.toast-mg-info {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6) !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7 col-xl-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header ride-request-header text-white text-center py-4">
+                <h2 class="h4 mb-2">
+                    <i class="bi bi-car-front me-2"></i>
+                    Demander une course
+                </h2>
+                <p class="mb-0 opacity-90">Trouvez le chauffeur parfait en quelques clics</p>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <form method="post" id="ride-request-form" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Section Trajet -->
+                    <div class="mb-4">
+                        <h5 class="ride-request-section-title mb-3">
+                            <i class="bi bi-geo-alt me-2"></i>
+                            Votre trajet
+                        </h5>
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" for="{{ form.pickup_location.id_for_label }}">
+                                    Point de départ
+                                </label>
+                                <div class="input-group">
+                                    {{ form.pickup_location }}
+                                    <button type="button" class="btn btn-outline-primary" onclick="getCurrentLocation('pickup')" title="Utiliser ma position">
+                                        <i class="bi bi-crosshair"></i>
+                                    </button>
+                                </div>
+                                {{ form.pickup_location.errors }}
+                                {{ form.pickup_latitude }}
+                                {{ form.pickup_longitude }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" for="{{ form.dropoff_location.id_for_label }}">
+                                    Destination
+                                </label>
+                                <div class="input-group">
+                                    {{ form.dropoff_location }}
+                                    <button type="button" class="btn btn-outline-primary" onclick="searchLocation('dropoff')" title="Rechercher l'adresse">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                {{ form.dropoff_location.errors }}
+                                {{ form.dropoff_latitude }}
+                                {{ form.dropoff_longitude }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" for="{{ form.requested_pickup_time.id_for_label }}">
+                                    Heure souhaitée
+                                </label>
+                                {{ form.requested_pickup_time }}
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Minimum 10 minutes à l'avance
+                                </div>
+                                {{ form.requested_pickup_time.errors }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Critères -->
+                    <div class="mb-4">
+                        <h5 class="ride-request-section-title mb-3">
+                            <i class="bi bi-sliders me-2"></i>
+                            Vos critères
+                        </h5>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" for="{{ form.max_distance_km.id_for_label }}">
+                                    Distance maximale du chauffeur
+                                </label>
+                                <div class="range-container">
+                                    <input type="range" 
+                                           class="form-range" 
+                                           id="distance-slider"
+                                           min="1" 
+                                           max="50" 
+                                           value="10"
+                                           oninput="updateRangeValue('distance', this.value)">
+                                    <div class="d-flex justify-content-between small text-muted">
+                                        <span>1km</span>
+                                        <strong id="distance-value" class="ride-request-value">10 km</strong>
+                                        <span>50km</span>
+                                    </div>
+                                </div>
+                                {{ form.max_distance_km }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" for="{{ form.min_rating.id_for_label }}">
+                                    Note minimale requise
+                                </label>
+                                <div class="range-container">
+                                    <input type="range" 
+                                           class="form-range" 
+                                           id="rating-slider"
+                                           min="1" 
+                                           max="5" 
+                                           step="0.5"
+                                           value="3.0"
+                                           oninput="updateRangeValue('rating', this.value)">
+                                    <div class="d-flex justify-content-between small text-muted">
+                                        <span>1⭐</span>
+                                        <strong id="rating-value" class="ride-request-value">3.0⭐</strong>
+                                        <span>5⭐</span>
+                                    </div>
+                                </div>
+                                {{ form.min_rating }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Priorité de sélection</label>
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-3">
+                                        <input type="radio" class="btn-check" name="priority" id="priority-closest" value="closest" checked>
+                                        <label class="btn btn-outline-primary w-100 text-center py-3 priority-option" for="priority-closest">
+                                            <i class="bi bi-geo-alt-fill d-block mb-1"></i>
+                                            <small>Plus proche</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <input type="radio" class="btn-check" name="priority" id="priority-fastest" value="fastest">
+                                        <label class="btn btn-outline-primary w-100 text-center py-3 priority-option" for="priority-fastest">
+                                            <i class="bi bi-lightning-fill d-block mb-1"></i>
+                                            <small>Plus rapide</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <input type="radio" class="btn-check" name="priority" id="priority-rated" value="best_rated">
+                                        <label class="btn btn-outline-primary w-100 text-center py-3 priority-option" for="priority-rated">
+                                            <i class="bi bi-star-fill d-block mb-1"></i>
+                                            <small>Mieux noté</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <input type="radio" class="btn-check" name="priority" id="priority-cheap" value="cheapest">
+                                        <label class="btn btn-outline-primary w-100 text-center py-3 priority-option" for="priority-cheap">
+                                            <i class="bi bi-currency-dollar d-block mb-1"></i>
+                                            <small>Économique</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Options -->
+                    <div class="mb-4">
+                        <h5 class="ride-request-section-title mb-3">
+                            <i class="bi bi-gear me-2"></i>
+                            Options supplémentaires
+                        </h5>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check p-3 option-card rounded">
+                                    {{ form.accept_shared_ride }}
+                                    <label class="form-check-label" for="{{ form.accept_shared_ride.id_for_label }}">
+                                        <strong>Trajet partagé</strong>
+                                        <div class="small text-muted">Réduction possible avec d'autres passagers</div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-check p-3 option-card rounded">
+                                    {{ form.need_child_seat }}
+                                    <label class="form-check-label" for="{{ form.need_child_seat.id_for_label }}">
+                                        <strong>Siège enfant requis</strong>
+                                        <div class="small text-muted">Pour enfants de moins de 10 ans</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Instructions -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="{{ form.notes.id_for_label }}">
+                            <i class="bi bi-chat-dots me-2 ride-request-section-title"></i>
+                            Instructions particulières (optionnel)
+                        </label>
+                        {{ form.notes }}
+                        <div class="form-text">Détails utiles pour le chauffeur (point de rendez-vous, etc.)</div>
+                    </div>
+
+                    <!-- Chauffeur suggéré -->
+                    {% if form.suggested_chauffeur %}
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="{{ form.suggested_chauffeur.id_for_label }}">
+                            <i class="bi bi-person-check me-2 ride-request-section-title"></i>
+                            Chauffeur préféré (optionnel)
+                        </label>
+                        {{ form.suggested_chauffeur }}
+                        <div class="form-text">Si disponible, ce chauffeur sera prioritaire</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Estimation -->
+                    <div class="alert ride-request-estimation d-none" id="estimation-card">
+                        <h6 class="alert-heading ride-request-section-title">
+                            <i class="bi bi-calculator me-2"></i>
+                            Estimation de votre course
+                        </h6>
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="fw-bold ride-request-value" id="est-distance">-</div>
+                                <small class="text-muted">Distance</small>
+                            </div>
+                            <div class="col-3">
+                                <div class="fw-bold ride-request-value" id="est-duration">-</div>
+                                <small class="text-muted">Durée</small>
+                            </div>
+                            <div class="col-3">
+                                <div class="fw-bold ride-request-value" id="est-chauffeurs">-</div>
+                                <small class="text-muted">Chauffeurs</small>
+                            </div>
+                            <div class="col-3">
+                                <div class="fw-bold ride-request-value" id="est-eta">-</div>
+                                <small class="text-muted">ETA</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bouton de soumission -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-lg ride-request-btn-success" id="submit-btn">
+                            <span class="spinner-border spinner-border-sm d-none me-2" id="loading-spinner"></span>
+                            <i class="bi bi-search me-2"></i>
+                            <span id="submit-text">Trouver des chauffeurs</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+let estimationTimeout = null;
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    initializeForm();
+    setupEventListeners();
+});
+
+function initializeForm() {
+    // Définir l'heure par défaut (15 minutes dans le futur)
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 15);
+    const timeString = now.toISOString().slice(0, 16);
+    const timeInput = document.getElementById('{{ form.requested_pickup_time.id_for_label }}');
+    if (timeInput) {
+        timeInput.value = timeString;
+    }
+}
+
+function setupEventListeners() {
+    // Écouter les changements pour l'estimation
+    const pickupInput = document.getElementById('{{ form.pickup_location.id_for_label }}');
+    const dropoffInput = document.getElementById('{{ form.dropoff_location.id_for_label }}');
+    
+    if (pickupInput) pickupInput.addEventListener('input', debounce(updateEstimation, 1000));
+    if (dropoffInput) dropoffInput.addEventListener('input', debounce(updateEstimation, 1000));
+    
+    // Gestion de la soumission
+    const form = document.getElementById('ride-request-form');
+    if (form) {
+        form.addEventListener('submit', handleSubmit);
+    }
+}
+
+function updateRangeValue(type, value) {
+    if (type === 'distance') {
+        document.getElementById('distance-value').textContent = value + ' km';
+        const hiddenInput = document.getElementById('{{ form.max_distance_km.id_for_label }}');
+        if (hiddenInput) hiddenInput.value = value;
+    } else if (type === 'rating') {
+        document.getElementById('rating-value').textContent = value + '⭐';
+        const hiddenInput = document.getElementById('{{ form.min_rating.id_for_label }}');
+        if (hiddenInput) hiddenInput.value = value;
+    }
+    
+    updateEstimation();
+}
+
+function getCurrentLocation(type) {
+    if (!navigator.geolocation) {
+        showToast('Géolocalisation non supportée par votre navigateur', 'warning');
+        return;
+    }
+    
+    const button = event.target.closest('button');
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-arrow-clockwise"></i>';
+    button.disabled = true;
+    
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            if (type === 'pickup') {
+                const latInput = document.getElementById('{{ form.pickup_latitude.id_for_label }}');
+                const lonInput = document.getElementById('{{ form.pickup_longitude.id_for_label }}');
+                if (latInput) latInput.value = lat;
+                if (lonInput) lonInput.value = lon;
+                reverseGeocode(lat, lon, 'pickup');
+            }
+            
+            button.innerHTML = originalContent;
+            button.disabled = false;
+            updateEstimation();
+            showToast('Position obtenue avec succès', 'success');
+        },
+        function(error) {
+            console.error('Erreur géolocalisation:', error);
+            let message = 'Impossible d\'obtenir votre position';
+            if (error.code === error.PERMISSION_DENIED) {
+                message = 'Géolocalisation refusée. Veuillez l\'autoriser.';
+            }
+            showToast(message, 'warning');
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
+        }
+    );
+}
+
+function searchLocation(type) {
+    const input = document.getElementById(
+        type === 'pickup' ? '{{ form.pickup_location.id_for_label }}' : '{{ form.dropoff_location.id_for_label }}'
+    );
+    const address = input.value.trim();
+    
+    if (!address) {
+        showToast('Veuillez saisir une adresse à rechercher', 'warning');
+        input.focus();
+        return;
+    }
+    
+    // Simulation de géocodage (à remplacer par une vraie API)
+    const mockLat = 3.848 + (Math.random() - 0.5) * 0.1;
+    const mockLon = 11.502 + (Math.random() - 0.5) * 0.1;
+    
+    if (type === 'dropoff') {
+        const latInput = document.getElementById('{{ form.dropoff_latitude.id_for_label }}');
+        const lonInput = document.getElementById('{{ form.dropoff_longitude.id_for_label }}');
+        if (latInput) latInput.value = mockLat;
+        if (lonInput) lonInput.value = mockLon;
+    }
+    
+    showToast('Position trouvée pour "' + address + '"', 'success');
+    updateEstimation();
+}
+
+function reverseGeocode(lat, lon, type) {
+    // Simulation de géocodage inverse
+    const mockAddress = `Position ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+    const inputId = type === 'pickup' ? '{{ form.pickup_location.id_for_label }}' : '{{ form.dropoff_location.id_for_label }}';
+    const input = document.getElementById(inputId);
+    if (input) {
+        input.value = mockAddress;
+    }
+}
+
+function updateEstimation() {
+    clearTimeout(estimationTimeout);
+    estimationTimeout = setTimeout(() => {
+        const pickupLat = document.getElementById('{{ form.pickup_latitude.id_for_label }}')?.value;
+        const pickupLon = document.getElementById('{{ form.pickup_longitude.id_for_label }}')?.value;
+        const dropoffLat = document.getElementById('{{ form.dropoff_latitude.id_for_label }}')?.value;
+        const dropoffLon = document.getElementById('{{ form.dropoff_longitude.id_for_label }}')?.value;
+        
+        if (pickupLat && pickupLon && dropoffLat && dropoffLon) {
+            const distance = calculateDistance(
+                parseFloat(pickupLat), parseFloat(pickupLon),
+                parseFloat(dropoffLat), parseFloat(dropoffLon)
+            );
+            
+            const duration = Math.round(distance / 30 * 60); // 30 km/h moyenne
+            const chauffeurs = Math.floor(Math.random() * 5) + 1;
+            const eta = Math.round(Math.random() * 15) + 5;
+            
+            document.getElementById('est-distance').textContent = distance.toFixed(1) + ' km';
+            document.getElementById('est-duration').textContent = duration + ' min';
+            document.getElementById('est-chauffeurs').textContent = chauffeurs;
+            document.getElementById('est-eta').textContent = eta + ' min';
+            
+            const card = document.getElementById('estimation-card');
+            if (card) {
+                card.classList.remove('d-none');
+            }
+        }
+    }, 500);
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Rayon de la Terre en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+function handleSubmit(event) {
+    event.preventDefault();
+    
+    const submitBtn = document.getElementById('submit-btn');
+    const submitText = document.getElementById('submit-text');
+    const spinner = document.getElementById('loading-spinner');
+    
+    // Animation de soumission
+    if (submitBtn && submitText && spinner) {
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+        submitText.textContent = 'Recherche en cours...';
+        
+        // Soumettre le formulaire après animation
+        setTimeout(() => {
+            event.target.submit();
+        }, 500);
+    } else {
+        event.target.submit();
+    }
+}
+
+function showToast(message, type = 'info') {
+    // Créer un toast avec les couleurs de l'application
+    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+    
+    const toastId = 'toast-' + Date.now();
+    const toastClass = type === 'success' ? 'toast-mg-success' : 
+                     type === 'warning' ? 'toast-mg-warning' : 
+                     'toast-mg-info';
+    
+    const toastHTML = `
+        <div id="${toastId}" class="toast ${toastClass} text-white" role="alert">
+            <div class="toast-body">
+                <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1080';
+    document.body.appendChild(container);
+    return container;
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+</script>
+{% endblock %}
+
+

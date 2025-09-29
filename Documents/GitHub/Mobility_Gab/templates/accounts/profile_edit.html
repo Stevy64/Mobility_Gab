@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Modifier mon profil{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4 p-md-5">
+                <h2 class="h4 fw-bold mb-4">Mes informations</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <h5 class="fw-semibold">Compte</h5>
+                        <div class="row g-3">
+                            {% for field in user_form %}
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {{ field.errors }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="fw-semibold">Profil</h5>
+                        <div class="row g-3">
+                            {% for field in profile_form %}
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {% if field.widget.input_type == 'checkbox' %}
+                                    <div class="form-check">{{ field }} {{ field.errors }}</div>
+                                {% else %}
+                                    {{ field }}
+                                    {{ field.errors }}
+                                {% endif %}
+                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if parent_form %}
+                    <div class="mb-4">
+                        <h5 class="fw-semibold">Contacts d'urgence</h5>
+                        <div class="row g-3">
+                            {% for field in parent_form %}
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {{ field.errors }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if chauffeur_form %}
+                    <div class="mb-4">
+                        <h5 class="fw-semibold">Informations véhicule</h5>
+                        <div class="row g-3">
+                            {% for field in chauffeur_form %}
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {{ field.errors }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if password_form %}
+                    <div class="mb-4">
+                        <h5 class="fw-semibold">Sécurité</h5>
+                        <div class="row g-3">
+                            {% for field in password_form %}
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {{ field.errors }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <p class="text-muted small mt-2">Laissez les champs vides si vous ne souhaitez pas changer votre mot de passe.</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,498 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Nouvelle demande de course{% endblock %}
+
+{% block extra_head %}
+<style>
+    .geolocation-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: #007bff;
+        color: white;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    
+    .geolocation-btn:hover {
+        background: #0056b3;
+    }
+    
+    .input-group-gps {
+        position: relative;
+    }
+    
+    .criteria-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .priority-info {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .estimated-info {
+        background: #e3f2fd;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 15px 0;
+        border-left: 4px solid #2196f3;
+    }
+    
+    .loading-spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <h2 class="h3 fw-bold text-primary">🚗 Demander une course</h2>
+                    <p class="text-muted">Définissez vos critères, nous trouvons le meilleur chauffeur pour vous</p>
+                </div>
+
+                <form method="post" novalidate id="ride-request-form">
+                    {% csrf_token %}
+                    
+                    <!-- Section Trajet -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="{{ form.pickup_location.id_for_label }}">
+                                    <i class="bi bi-geo-alt text-primary me-2"></i>{{ form.pickup_location.label }}
+                                </label>
+                                <div class="input-group-gps">
+                                    {{ form.pickup_location }}
+                                    <button type="button" class="geolocation-btn" onclick="getCurrentLocation('pickup')">
+                                        <i class="bi bi-crosshair"></i> Localiser
+                                    </button>
+                                </div>
+                                {{ form.pickup_location.errors }}
+                                {% if form.pickup_location.help_text %}
+                                    <div class="form-text">{{ form.pickup_location.help_text }}</div>
+                                {% endif %}
+                                {{ form.pickup_latitude }}
+                                {{ form.pickup_longitude }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="{{ form.dropoff_location.id_for_label }}">
+                                    <i class="bi bi-flag text-danger me-2"></i>{{ form.dropoff_location.label }}
+                                </label>
+                                <div class="input-group-gps">
+                                    {{ form.dropoff_location }}
+                                    <button type="button" class="geolocation-btn" onclick="searchLocation('dropoff')">
+                                        <i class="bi bi-search"></i> Chercher
+                                    </button>
+                                </div>
+                                {{ form.dropoff_location.errors }}
+                                {{ form.dropoff_latitude }}
+                                {{ form.dropoff_longitude }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Heure -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="{{ form.requested_pickup_time.id_for_label }}">
+                                    <i class="bi bi-clock text-info me-2"></i>{{ form.requested_pickup_time.label }}
+                                </label>
+                                {{ form.requested_pickup_time }}
+                                {{ form.requested_pickup_time.errors }}
+                                {% if form.requested_pickup_time.help_text %}
+                                    <div class="form-text">{{ form.requested_pickup_time.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Critères de sélection -->
+                    <div class="criteria-section">
+                        <h5 class="fw-bold mb-3">
+                            <i class="bi bi-sliders text-warning me-2"></i>Critères de sélection
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label" for="{{ form.max_distance_km.id_for_label }}">{{ form.max_distance_km.label }}</label>
+                                    {{ form.max_distance_km }}
+                                    {{ form.max_distance_km.errors }}
+                                    {% if form.max_distance_km.help_text %}
+                                        <div class="form-text">{{ form.max_distance_km.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label" for="{{ form.min_rating.id_for_label }}">{{ form.min_rating.label }}</label>
+                                    {{ form.min_rating }}
+                                    {{ form.min_rating.errors }}
+                                    {% if form.min_rating.help_text %}
+                                        <div class="form-text">{{ form.min_rating.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label" for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
+                                    {{ form.priority }}
+                                    {{ form.priority.errors }}
+                                    {% if form.priority.help_text %}
+                                        <div class="form-text">{{ form.priority.help_text }}</div>
+                                    {% endif %}
+                                    <div class="priority-info" id="priority-info">
+                                        Sélectionne automatiquement le chauffeur le plus proche
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Options -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                {{ form.accept_shared_ride }}
+                                <label class="form-check-label" for="{{ form.accept_shared_ride.id_for_label }}">
+                                    {{ form.accept_shared_ride.label }}
+                                </label>
+                                {% if form.accept_shared_ride.help_text %}
+                                    <div class="form-text">{{ form.accept_shared_ride.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                {{ form.need_child_seat }}
+                                <label class="form-check-label" for="{{ form.need_child_seat.id_for_label }}">
+                                    {{ form.need_child_seat.label }}
+                                </label>
+                                {% if form.need_child_seat.help_text %}
+                                    <div class="form-text">{{ form.need_child_seat.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chauffeur préféré -->
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.suggested_chauffeur.id_for_label }}">{{ form.suggested_chauffeur.label }}</label>
+                        {{ form.suggested_chauffeur }}
+                        {{ form.suggested_chauffeur.errors }}
+                        {% if form.suggested_chauffeur.help_text %}
+                            <div class="form-text">{{ form.suggested_chauffeur.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Instructions -->
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+                        {{ form.notes }}
+                        {{ form.notes.errors }}
+                        {% if form.notes.help_text %}
+                            <div class="form-text">{{ form.notes.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Estimation -->
+                    <div class="estimated-info" id="estimated-info" style="display: none;">
+                        <h6 class="fw-bold mb-2">📊 Estimation</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Distance:</strong> <span id="estimated-distance">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Durée:</strong> <span id="estimated-duration">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Chauffeurs:</strong> <span id="available-chauffeurs">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>ETA:</strong> <span id="estimated-eta">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Boutons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-outline-secondary" onclick="previewRequest()">
+                            <i class="bi bi-eye me-2"></i>Aperçu
+                        </button>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-send me-2"></i>Envoyer la demande
+                            <div class="loading-spinner ms-2" id="submit-spinner"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal d'aperçu -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Aperçu de votre demande</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="preview-content">
+                <!-- Contenu généré dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Modifier</button>
+                <button type="button" class="btn btn-success" onclick="submitFromPreview()">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+let currentPosition = null;
+let estimationTimeout = null;
+
+// Géolocalisation
+function getCurrentLocation(type) {
+    if (!navigator.geolocation) {
+        alert('La géolocalisation n\'est pas supportée par votre navigateur');
+        return;
+    }
+    
+    const button = event.target.closest('button');
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<div class="loading-spinner"></div>';
+    button.disabled = true;
+    
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            if (type === 'pickup') {
+                document.getElementById('id_pickup_latitude').value = lat;
+                document.getElementById('id_pickup_longitude').value = lon;
+                
+                // Géocodage inverse pour obtenir l'adresse
+                reverseGeocode(lat, lon, 'pickup');
+            }
+            
+            button.innerHTML = originalContent;
+            button.disabled = false;
+            
+            // Déclencher l'estimation
+            updateEstimation();
+        },
+        function(error) {
+            console.error('Erreur géolocalisation:', error);
+            alert('Impossible d\'obtenir votre position');
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
+        }
+    );
+}
+
+// Géocodage inverse (mock - en production utiliser une vraie API)
+function reverseGeocode(lat, lon, type) {
+    // Mock de géocodage inverse
+    const mockAddress = `Position ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+    
+    if (type === 'pickup') {
+        document.getElementById('pickup-input').value = mockAddress;
+    }
+}
+
+// Recherche d'adresse
+function searchLocation(type) {
+    const input = document.getElementById(type + '-input');
+    const address = input.value;
+    
+    if (!address) {
+        alert('Veuillez saisir une adresse');
+        return;
+    }
+    
+    // Mock de géocodage
+    const mockLat = 3.848 + (Math.random() - 0.5) * 0.1;
+    const mockLon = 11.502 + (Math.random() - 0.5) * 0.1;
+    
+    document.getElementById('id_' + type + '_latitude').value = mockLat;
+    document.getElementById('id_' + type + '_longitude').value = mockLon;
+    
+    updateEstimation();
+}
+
+// Mise à jour des informations de priorité
+document.addEventListener('DOMContentLoaded', function() {
+    const prioritySelect = document.getElementById('id_priority');
+    if (prioritySelect) {
+        prioritySelect.addEventListener('change', function() {
+            const priority = this.value;
+            const infoDiv = document.getElementById('priority-info');
+            
+            const messages = {
+                'closest': 'Sélectionne automatiquement le chauffeur le plus proche',
+                'fastest': 'Privilégie le chauffeur qui peut arriver le plus vite',
+                'best_rated': 'Choisit le chauffeur avec la meilleure note',
+                'cheapest': 'Trouve le tarif le plus avantageux'
+            };
+            
+            if (infoDiv) {
+                infoDiv.textContent = messages[priority] || '';
+            }
+        });
+    }
+});
+
+// Mise à jour de l'estimation
+function updateEstimation() {
+    clearTimeout(estimationTimeout);
+    estimationTimeout = setTimeout(() => {
+        const pickupLat = document.getElementById('id_pickup_latitude').value;
+        const pickupLon = document.getElementById('id_pickup_longitude').value;
+        const dropoffLat = document.getElementById('id_dropoff_latitude').value;
+        const dropoffLon = document.getElementById('id_dropoff_longitude').value;
+        
+        if (pickupLat && pickupLon && dropoffLat && dropoffLon) {
+            // Calcul de distance (formule de Haversine simplifiée)
+            const distance = calculateDistance(
+                parseFloat(pickupLat), parseFloat(pickupLon),
+                parseFloat(dropoffLat), parseFloat(dropoffLon)
+            );
+            
+            const duration = Math.round(distance / 30 * 60); // 30 km/h moyenne
+            const chauffeurs = Math.floor(Math.random() * 5) + 1; // Mock
+            const eta = Math.round(Math.random() * 15) + 5; // Mock
+            
+            document.getElementById('estimated-distance').textContent = distance.toFixed(1) + ' km';
+            document.getElementById('estimated-duration').textContent = duration + ' min';
+            document.getElementById('available-chauffeurs').textContent = chauffeurs;
+            document.getElementById('estimated-eta').textContent = eta + ' min';
+            
+            document.getElementById('estimated-info').style.display = 'block';
+        }
+    }, 1000);
+}
+
+// Calcul de distance (Haversine)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Rayon de la Terre en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// Aperçu de la demande
+function previewRequest() {
+    const formData = new FormData(document.getElementById('ride-request-form'));
+    const preview = document.getElementById('preview-content');
+    
+    const pickup = formData.get('pickup_location');
+    const dropoff = formData.get('dropoff_location');
+    const time = formData.get('requested_pickup_time');
+    const distance = formData.get('max_distance_km');
+    const rating = formData.get('min_rating');
+    const priority = formData.get('priority');
+    
+    preview.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Trajet</h6>
+                <p><strong>Départ:</strong> ${pickup}</p>
+                <p><strong>Destination:</strong> ${dropoff}</p>
+                <p><strong>Heure:</strong> ${new Date(time).toLocaleString('fr-FR')}</p>
+            </div>
+            <div class="col-md-6">
+                <h6>Critères</h6>
+                <p><strong>Distance max:</strong> ${distance} km</p>
+                <p><strong>Note min:</strong> ${rating}/5</p>
+                <p><strong>Priorité:</strong> ${priority}</p>
+            </div>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+}
+
+// Soumission depuis l'aperçu
+function submitFromPreview() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+    modal.hide();
+    document.getElementById('ride-request-form').submit();
+}
+
+// Gestion de la soumission
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('ride-request-form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const spinner = document.getElementById('submit-spinner');
+            
+            if (submitBtn) {
+                submitBtn.disabled = true;
+            }
+            if (spinner) {
+                spinner.style.display = 'inline-block';
+            }
+            
+            // Re-enable après 10 secondes en cas d'erreur
+            setTimeout(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+                if (spinner) {
+                    spinner.style.display = 'none';
+                }
+            }, 10000);
+        });
+    }
+});
+</script>
+{% endblock %}
+
+

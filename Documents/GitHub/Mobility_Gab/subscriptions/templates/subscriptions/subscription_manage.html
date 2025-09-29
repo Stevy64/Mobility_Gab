@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}Gestion Abonnement #{{ subscription.id }} - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+.subscription-header {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.subscription-header.premium {
+    background: linear-gradient(135deg, #ffc107, #ffb300);
+    color: #333;
+}
+
+.subscription-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(180deg); }
+}
+
+.info-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 3rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.timeline-item:last-child {
+    border-bottom: none;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    background: var(--mg-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.875rem;
+}
+
+.timeline-marker.completed {
+    background: var(--mg-secondary);
+}
+
+.timeline-marker.cancelled {
+    background: #dc3545;
+}
+
+.timeline-marker.payment {
+    background: #ffc107;
+    color: #333;
+}
+
+.action-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.action-btn.premium {
+    background: linear-gradient(135deg, #ffc107, #ffb300);
+    color: #333;
+}
+
+.action-btn.premium:hover {
+    background: linear-gradient(135deg, #ffb300, #ffc107);
+    transform: scale(1.05);
+}
+
+.back-btn {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+    background: linear-gradient(135deg, #0f4aa6, var(--mg-primary));
+    color: white;
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Navigation -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <button class="back-btn" onclick="goBack()">
+            <i class="bi bi-arrow-left me-2"></i>
+            Retour
+        </button>
+        <div class="d-flex gap-2">
+            {% if is_premium %}
+            <button class="btn btn-outline-secondary" onclick="downgradeSubscription()">
+                <i class="bi bi-arrow-down-circle me-2"></i>
+                Downgrade
+            </button>
+            {% else %}
+            <button class="action-btn premium" onclick="upgradeSubscription()">
+                <i class="bi bi-arrow-up-circle me-2"></i>
+                Upgrade Premium
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- En-tête de l'abonnement -->
+    <div class="subscription-header {% if is_premium %}premium{% endif %}">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">
+                    <i class="bi bi-card-checklist me-3"></i>
+                    Abonnement {{ subscription.plan.name }}
+                    {% if is_premium %}
+                        <span class="badge bg-warning text-dark ms-2">
+                            <i class="bi bi-star-fill me-1"></i>
+                            MOBILITY PLUS
+                        </span>
+                    {% endif %}
+                </h1>
+                <p class="mb-0 opacity-90">
+                    {% if user.role == 'parent' %}
+                        Chauffeur: {{ subscription.chauffeur.get_full_name|default:"Non assigné" }}
+                    {% else %}
+                        Client: {{ subscription.parent.get_full_name }}
+                    {% endif %}
+                </p>
+                <p class="mb-0 opacity-75 small">
+                    Créé le {{ subscription.start_date|date:"d F Y" }}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="h2 mb-1">{{ subscription.price_monthly }} FCFA</div>
+                <div class="opacity-90">par mois</div>
+                <span class="badge bg-{{ subscription.status }} mt-2">
+                    {{ subscription.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Informations de l'abonnement -->
+        <div class="col-lg-8">
+            <div class="info-card">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Détails de l'Abonnement
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Plan:</span>
+                            <strong>{{ subscription.plan.name }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Prix mensuel:</span>
+                            <strong>{{ subscription.price_monthly }} FCFA</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Prochain paiement:</span>
+                            <strong>{{ subscription.next_due_date|date:"d/m/Y" }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Statut:</span>
+                            <span class="badge bg-{{ subscription.status }}">{{ subscription.get_status_display }}</span>
+                        </div>
+                    </div>
+                    {% if subscription.last_payment_date %}
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Dernier paiement:</span>
+                            <strong>{{ subscription.last_payment_date|date:"d/m/Y" }}</strong>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if subscription.notes %}
+                <div class="mt-3">
+                    <h6 class="fw-semibold">Notes:</h6>
+                    <p class="text-muted small">{{ subscription.notes|linebreaks }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Historique des trajets récents -->
+            <div class="info-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Trajets Récents
+                    </h5>
+                    <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-outline-primary btn-sm">
+                        Voir tout
+                    </a>
+                </div>
+
+                {% if recent_trips %}
+                <div class="timeline">
+                    {% for trip in recent_trips %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker {{ trip.status }}">
+                            {% if trip.status == 'completed' %}
+                                <i class="bi bi-check"></i>
+                            {% elif trip.status == 'cancelled' %}
+                                <i class="bi bi-x"></i>
+                            {% else %}
+                                <i class="bi bi-clock"></i>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">{{ trip.scheduled_date|date:"d M Y" }}</div>
+                                <div class="text-muted small">
+                                    {% if user.role == 'parent' %}
+                                        Avec {{ trip.chauffeur.get_full_name|default:"Chauffeur non assigné" }}
+                                    {% else %}
+                                        Avec {{ trip.parent.get_full_name }}
+                                    {% endif %}
+                                </div>
+                                {% if trip.distance_km %}
+                                <div class="text-muted small">{{ trip.distance_km }} km</div>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{{ trip.status }}">{{ trip.get_status_display }}</span>
+                                {% if trip.started_at %}
+                                <div class="text-muted small">{{ trip.started_at|date:"H:i" }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-clock-history display-4 text-muted"></i>
+                    <h6 class="mt-3">Aucun trajet récent</h6>
+                    <p class="text-muted">Les trajets de cet abonnement apparaîtront ici.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Informations Mobility Plus -->
+            <div class="info-card">
+                {% if is_premium %}
+                <div class="text-center">
+                    <i class="bi bi-star-fill display-4 text-warning"></i>
+                    <h5 class="mt-3">Mobility Plus Actif</h5>
+                    <p class="text-muted">Profitez de tous les avantages premium</p>
+                    <ul class="list-unstyled text-start mt-3">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Chat en temps réel</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Suivi GPS avancé</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Notifications push</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Support prioritaire</li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <i class="bi bi-star display-4 text-warning"></i>
+                    <h5 class="mt-3">Passer à Mobility Plus</h5>
+                    <p class="text-muted">Débloquez des fonctionnalités premium</p>
+                    <ul class="list-unstyled text-start mt-3">
+                        <li><i class="bi bi-star text-warning me-2"></i>Chat en temps réel</li>
+                        <li><i class="bi bi-star text-warning me-2"></i>Suivi GPS avancé</li>
+                        <li><i class="bi bi-star text-warning me-2"></i>Notifications push</li>
+                        <li><i class="bi bi-star text-warning me-2"></i>Support prioritaire</li>
+                    </ul>
+                    <div class="alert alert-warning mt-3">
+                        <strong>+5 000 FCFA/mois</strong>
+                    </div>
+                    <button class="action-btn premium w-100" onclick="upgradeSubscription()">
+                        <i class="bi bi-arrow-up-circle me-2"></i>
+                        Upgrade maintenant
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Historique des paiements -->
+            <div class="info-card">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-credit-card me-2"></i>
+                    Paiements Récents
+                </h6>
+                {% if payment_history %}
+                <div class="timeline">
+                    {% for payment in payment_history %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker payment">
+                            <i class="bi bi-currency-exchange"></i>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">{{ payment.amount }} FCFA</div>
+                                <div class="text-muted small">{{ payment.created_at|date:"d M Y" }}</div>
+                            </div>
+                            <span class="badge bg-{{ payment.status }}">{{ payment.get_status_display }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="bi bi-credit-card display-6 text-muted"></i>
+                    <p class="text-muted small mt-2">Aucun paiement enregistré</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function goBack() {
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.href = "{% url 'core:dashboard' %}";
+    }
+}
+
+function upgradeSubscription() {
+    if (confirm('Passer cet abonnement à Mobility Plus pour 5 000 FCFA supplémentaires par mois ?')) {
+        fetch("{% url 'subscriptions:upgrade_to_premium' subscription.id %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Upgrade réussi !', data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Erreur', data.error || 'Une erreur est survenue.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur', 'Une erreur de connexion est survenue.', 'error');
+        });
+    }
+}
+
+function downgradeSubscription() {
+    if (confirm('Êtes-vous sûr de vouloir rétrograder cet abonnement ? Vous perdrez les fonctionnalités Mobility Plus.')) {
+        fetch("{% url 'subscriptions:downgrade_from_premium' subscription.id %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Downgrade réussi', data.message, 'info');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Erreur', data.error || 'Une erreur est survenue.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur', 'Une erreur de connexion est survenue.', 'error');
+        });
+    }
+}
+
+function showNotification(title, message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                     type === 'error' ? 'alert-danger' : 
+                     type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <strong>${title}</strong><br>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove après 5 secondes
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
+
+

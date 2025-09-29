@@ -1,0 +1,11 @@
+{% extends 'core/dashboard/base.html' %}
+
+{% block dashboard_title %}Administration (legacy){% endblock %}
+{% block dashboard_subtitle %}Vue statique à migrer vers le nouvel espace admin réservé staff{% endblock %}
+
+{% block dashboard_content %}
+<div class="alert alert-warning" role="alert">
+    Un nouvel espace admin dédié aux utilisateurs <code>is_staff</code> est disponible via l'onglet "Espace admin". Cette page sera retirée après migration complète.
+</div>
+{% endblock %}
+

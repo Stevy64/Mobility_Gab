@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Paiement - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+.payment-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.payment-header {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.payment-amount {
+    font-size: 3rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+
+.payment-method {
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-method:hover {
+    border-color: var(--mg-primary);
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.payment-method.selected {
+    border-color: var(--mg-primary);
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.payment-method input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
+.payment-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.security-badges {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.loading-spinner {
+    display: none;
+}
+
+.payment-processing .loading-spinner {
+    display: inline-block;
+}
+
+.payment-processing .btn-text {
+    display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card payment-card">
+                <div class="payment-header">
+                    <i class="bi bi-credit-card payment-icon"></i>
+                    <h2 class="mb-2">Paiement sécurisé</h2>
+                    <p class="mb-0">Finalisez votre abonnement</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Informations de l'abonnement -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <h5 class="fw-bold mb-2">
+                                {% if payment.payment_type == 'mobility_plus' %}
+                                    <i class="bi bi-star text-warning me-2"></i>
+                                    Abonnement Mobility Plus
+                                {% else %}
+                                    <i class="bi bi-person text-primary me-2"></i>
+                                    Abonnement Chauffeur
+                                {% endif %}
+                            </h5>
+                            <p class="text-muted mb-1">
+                                {% if payment.mobility_plus_subscription %}
+                                    Abonnement premium avec fonctionnalités avancées
+                                {% else %}
+                                    Abonnement personnalisé avec {{ payment.chauffeur_subscription.chauffeur.get_full_name }}
+                                {% endif %}
+                            </p>
+                            <p class="text-muted small mb-0">
+                                Période: 1 mois
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="payment-amount text-primary">
+                                {{ payment.amount|floatformat:0 }} FCFA
+                            </div>
+                            <small class="text-muted">TTC</small>
+                        </div>
+                    </div>
+
+                    <!-- Méthodes de paiement -->
+                    <form id="paymentForm">
+                        {% csrf_token %}
+                        <h6 class="fw-bold mb-3">Choisissez votre méthode de paiement</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="payment-method w-100" for="mobile_money">
+                                    <input type="radio" id="mobile_money" name="payment_method" value="mobile_money" checked>
+                                    <div class="text-center">
+                                        <i class="bi bi-phone payment-icon text-success"></i>
+                                        <h6 class="mb-1">Mobile Money</h6>
+                                        <small class="text-muted">Orange Money, MTN Mobile Money</small>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="payment-method w-100" for="bank_transfer">
+                                    <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer">
+                                    <div class="text-center">
+                                        <i class="bi bi-bank payment-icon text-primary"></i>
+                                        <h6 class="mb-1">Virement bancaire</h6>
+                                        <small class="text-muted">Transfert bancaire</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Informations de paiement Mobile Money -->
+                        <div id="mobileMoneyInfo" class="payment-details">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Instructions de paiement
+                                </h6>
+                                <p class="mb-2">Pour effectuer le paiement via Mobile Money :</p>
+                                <ol class="mb-0">
+                                    <li>Composez le code USSD de votre opérateur</li>
+                                    <li>Sélectionnez "Paiement de factures"</li>
+                                    <li>Choisissez "Mobility Gab"</li>
+                                    <li>Entrez le montant : <strong>{{ payment.amount|floatformat:0 }} FCFA</strong></li>
+                                    <li>Confirmez la transaction</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <!-- Informations de paiement Virement -->
+                        <div id="bankTransferInfo" class="payment-details" style="display: none;">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Informations de virement
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Banque :</strong> UBA Cameroun</p>
+                                        <p class="mb-1"><strong>Compte :</strong> 1234567890</p>
+                                        <p class="mb-1"><strong>Bénéficiaire :</strong> Mobility Gab SARL</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Montant :</strong> {{ payment.amount|floatformat:0 }} FCFA</p>
+                                        <p class="mb-1"><strong>Référence :</strong> {{ payment.id }}</p>
+                                        <p class="mb-0"><strong>Communication :</strong> Abonnement {{ payment.payment_type }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bouton de paiement -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg payment-processing" id="payButton">
+                                <span class="btn-text">
+                                    <i class="bi bi-credit-card me-2"></i>
+                                    Payer maintenant
+                                </span>
+                                <div class="loading-spinner">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                                        <span class="visually-hidden">Chargement...</span>
+                                    </div>
+                                    Traitement en cours...
+                                </div>
+                            </button>
+                            
+                            <a href="{% url 'subscriptions:new_subscription_system' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Retour aux abonnements
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Badges de sécurité -->
+                    <div class="security-badges mt-4">
+                        <h6 class="fw-bold mb-2">Paiement sécurisé</h6>
+                        <div class="d-flex justify-content-center gap-4">
+                            <div class="text-center">
+                                <i class="bi bi-shield-check text-success" style="font-size: 1.5rem;"></i>
+                                <small class="d-block text-muted">SSL Sécurisé</small>
+                            </div>
+                            <div class="text-center">
+                                <i class="bi bi-lock text-success" style="font-size: 1.5rem;"></i>
+                                <small class="d-block text-muted">Chiffrement</small>
+                            </div>
+                            <div class="text-center">
+                                <i class="bi bi-award text-success" style="font-size: 1.5rem;"></i>
+                                <small class="d-block text-muted">Garantie</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+    const mobileMoneyInfo = document.getElementById('mobileMoneyInfo');
+    const bankTransferInfo = document.getElementById('bankTransferInfo');
+    const paymentForm = document.getElementById('paymentForm');
+    const payButton = document.getElementById('payButton');
+
+    // Gérer le changement de méthode de paiement
+    paymentMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            // Mettre à jour les styles des méthodes
+            document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+            this.closest('.payment-method').classList.add('selected');
+            
+            // Afficher les informations correspondantes
+            if (this.value === 'mobile_money') {
+                mobileMoneyInfo.style.display = 'block';
+                bankTransferInfo.style.display = 'none';
+            } else if (this.value === 'bank_transfer') {
+                mobileMoneyInfo.style.display = 'none';
+                bankTransferInfo.style.display = 'block';
+            }
+        });
+    });
+
+    // Initialiser avec la méthode sélectionnée
+    document.querySelector('input[name="payment_method"]:checked').dispatchEvent(new Event('change'));
+
+    // Gérer la soumission du formulaire
+    paymentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(paymentForm);
+        const paymentMethod = formData.get('payment_method');
+        
+        // Désactiver le bouton et afficher le spinner
+        payButton.classList.add('payment-processing');
+        payButton.disabled = true;
+        
+        // Simuler le traitement du paiement
+        fetch('{% url "subscriptions:process_payment" payment.id %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Afficher un message de succès
+                alert(data.message);
+                // Rediriger vers la page de confirmation
+                window.location.href = data.redirect_url;
+            } else {
+                alert('Erreur: ' + data.error);
+                // Réactiver le bouton
+                payButton.classList.remove('payment-processing');
+                payButton.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue lors du traitement du paiement');
+            // Réactiver le bouton
+            payButton.classList.remove('payment-processing');
+            payButton.disabled = false;
+        });
+    });
+});
+</script>
+{% endblock %}

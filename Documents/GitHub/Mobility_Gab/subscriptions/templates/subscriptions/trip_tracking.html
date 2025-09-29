@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Suivi de course en temps réel{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS pour la carte -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #map {
+        height: 400px;
+        width: 100%;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .tracking-status {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .checkpoint-item {
+        border-left: 3px solid #28a745;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    
+    .checkpoint-item.completed {
+        border-left-color: #6c757d;
+        opacity: 0.7;
+    }
+    
+    .checkpoint-item.current {
+        border-left-color: #ffc107;
+        background-color: #fff3cd;
+        padding: 1rem;
+        border-radius: 0.25rem;
+    }
+    
+    .eta-badge {
+        background: #17a2b8;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .live-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #28a745;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+        margin-right: 0.5rem;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Statut de la course -->
+        <div class="tracking-status">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1">
+                        <span class="live-indicator"></span>
+                        Course en cours
+                    </h4>
+                    <p class="mb-0">{{ trip.chauffeur.get_full_name }} vous conduit</p>
+                </div>
+                <div class="text-end">
+                    <div class="eta-badge">
+                        ETA: <span id="eta-time">{{ estimated_arrival }}</span> min
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carte de suivi -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-geo-alt"></i>
+                    Localisation en temps réel
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <!-- Informations du véhicule -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="fw-bold">Informations du véhicule</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Véhicule:</strong> {{ trip.chauffeur.chauffeur_profile.vehicle_make }} {{ trip.chauffeur.chauffeur_profile.vehicle_model }}</p>
+                        <p class="mb-1"><strong>Couleur:</strong> {{ trip.chauffeur.chauffeur_profile.vehicle_color }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Plaque:</strong> {{ trip.chauffeur.chauffeur_profile.vehicle_plate }}</p>
+                        <p class="mb-1"><strong>Note:</strong> 
+                            <span class="text-warning">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= trip.chauffeur.chauffeur_profile.reliability_score %}★{% else %}☆{% endif %}
+                                {% endfor %}
+                            </span>
+                            ({{ trip.chauffeur.chauffeur_profile.reliability_score }}/5)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Étapes de la course -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Étapes de la course</h6>
+            </div>
+            <div class="card-body">
+                <div id="checkpoints-list">
+                    {% for checkpoint in checkpoints %}
+                    <div class="checkpoint-item {% if checkpoint.completed_at %}completed{% elif checkpoint.is_current %}current{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ checkpoint.get_checkpoint_type_display }}</h6>
+                                {% if checkpoint.completed_at %}
+                                    <small class="text-muted">{{ checkpoint.completed_at|date:"H:i" }}</small>
+                                {% elif checkpoint.is_current %}
+                                    <small class="text-warning">En cours...</small>
+                                {% else %}
+                                    <small class="text-muted">À venir</small>
+                                {% endif %}
+                            </div>
+                            {% if checkpoint.completed_at %}
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            {% elif checkpoint.is_current %}
+                                <i class="bi bi-clock text-warning"></i>
+                            {% else %}
+                                <i class="bi bi-circle text-muted"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Actions</h6>
+                <div class="d-grid gap-2">
+                    <a href="tel:{{ trip.chauffeur.profile.phone }}" class="btn btn-outline-primary">
+                        <i class="bi bi-telephone"></i>
+                        Appeler le chauffeur
+                    </a>
+                    <button class="btn btn-outline-warning" onclick="shareLocation()">
+                        <i class="bi bi-share"></i>
+                        Partager ma position
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="showSOSModal()">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        SOS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal SOS -->
+<div class="modal fade" id="sosModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Alerte SOS</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous en situation d'urgence ?</p>
+                <p class="text-muted">Cette action alertera immédiatement l'administration et vos contacts d'urgence.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" onclick="triggerSOS()">Déclencher SOS</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS pour la carte -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// Variables globales
+let map;
+let chauffeurMarker;
+let pickupMarker;
+let dropoffMarker;
+let routeLine;
+let updateInterval;
+
+// Données du trip (injectées depuis Django)
+const tripData = {
+    id: {{ trip.id }},
+    chauffeurLat: {{ trip.chauffeur.chauffeur_profile.current_latitude|default:"null" }},
+    chauffeurLon: {{ trip.chauffeur.chauffeur_profile.current_longitude|default:"null" }},
+    pickupLat: {{ trip.pickup_latitude|default:"null" }},
+    pickupLon: {{ trip.pickup_longitude|default:"null" }},
+    dropoffLat: {{ trip.dropoff_latitude|default:"null" }},
+    dropoffLon: {{ trip.dropoff_longitude|default:"null" }},
+    status: '{{ trip.status }}'
+};
+
+// Initialisation de la carte
+function initMap() {
+    // Centre par défaut (Yaoundé)
+    const defaultCenter = [3.848, 11.502];
+    let center = defaultCenter;
+    
+    // Utiliser la position du chauffeur si disponible
+    if (tripData.chauffeurLat && tripData.chauffeurLon) {
+        center = [tripData.chauffeurLat, tripData.chauffeurLon];
+    }
+    
+    // Créer la carte
+    map = L.map('map').setView(center, 13);
+    
+    // Ajouter les tuiles OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    // Ajouter les marqueurs
+    addMarkers();
+    
+    // Ajuster la vue pour inclure tous les marqueurs
+    fitMapToMarkers();
+}
+
+// Ajouter les marqueurs sur la carte
+function addMarkers() {
+    // Marqueur du chauffeur (voiture)
+    if (tripData.chauffeurLat && tripData.chauffeurLon) {
+        const carIcon = L.divIcon({
+            html: '<i class="bi bi-car-front-fill" style="color: #28a745; font-size: 24px;"></i>',
+            iconSize: [30, 30],
+            className: 'custom-div-icon'
+        });
+        
+        chauffeurMarker = L.marker([tripData.chauffeurLat, tripData.chauffeurLon], {
+            icon: carIcon
+        }).addTo(map).bindPopup('Chauffeur: {{ trip.chauffeur.get_full_name }}');
+    }
+    
+    // Marqueur de pickup (point de départ)
+    if (tripData.pickupLat && tripData.pickupLon) {
+        const pickupIcon = L.divIcon({
+            html: '<i class="bi bi-geo-alt-fill" style="color: #007bff; font-size: 20px;"></i>',
+            iconSize: [25, 25],
+            className: 'custom-div-icon'
+        });
+        
+        pickupMarker = L.marker([tripData.pickupLat, tripData.pickupLon], {
+            icon: pickupIcon
+        }).addTo(map).bindPopup('Point de départ');
+    }
+    
+    // Marqueur de dropoff (destination)
+    if (tripData.dropoffLat && tripData.dropoffLon) {
+        const dropoffIcon = L.divIcon({
+            html: '<i class="bi bi-flag-fill" style="color: #dc3545; font-size: 20px;"></i>',
+            iconSize: [25, 25],
+            className: 'custom-div-icon'
+        });
+        
+        dropoffMarker = L.marker([tripData.dropoffLat, tripData.dropoffLon], {
+            icon: dropoffIcon
+        }).addTo(map).bindPopup('Destination');
+    }
+}
+
+// Ajuster la carte pour inclure tous les marqueurs
+function fitMapToMarkers() {
+    const markers = [];
+    if (chauffeurMarker) markers.push(chauffeurMarker);
+    if (pickupMarker) markers.push(pickupMarker);
+    if (dropoffMarker) markers.push(dropoffMarker);
+    
+    if (markers.length > 0) {
+        const group = new L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.1));
+    }
+}
+
+// Mettre à jour la position du chauffeur
+function updateChauffeurPosition() {
+    fetch(`/api/trips/${tripData.id}/location/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.latitude && data.longitude) {
+                // Mettre à jour le marqueur du chauffeur
+                if (chauffeurMarker) {
+                    chauffeurMarker.setLatLng([data.latitude, data.longitude]);
+                } else {
+                    // Créer le marqueur s'il n'existe pas
+                    const carIcon = L.divIcon({
+                        html: '<i class="bi bi-car-front-fill" style="color: #28a745; font-size: 24px;"></i>',
+                        iconSize: [30, 30],
+                        className: 'custom-div-icon'
+                    });
+                    
+                    chauffeurMarker = L.marker([data.latitude, data.longitude], {
+                        icon: carIcon
+                    }).addTo(map).bindPopup('Chauffeur: {{ trip.chauffeur.get_full_name }}');
+                }
+                
+                // Mettre à jour l'ETA si fourni
+                if (data.eta_minutes) {
+                    document.getElementById('eta-time').textContent = data.eta_minutes;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors de la mise à jour de la position:', error);
+        });
+}
+
+// Mettre à jour les checkpoints
+function updateCheckpoints() {
+    fetch(`/api/trips/${tripData.id}/checkpoints/`)
+        .then(response => response.json())
+        .then(data => {
+            // Mettre à jour la liste des checkpoints
+            // (Implémentation simplifiée - dans une vraie app, il faudrait reconstruire la liste)
+            console.log('Checkpoints mis à jour:', data);
+        })
+        .catch(error => {
+            console.error('Erreur lors de la mise à jour des checkpoints:', error);
+        });
+}
+
+// Partager la localisation
+function shareLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const shareUrl = `${window.location.origin}/tracking/${tripData.id}/?lat=${position.coords.latitude}&lon=${position.coords.longitude}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Ma position en temps réel',
+                    text: 'Suivez ma course en temps réel',
+                    url: shareUrl
+                });
+            } else {
+                // Fallback : copier dans le presse-papier
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('Lien de suivi copié dans le presse-papier !');
+                });
+            }
+        });
+    } else {
+        alert('Géolocalisation non supportée par votre navigateur.');
+    }
+}
+
+// Afficher le modal SOS
+function showSOSModal() {
+    const modal = new bootstrap.Modal(document.getElementById('sosModal'));
+    modal.show();
+}
+
+// Déclencher une alerte SOS
+function triggerSOS() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            fetch('/api/sos/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    trip_id: tripData.id,
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    message: 'Alerte SOS déclenchée depuis le suivi de course'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Alerte SOS envoyée ! Les secours ont été prévenus.');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('sosModal'));
+                modal.hide();
+            })
+            .catch(error => {
+                console.error('Erreur SOS:', error);
+                alert('Erreur lors de l\'envoi de l\'alerte. Contactez directement les secours.');
+            });
+        });
+    } else {
+        // SOS sans géolocalisation
+        fetch('/api/sos/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                trip_id: tripData.id,
+                message: 'Alerte SOS déclenchée depuis le suivi de course (sans géolocalisation)'
+            })
+        })
+        .then(() => {
+            alert('Alerte SOS envoyée !');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('sosModal'));
+            modal.hide();
+        });
+    }
+}
+
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+    
+    // Démarrer les mises à jour périodiques (toutes les 10 secondes)
+    updateInterval = setInterval(() => {
+        updateChauffeurPosition();
+        updateCheckpoints();
+    }, 10000);
+});
+
+// Nettoyer l'intervalle quand on quitte la page
+window.addEventListener('beforeunload', function() {
+    if (updateInterval) {
+        clearInterval(updateInterval);
+    }
+});
+</script>
+{% endblock %}
+
+
+
