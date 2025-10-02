@@ -4,6 +4,7 @@ from django.urls import path
 
 from . import views, views_premium
 from . import views_advanced
+from . import views_subscription_management
 
 
 app_name = "subscriptions"
@@ -24,9 +25,11 @@ urlpatterns = [
     path("api/ride-requests/<int:pk>/status/", views_advanced.ride_request_status_api, name="ride_request_status_api"),
     path("api/ride-requests/<int:pk>/cancel/", views_advanced.cancel_ride_request_api, name="cancel_ride_request_api"),
     path("api/ride-requests/realtime/", views_advanced.get_ride_requests_realtime, name="ride_requests_realtime"),
+    path("api/subscription-requests/realtime/", views_advanced.get_subscription_requests_realtime, name="subscription_requests_realtime"),
     path("api/parent/ride-requests/status/", views_advanced.get_parent_ride_requests_status, name="parent_ride_requests_status"),
     path("api/chauffeur/availability/", views_advanced.toggle_chauffeur_availability, name="toggle_chauffeur_availability"),
     path("api/chauffeur/notifications/", views_advanced.get_chauffeur_notifications, name="chauffeur_notifications"),
+    path("api/chauffeur/pending-count/", views_advanced.get_pending_requests_count, name="pending_requests_count"),
     path("chauffeur_ride_requests_realtime/", views_advanced.ChauffeurRideRequestsRealtimeView.as_view(), name="chauffeur_ride_requests_realtime"),
     path("api/ride-requests/<int:pk>/delete/", views_advanced.delete_ride_request_api, name="ride_request_delete_api"),
     
@@ -57,6 +60,16 @@ urlpatterns = [
     path("payment/process/<int:payment_id>/", views.process_payment, name="process_payment"),
     path("chauffeur-respond/<int:request_id>/", views.chauffeur_respond_to_request, name="chauffeur_respond_to_request"),
     path("chauffeur-request/<int:request_id>/delete/", views.delete_chauffeur_request, name="delete_chauffeur_request"),
+    
+    # === GESTION DES ABONNEMENTS CHAUFFEUR ===
+    path("manage-chauffeur-subscriptions/", views_subscription_management.ManageChauffeurSubscriptionsView.as_view(), name="manage_chauffeur_subscriptions"),
+    path("manage-subscribers/", views_subscription_management.ManageSubscribersView.as_view(), name="manage_subscribers"),
+    path("api/chauffeur-subscription/<int:subscription_id>/cancel/", views_subscription_management.cancel_chauffeur_subscription, name="cancel_chauffeur_subscription"),
+    path("api/chauffeur-subscription/<int:subscription_id>/delete/", views_subscription_management.delete_chauffeur_subscription_record, name="delete_chauffeur_subscription_record"),
+    path("api/subscription-request/<int:request_id>/accept/", views_subscription_management.accept_subscription_request, name="accept_subscription_request"),
+    path("api/subscription-request/<int:request_id>/reject/", views_subscription_management.reject_subscription_request, name="reject_subscription_request"),
+    path("api/subscription-request/<int:request_id>/details/", views_subscription_management.view_subscription_request_details, name="view_subscription_request_details"),
+    path("api/subscriber/<int:subscription_id>/details/", views_subscription_management.view_subscriber_details, name="view_subscriber_details"),
     
     # === CHAT ===
     path("chat/", views.chat_list, name="chat_list"),

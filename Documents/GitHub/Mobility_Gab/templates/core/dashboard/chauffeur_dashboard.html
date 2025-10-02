@@ -5,8 +5,11 @@
 
 {% block dashboard_actions %}
 <div class="btn-group">
-    <a href="/subscriptions/chauffeur_ride_requests_realtime/" class="btn btn-primary">
+    <a href="/subscriptions/chauffeur_ride_requests_realtime/" class="btn btn-primary position-relative">
         <i class="bi bi-bell"></i> Demandes temps réel
+        <span id="pending-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+            0
+        </span>
     </a>
     <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-outline-secondary">
         <i class="bi bi-clock-history"></i> Historique
@@ -141,4 +144,45 @@
 </div>
 {% endblock %}
 
+{% block extra_js %}
+{{ block.super }}
+<script>
+    // Mise à jour automatique du compteur de demandes en attente
+    function updatePendingRequestsCount() {
+        fetch('/subscriptions/api/chauffeur/pending-count/')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('pending-badge');
+                if (data.total_count > 0) {
+                    badge.textContent = data.total_count;
+                    badge.style.display = 'inline-block';
+                    
+                    // Animation de pulsation pour attirer l'attention
+                    badge.style.animation = 'pulse 1.5s ease-in-out infinite';
+                } else {
+                    badge.style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Erreur lors de la récupération du compteur:', error));
+    }
+    
+    // Mettre à jour immédiatement
+    updatePendingRequestsCount();
+    
+    // Puis mettre à jour toutes les 15 secondes
+    setInterval(updatePendingRequestsCount, 15000);
+</script>
 
+<style>
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+    }
+</style>
+{% endblock %}

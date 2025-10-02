@@ -28,7 +28,7 @@ from .forms import RideRequestFilterForm, RideRequestForm
 from .models import (
     RideRequest, RideRequestStatus, Trip, Checkpoint, Subscription, SubscriptionStatus,
     MobilityPlusSubscription, ChauffeurSubscriptionRequest, ChauffeurSubscription, 
-    SubscriptionPayment, ChatMessage
+    SubscriptionPayment, ChatMessage, SubscriptionRequestStatus
 )
 from .utils import find_available_chauffeurs
 
@@ -675,10 +675,10 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
                 parent=request.user,
                 chauffeur=chauffeur,
                 status__in=[
-                    ChauffeurSubscriptionRequest.PENDING,
-                    ChauffeurSubscriptionRequest.PAYMENT_PENDING,
-                    ChauffeurSubscriptionRequest.ACCEPTED,
-                    ChauffeurSubscriptionRequest.ACTIVE,
+                    SubscriptionRequestStatus.PENDING,
+                    SubscriptionRequestStatus.PAYMENT_PENDING,
+                    SubscriptionRequestStatus.ACCEPTED,
+                    SubscriptionRequestStatus.ACTIVE,
                 ],
             ).exists():
                 return JsonResponse({
@@ -703,7 +703,14 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
                 expires_at=timezone.now() + timedelta(days=7)
             )
             
-            # TODO: Envoyer notification au chauffeur
+            # Envoyer notification au chauffeur
+            NotificationLog.objects.create(
+                user=chauffeur,
+                title="Nouvelle demande d'abonnement",
+                message=f"{request.user.get_full_name() or request.user.username} vous a envoyé une demande d'abonnement : {title}",
+                notification_type="subscription_request",
+                sent_via_email=True,
+            )
             
             return JsonResponse({
                 'success': True,

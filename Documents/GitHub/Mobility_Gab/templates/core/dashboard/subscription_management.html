@@ -10,15 +10,15 @@
         <i class="bi bi-plus-circle"></i> Nouvelle course
     </a>
     {% else %}
-    <a href="/subscriptions/chauffeur_ride_requests_realtime/" class="btn btn-primary">
+    <a href="/subscriptions/chauffeur_ride_requests_realtime/" class="btn btn-primary position-relative">
         <i class="bi bi-bell"></i> Demandes temps réel
+        <span id="pending-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+            0
+        </span>
     </a>
     {% endif %}
     <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-outline-secondary">
         <i class="bi bi-clock-history"></i> Historique
-    </a>
-    <a href="#" class="btn btn-danger" onclick="triggerSOS()">
-        <i class="bi bi-shield-exclamation"></i> SOS
     </a>
 </div>
 {% endblock %}
@@ -105,16 +105,23 @@
 .section-header {
     background: linear-gradient(135deg, rgba(var(--mg-primary-rgb), 0.1), rgba(var(--mg-primary-rgb), 0.05));
     border-radius: 1rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
     border-left: 5px solid var(--mg-primary);
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 992px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 100%;
+    }
 }
 
 .stat-card {
@@ -241,9 +248,9 @@
 </div>
 
 <!-- Nouveau contenu de gestion des abonnements -->
-<div class="row g-4">
+<div class="row g-3">
     <!-- Section Abonnements/Souscriptions -->
-    <div class="col-lg-8">
+    <div class="col-lg-9">
         <!-- Gestion des abonnements -->
         <div class="section-header">
             <div class="d-flex justify-content-between align-items-center">
@@ -392,12 +399,19 @@
                         
                         {% if chauffeur_subscriptions %}
                         <div class="mb-3">
-                            {% for subscription in chauffeur_subscriptions %}
+                            {% for subscription in chauffeur_subscriptions|slice:":2" %}
                             <div class="small mb-2">
                                 <strong>{{ subscription.title }}</strong><br>
                                 <span class="text-muted">{{ subscription.chauffeur.get_full_name }} - {{ subscription.price_monthly|floatformat:0 }} FCFA/mois</span>
                             </div>
                             {% endfor %}
+                            {% if chauffeur_subscriptions|length > 2 %}
+                            <div class="text-center mt-2">
+                                <a href="{% url 'subscriptions:manage_chauffeur_subscriptions' %}" class="small text-primary">
+                                    Voir tout ({{ chauffeur_subscriptions|length }})
+                                </a>
+                            </div>
+                            {% endif %}
                         </div>
                         {% else %}
                         <div class="text-center py-2">
@@ -406,10 +420,58 @@
                         </div>
                         {% endif %}
                         
-                        <button class="btn btn-success btn-sm w-100" onclick="requestChauffeur()">
-                            <i class="bi bi-person-plus me-1"></i>
-                            Demander un chauffeur
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success btn-sm flex-fill" onclick="requestChauffeur()">
+                                <i class="bi bi-person-plus me-1"></i>
+                                Nouveau
+                            </button>
+                            {% if chauffeur_subscriptions %}
+                            <a href="{% url 'subscriptions:manage_chauffeur_subscriptions' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-gear"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Section Chauffeur : Mes abonnés -->
+        {% if user.role == 'chauffeur' %}
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-people me-2"></i>
+                    Mes abonnés
+                </h5>
+            </div>
+            
+            <div class="col-12">
+                <div class="subscription-card card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="fw-bold">Particuliers abonnés</h6>
+                                <p class="text-muted small mb-0">Gérez vos abonnements avec vos clients</p>
+                            </div>
+                            <a href="{% url 'subscriptions:manage_subscribers' %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-list-ul me-1"></i>
+                                Voir tout
+                            </a>
+                        </div>
+                        
+                        {% if active_subscribers > 0 %}
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Vous avez <strong>{{ active_subscribers }}</strong> abonné(s) actif(s)
+                        </div>
+                        {% else %}
+                        <div class="text-center py-3">
+                            <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mb-0 mt-2">Aucun abonné pour le moment</p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -419,7 +481,7 @@
     </div>
 
     <!-- Section Badges et Récompenses -->
-    <div class="col-lg-4">
+    <div class="col-lg-3">
         <div class="section-header">
             <h4 class="mb-1">
                 <i class="bi bi-award me-2"></i>
@@ -860,5 +922,45 @@ function triggerSOS() {
         // Logique SOS ici
     }
 }
+
+{% if user.role == 'chauffeur' %}
+// Mise à jour automatique du compteur de demandes en attente pour les chauffeurs
+function updatePendingRequestsCount() {
+    fetch('/subscriptions/api/chauffeur/pending-count/')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('pending-badge');
+            if (badge && data.total_count > 0) {
+                badge.textContent = data.total_count;
+                badge.style.display = 'inline-block';
+                
+                // Animation de pulsation pour attirer l'attention
+                badge.style.animation = 'pulse 1.5s ease-in-out infinite';
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Erreur lors de la récupération du compteur:', error));
+}
+
+// Mettre à jour immédiatement
+updatePendingRequestsCount();
+
+// Puis mettre à jour toutes les 15 secondes
+setInterval(updatePendingRequestsCount, 15000);
+{% endif %}
 </script>
+
+<style>
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+    }
+</style>
 {% endblock %}

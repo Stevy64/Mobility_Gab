@@ -205,7 +205,8 @@
             </div>
         </div>
 
-        <!-- Abonnements Chauffeur -->
+        <!-- Abonnements Chauffeur / Mes Abonnés -->
+        {% if user.role == 'parent' %}
         <div class="col-lg-6">
             <div class="card subscription-card chauffeur">
                 <div class="card-body p-4">
@@ -263,6 +264,61 @@
                 </div>
             </div>
         </div>
+        {% elif user.role == 'chauffeur' %}
+        <div class="col-lg-6">
+            <div class="card subscription-card chauffeur">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Mes Abonnés</h5>
+                            <p class="text-muted small mb-0">Gérez vos clients abonnés</p>
+                        </div>
+                        <span class="badge bg-primary status-badge">{{ active_clients.count }} client(s)</span>
+                    </div>
+                    
+                    {% if active_clients %}
+                    <div class="mb-3">
+                        {% for subscription in active_clients|slice:":3" %}
+                        <div class="chauffeur-info mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ subscription.title }}</h6>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-person me-1"></i>
+                                        {{ subscription.parent.get_full_name }}
+                                    </p>
+                                    <p class="text-muted small mb-0">
+                                        <i class="bi bi-geo-alt me-1"></i>
+                                        {{ subscription.pickup_location|truncatewords:3 }}
+                                    </p>
+                                </div>
+                                <div class="text-end">
+                                    <div class="price-display" style="font-size: 1.2rem;">{{ subscription.price_monthly|floatformat:0 }} FCFA</div>
+                                    <small class="text-muted">/mois</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if active_clients.count > 3 %}
+                        <p class="text-muted small text-center mb-0">+{{ active_clients.count|add:"-3" }} autre(s) client(s)</p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Aucun client abonné</p>
+                        <p class="text-muted small">Les particuliers peuvent vous envoyer des demandes d'abonnement</p>
+                    </div>
+                    {% endif %}
+                    
+                    <a href="{% url 'subscriptions:manage_subscribers' %}" class="btn btn-primary action-btn w-100">
+                        <i class="bi bi-people me-2"></i>
+                        Gérer mes abonnés
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Demandes en attente (pour les particuliers) -->

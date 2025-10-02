@@ -77,32 +77,65 @@
     <div class="hero-banner mb-4 d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center">
             <div class="hero-icon">
-                        <i class="bi bi-bell-fill"></i>
+                <i class="bi bi-bell-fill"></i>
             </div>
             <div>
-                <h2 class="h4 mb-1">Demandes de course</h2>
+                <h2 class="h4 mb-1">Demandes en temps réel</h2>
                 <p class="text-muted mb-0">Recevez, examinez et acceptez les demandes des particuliers.</p>
             </div>
         </div>
         <div class="text-end">
             <span class="badge bg-primary-subtle text-primary-emphasis badge-pill">
                 <i class="bi bi-activity me-1"></i>
-                <span id="requestsCount">0</span> demande(s)
+                <span id="totalCount">0</span> demande(s) totales
             </span>
             <p class="text-muted small mb-0">Actualisation automatique toutes les 20 secondes.</p>
         </div>
     </div>
 
-    <div id="requestsContainer" class="row g-4"></div>
+    <!-- Onglets pour basculer entre les types de demandes -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="rides-tab" data-bs-toggle="tab" data-bs-target="#rides-pane" type="button" role="tab">
+                <i class="bi bi-car-front me-2"></i>
+                Demandes de course
+                <span id="ridesCount" class="badge bg-primary rounded-pill ms-2">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="subscriptions-tab" data-bs-toggle="tab" data-bs-target="#subscriptions-pane" type="button" role="tab">
+                <i class="bi bi-calendar-check me-2"></i>
+                Demandes d'abonnement
+                <span id="subscriptionsCount" class="badge bg-warning rounded-pill ms-2">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Contenu des onglets -->
+    <div class="tab-content">
+        <!-- Onglet Demandes de course -->
+        <div class="tab-pane fade show active" id="rides-pane" role="tabpanel">
+            <div id="ridesContainer" class="row g-4"></div>
+        </div>
+        
+        <!-- Onglet Demandes d'abonnement -->
+        <div class="tab-pane fade" id="subscriptions-pane" role="tabpanel">
+            <div id="subscriptionsContainer" class="row g-4"></div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-const container = document.getElementById('requestsContainer');
-const countBadge = document.getElementById('requestsCount');
+const ridesContainer = document.getElementById('ridesContainer');
+const subscriptionsContainer = document.getElementById('subscriptionsContainer');
+const ridesCountBadge = document.getElementById('ridesCount');
+const subscriptionsCountBadge = document.getElementById('subscriptionsCount');
+const totalCountBadge = document.getElementById('totalCount');
 
-function fetchRequests() {
+function fetchAllRequests() {
+    // Récupérer les demandes de course
     fetch('{% url "subscriptions:ride_requests_realtime" %}')
         .then(response => response.json())
         .then(data => {
@@ -110,21 +143,42 @@ function fetchRequests() {
                 console.error(data.error);
                 return;
             }
-            countBadge.textContent = data.requests.length;
-            renderRequests(data.requests);
+            ridesCountBadge.textContent = data.requests.length;
+            renderRideRequests(data.requests);
+            updateTotalCount();
         })
-        .catch(error => console.error('Erreur polling', error));
+        .catch(error => console.error('Erreur polling courses', error));
+    
+    // Récupérer les demandes d'abonnement
+    fetch('{% url "subscriptions:subscription_requests_realtime" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error(data.error);
+                return;
+            }
+            subscriptionsCountBadge.textContent = data.requests.length;
+            renderSubscriptionRequests(data.requests);
+            updateTotalCount();
+        })
+        .catch(error => console.error('Erreur polling abonnements', error));
 }
 
-function renderRequests(requests) {
-    container.innerHTML = '';
+function updateTotalCount() {
+    const ridesCount = parseInt(ridesCountBadge.textContent) || 0;
+    const subsCount = parseInt(subscriptionsCountBadge.textContent) || 0;
+    totalCountBadge.textContent = ridesCount + subsCount;
+}
+
+function renderRideRequests(requests) {
+    ridesContainer.innerHTML = '';
     if (!requests.length) {
-        container.innerHTML = `
+        ridesContainer.innerHTML = `
             <div class="col-12">
                 <div class="empty-state">
                     <i class="bi bi-calendar-heart"></i>
-                    <h4 class="mt-3 mb-2">Aucune demande pour le moment</h4>
-                    <p class="text-muted mb-0">Restez disponible pour recevoir les prochaines sollicitations.</p>
+                    <h4 class="mt-3 mb-2">Aucune demande de course pour le moment</h4>
+                    <p class="text-muted mb-0">Restez disponible pour recevoir les prochaines demandes de course.</p>
                 </div>
             </div>`;
         return;
@@ -189,7 +243,100 @@ function renderRequests(requests) {
                     </div>
                 </div>
             </div>`;
-        container.appendChild(card);
+        ridesContainer.appendChild(card);
+    });
+}
+
+function renderSubscriptionRequests(requests) {
+    subscriptionsContainer.innerHTML = '';
+    if (!requests.length) {
+        subscriptionsContainer.innerHTML = `
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="bi bi-calendar-check"></i>
+                    <h4 class="mt-3 mb-2">Aucune demande d'abonnement pour le moment</h4>
+                    <p class="text-muted mb-0">Les demandes d'abonnement mensuelles apparaîtront ici.</p>
+                </div>
+            </div>`;
+        return;
+    }
+    
+    requests.forEach(request => {
+        const card = document.createElement('div');
+        card.className = 'col-xl-6';
+        const returnTimeText = request.return_time ? `<br>Retour: ${request.return_time}` : '';
+        const childNameText = request.child_name ? `<br>Enfant: ${request.child_name}` : '';
+        
+        card.innerHTML = `
+            <div class="card request-card border-warning">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h4 class="mb-1"><i class="bi bi-calendar-check text-warning me-2"></i>${request.title}</h4>
+                            <p class="text-muted small mb-0">
+                                <i class="bi bi-person"></i> ${request.parent_name} • 
+                                <i class="bi bi-clock"></i> Il y a ${request.created_ago} min
+                            </p>
+                        </div>
+                        <span class="badge bg-warning-subtle text-warning-emphasis badge-pill">
+                            ${request.frequency}
+                        </span>
+                    </div>
+
+                    <p class="text-muted mb-3">${request.description}</p>
+
+                    <div class="request-meta">
+                        <div class="meta-item">
+                            <i class="bi bi-geo-alt"></i>
+                            <div>
+                                <strong>Départ</strong><br>${request.pickup_location}
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-flag"></i>
+                            <div>
+                                <strong>Destination</strong><br>${request.dropoff_location}
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-clock"></i>
+                            <div>
+                                <strong>Horaires</strong><br>
+                                Départ: ${request.pickup_time}${returnTimeText}
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-currency-dollar"></i>
+                            <div>
+                                <strong>Prix proposé</strong><br>
+                                ${request.proposed_price.toLocaleString('fr-FR')} FCFA/mois
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${request.special_requirements ? `
+                        <div class="alert alert-info mt-3 mb-3 py-2">
+                            <small><strong><i class="bi bi-info-circle me-1"></i>Exigences:</strong> ${request.special_requirements}${childNameText}</small>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted small">
+                            <i class="bi bi-lightning-charge text-warning"></i>
+                            Abonnement mensuel récurrent
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-danger btn-sm" onclick="respondSubscriptionRequest('${request.reject_url}', ${request.id})">
+                                <i class="bi bi-x-lg me-1"></i> Refuser
+                            </button>
+                            <button class="btn btn-success btn-sm" onclick="respondSubscriptionRequest('${request.accept_url}', ${request.id})">
+                                <i class="bi bi-check-lg me-1"></i> Accepter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        subscriptionsContainer.appendChild(card);
     });
 }
 
@@ -201,7 +348,7 @@ function respondRequest(url, accepted) {
     .then(response => response.json())
     .then(data => {
         if (data.success !== false) {
-            fetchRequests();
+            fetchAllRequests();
         } else {
             alert(data.error || 'Action impossible.');
         }
@@ -209,7 +356,29 @@ function respondRequest(url, accepted) {
     .catch(() => alert('Erreur réseau.'));
 }
 
-fetchRequests();
-setInterval(fetchRequests, 20000);
+function respondSubscriptionRequest(url, requestId) {
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'response_message='
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || 'Demande traitée avec succès');
+            fetchAllRequests();
+        } else {
+            alert(data.error || 'Action impossible.');
+        }
+    })
+    .catch(() => alert('Erreur réseau.'));
+}
+
+// Initialiser
+fetchAllRequests();
+setInterval(fetchAllRequests, 20000);
 </script>
 {% endblock %}
