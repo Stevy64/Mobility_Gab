@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static subscriptions_extras %}
 
 {% block page_title %}Dashboard Particulier - Mobility Gab{% endblock %}
 
@@ -313,6 +314,11 @@ function createRequestCard(request) {
                                     Annuler
                                 </button>
                             ` : ''}
+                            ${['cancelled', 'completed'].includes(request.status) ? `
+                                <button class="btn btn-outline-secondary btn-sm" onclick="deleteRequest(${request.id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -400,6 +406,29 @@ function cancelRequest(requestId) {
             button.disabled = false;
             button.innerHTML = '<i class="bi bi-x-circle me-1"></i>Annuler';
         }
+    });
+}
+
+function deleteRequest(requestId) {
+    if (!confirm('Supprimer cette demande ?')) return;
+    fetch(`/subscriptions/api/ride-requests/${requestId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Demande supprimée', 'La demande a été retirée de votre historique.', 'success');
+            refreshStatus();
+        } else {
+            showNotification('Erreur', data.error || 'Suppression impossible.', 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showNotification('Erreur', 'Impossible de joindre le serveur.', 'error');
     });
 }
 

@@ -340,30 +340,26 @@ class TripHistoryView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        """
-        Retourne les courses de l'utilisateur connecté avec filtrage par statut.
-        """
         user = self.request.user
-        
-        # Récupérer le queryset de base selon le rôle
+        recent_cutoff = timezone.now() - timezone.timedelta(days=7)
+
         if user.role == UserRoles.PARENT:
-            queryset = Trip.objects.filter(parent=user)
+            queryset = Trip.objects.filter(parent=user, parent_archived=False)
         elif user.role == UserRoles.CHAUFFEUR:
-            queryset = Trip.objects.filter(chauffeur=user)
+            queryset = Trip.objects.filter(chauffeur=user, chauffeur_archived=False)
         else:
-            # Admin peut voir toutes les courses
             queryset = Trip.objects.all()
-        
-        # Filtrer par statut si spécifié
+
+        queryset = queryset.filter(scheduled_date__gte=recent_cutoff.date())
+
         status_filter = self.request.GET.get('status')
         if status_filter:
             if ',' in status_filter:
-                # Plusieurs statuts séparés par virgule
                 statuses = [s.strip() for s in status_filter.split(',')]
                 queryset = queryset.filter(status__in=statuses)
             else:
                 queryset = queryset.filter(status=status_filter)
-        
+
         return queryset.select_related('parent', 'chauffeur').order_by('-scheduled_date')
     
     def get_context_data(self, **kwargs):
@@ -374,6 +370,7 @@ class TripHistoryView(LoginRequiredMixin, ListView):
         
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        context['is_archived_for_user'] = lambda trip: trip.is_archived_for(user)
         
         # Récupérer toutes les courses pour les stats
         all_trips = self.get_queryset()
@@ -740,11 +737,11 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
                     parent=user,
                     status='active'
                 ).select_related('chauffeur')
-                
-                # Demandes en attente
                 pending_requests = ChauffeurSubscriptionRequest.objects.filter(
                     parent=user,
-                    status='pending'
+                    status='pending',
+                    responded_at__isnull=True,
+                    created_at__gte=timezone.now() - timezone.timedelta(days=7)
                 ).select_related('chauffeur')
                 
                 # Chauffeurs disponibles
@@ -770,7 +767,9 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
                 # Demandes reçues
                 received_requests = ChauffeurSubscriptionRequest.objects.filter(
                     chauffeur=user,
-                    status='pending'
+                    status='pending',
+                    responded_at__isnull=True,
+                    created_at__gte=timezone.now() - timezone.timedelta(days=7)
                 ).select_related('parent')
                 
                 # Clients actifs

@@ -186,9 +186,9 @@ class RideRequestViewSet(viewsets.ModelViewSet):
         user = self.request.user
         qs = super().get_queryset()
         if getattr(user, "role", None) == UserRoles.PARENT:
-            qs = qs.filter(parent=user)
+            qs = qs.filter(parent=user, parent_archived=False, requested_at__gte=timezone.now() - timezone.timedelta(days=7))
         elif getattr(user, "role", None) == UserRoles.CHAUFFEUR:
-            qs = qs.filter(chauffeur=user)
+            qs = qs.filter(chauffeur=user, chauffeur_archived=False, requested_at__gte=timezone.now() - timezone.timedelta(days=7))
         return qs
 
     def perform_create(self, serializer):

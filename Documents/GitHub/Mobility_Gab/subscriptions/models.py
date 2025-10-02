@@ -391,12 +391,33 @@ class RideRequest(models.Model):
     requested_at = models.DateTimeField(auto_now_add=True)
     responded_at = models.DateTimeField(null=True, blank=True)
     trip = models.OneToOneField(Trip, on_delete=models.SET_NULL, null=True, blank=True, related_name="ride_request")
+    parent_archived = models.BooleanField(default=False)
+    chauffeur_archived = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-requested_at"]
 
     def __str__(self):
         return f"Course {self.parent} -> {self.chauffeur} ({self.status})"  # pragma: no cover
+
+    def archive_for_user(self, user):
+        if user == self.parent:
+            if not self.parent_archived:
+                self.parent_archived = True
+                self.save(update_fields=["parent_archived"])
+            return True
+        if user == self.chauffeur:
+            if not self.chauffeur_archived:
+                self.chauffeur_archived = True
+                self.save(update_fields=["chauffeur_archived"])
+            return True
+        return False
+
+    def reset_archives(self):
+        if self.parent_archived or self.chauffeur_archived:
+            self.parent_archived = False
+            self.chauffeur_archived = False
+            self.save(update_fields=["parent_archived", "chauffeur_archived"])
 
     def accept(self, chauffeur=None):
         """
@@ -418,6 +439,7 @@ class RideRequest(models.Model):
         if not self.chauffeur:
             raise ValueError("Aucun chauffeur assigné pour accepter la demande")
             
+        self.reset_archives()
         trip = Trip.objects.create(
             subscription=None,
             chauffeur=self.chauffeur,
@@ -450,6 +472,7 @@ class RideRequest(models.Model):
         self.responded_at = timezone.now()
         if reason:
             self.notes = f"{self.notes}\nRefus: {reason}" if self.notes else f"Refus: {reason}"
+        self.reset_archives()
         self.save(update_fields=["status", "responded_at", "notes"])
 
     def cancel(self):
@@ -461,6 +484,7 @@ class RideRequest(models.Model):
         if self.status == RideRequestStatus.PENDING:
             self.status = RideRequestStatus.CANCELLED
             self.responded_at = timezone.now()
+            self.reset_archives()
             self.save(update_fields=["status", "responded_at"])
 
     def complete(self):

@@ -25,6 +25,7 @@ from core.notifications import notification_service
 from .forms import RideRequestForm
 from .models import RideRequest, RideRequestStatus, Trip, Checkpoint
 from .utils import find_available_chauffeurs
+from datetime import timedelta
 
 
 class AdvancedRideRequestCreateView(LoginRequiredMixin, View):
@@ -371,12 +372,13 @@ def get_parent_ride_requests_status(request):
     
     try:
         # Récupérer les demandes récentes du particulier
-        from datetime import timedelta
         cutoff_time = timezone.now() - timedelta(hours=4)  # Demandes des 4 dernières heures
-        
+        recent_cutoff = timezone.now() - timedelta(days=7)
+
         requests = RideRequest.objects.filter(
             parent=request.user,
-            requested_at__gte=cutoff_time
+            requested_at__gte=recent_cutoff,
+            parent_archived=False,
         ).select_related('chauffeur', 'trip').order_by('-requested_at')[:10]
         
         requests_data = []
@@ -430,7 +432,6 @@ def get_ride_requests_realtime(request):
         # En production, filtrer par géolocalisation et critères
         
         # Récupérer les demandes en attente (incluant celles récentes même si l'heure est passée)
-        from datetime import timedelta
         cutoff_time = timezone.now() - timedelta(hours=2)  # Demandes des 2 dernières heures
         
         pending_requests = RideRequest.objects.filter(
@@ -698,6 +699,20 @@ def cancel_ride_request_api(request, pk):
             'success': False,
             'error': str(e)
         }, status=500)
+
+
+@login_required
+def delete_ride_request_api(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Méthode non autorisée'})
+
+    ride_request = get_object_or_404(RideRequest, pk=pk)
+
+    if request.user == ride_request.parent or request.user == ride_request.chauffeur:
+        ride_request.archive_for_user(request.user)
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Accès refusé'}, status=403)
 
 
 def _cancel_pending_notifications(accepted_request):

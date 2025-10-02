@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load subscriptions_extras %}
 
 {% block page_title %}Historique des Courses - Mobility Gab{% endblock %}
 
@@ -219,15 +220,27 @@
     border: none;
     border-radius: 1rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    margin-bottom: 1.5rem;
     transition: all 0.3s ease;
     overflow: hidden;
     background: white;
+    height: 100%;
 }
 
 .trip-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.trip-card-body {
+    padding: 2rem;
+}
+
+.trip-header {
+    margin-bottom: 1.5rem !important;
+}
+
+.trip-body {
+    padding-top: 1rem;
 }
 
 .trip-card.completed {
@@ -403,12 +416,15 @@
     
     /* Amélioration mobile des cartes de courses */
     .trip-card {
-        margin-bottom: 1rem;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     
+    .trip-card-body {
+        padding: 1.5rem;
+    }
+    
     .trip-card .card-body {
-        padding: 1rem;
+        padding: 1.5rem;
     }
     
     .trip-card .row {
@@ -673,187 +689,215 @@
     </div>
 
 <!-- Liste des courses -->
-<div class="row">
-    <div class="col-12">
-        <div id="trips-container">
-            {% for trip in trips %}
-            <div class="trip-card card {{ trip.status }}" data-status="{{ trip.status }}" data-date="{{ trip.scheduled_date|date:'Y-m' }}">
-                <div class="card-body">
-                    <!-- Version desktop (masquée sur mobile) -->
-                    <div class="row align-items-center d-none d-md-flex">
-                        <div class="col-md-2">
-                            <div class="text-center">
-                                <div class="h5 mb-1">{{ trip.scheduled_date|date:"d" }}</div>
-                                <div class="text-muted small">{{ trip.scheduled_date|date:"M Y" }}</div>
-                                {% if trip.started_at %}
-                                <div class="small">{{ trip.started_at|date:"H:i" }}</div>
-                                {% else %}
-                                <div class="small text-muted">Non commencée</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-geo-alt text-primary me-2"></i>
-                                <div>
-                                    <div class="fw-bold">{{ trip.pickup_location|default:"Point de départ" }}</div>
-                                    <div class="text-muted small">vers {{ trip.dropoff_location|default:"Destination" }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-2">
-                            {% if trip.chauffeur %}
-                            <div class="d-flex align-items-center">
-                                {% if trip.chauffeur.profile.photo %}
-                                <img src="{{ trip.chauffeur.profile.photo.url }}" class="user-avatar me-2">
-                                {% else %}
-                                <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center user-avatar">
-                                    <i class="bi bi-person text-white"></i>
-                                </div>
-                                {% endif %}
-                                <div>
-                                    <div class="fw-bold small">{{ trip.chauffeur.get_full_name }}</div>
-                                    {% if trip.chauffeur.chauffeur_profile.vehicle_plate %}
-                                    <div class="text-muted small">{{ trip.chauffeur.chauffeur_profile.vehicle_plate }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <div class="text-center">
-                                {% if trip.distance_km %}
-                                <div class="fw-bold">{{ trip.distance_km|floatformat:1 }} km</div>
-                                {% endif %}
-                                {% if trip.duration_minutes %}
-                                <div class="text-muted small">{{ trip.duration_minutes }} min</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <div class="text-center">
-                                <div class="trip-status-badge status-{{ trip.status }}">
-                                    {% if trip.status == 'completed' %}
-                                        <i class="bi bi-check-circle-fill me-1"></i>
-                                    {% elif trip.status == 'cancelled' %}
-                                        <i class="bi bi-x-circle-fill me-1"></i>
-                                    {% elif trip.status == 'in_progress' %}
-                                        <i class="bi bi-play-circle-fill me-1"></i>
-                                    {% endif %}
-                                    {{ trip.get_status_display }}
-                                </div>
-                                
-                                {% if trip.rating %}
-                                <div class="rating-stars mt-2">
-                                    {% for i in "12345" %}
-                                        {% if forloop.counter <= trip.rating.score %}★{% else %}☆{% endif %}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                
-                                <div class="mt-2">
-                                    <button class="btn-details" onclick="showTripDetails({{ trip.id }})">
-                                        <i class="bi bi-eye me-1"></i>
-                                        Détails
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Version mobile (masquée sur desktop) -->
-                    <div class="d-md-none">
-                        <!-- En-tête mobile avec date et statut -->
-                        <div class="trip-mobile-header">
-                            <div class="trip-mobile-date">
-                                <div class="h5 mb-0">{{ trip.scheduled_date|date:"d M Y" }}</div>
-                                {% if trip.started_at %}
-                                <div class="small text-muted">{{ trip.started_at|date:"H:i" }}</div>
-                                {% else %}
-                                <div class="small text-muted">Non commencée</div>
-                                {% endif %}
-                            </div>
-                            <div class="trip-mobile-status">
-                                <div class="trip-status-badge status-{{ trip.status }}">
-                                    {% if trip.status == 'completed' %}
-                                        <i class="bi bi-check-circle-fill me-1"></i>
-                                    {% elif trip.status == 'cancelled' %}
-                                        <i class="bi bi-x-circle-fill me-1"></i>
-                                    {% elif trip.status == 'in_progress' %}
-                                        <i class="bi bi-play-circle-fill me-1"></i>
-                                    {% endif %}
-                                    {{ trip.get_status_display }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Itinéraire mobile -->
-                        <div class="trip-mobile-route">
-                            <div class="mb-2">
-                                <i class="bi bi-geo-alt text-primary"></i>
-                                <strong>{{ trip.pickup_location|default:"Point de départ" }}</strong>
-                            </div>
+<div id="trips-container" class="row g-4">
+    {% for trip in trips %}
+    <div class="col-12 col-lg-6 trip-item" data-status="{{ trip.status }}">
+        <div class="trip-card h-100 {% if trip|trip_archived_for:user %}archived{% endif %}">
+                    <div class="trip-card-body">
+                        <div class="trip-header mb-3">
                             <div>
-                                <i class="bi bi-flag text-success"></i>
-                                <strong>{{ trip.dropoff_location|default:"Destination" }}</strong>
+                                <span class="badge bg-light text-dark d-inline-flex align-items-center">
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    {{ trip.scheduled_date|date:"d M Y" }}
+                                </span>
+                                <h5 class="mt-2 mb-1">Course #{{ trip.id }}</h5>
+                                <p class="text-muted mb-0">
+                                    {% if user.role == 'parent' %}
+                                        Chauffeur : {{ trip.chauffeur.get_full_name|default:trip.chauffeur.username }}
+                                    {% else %}
+                                        Client : {{ trip.parent.get_full_name|default:trip.parent.username }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge status-badge status-{{ trip.status }}">
+                                    {{ trip.get_status_display }}
+                                </span>
+                                {% if trip.status == 'completed' or trip.status == 'archived' or trip.status == 'cancelled' %}
+                                <button class="btn btn-sm btn-outline-danger mt-2" onclick="deleteTrip({{ trip.id }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
                             </div>
                         </div>
-
-                        <!-- Détails mobile -->
-                        <div class="trip-mobile-details">
-                            <div class="trip-mobile-user">
-                                {% if trip.chauffeur %}
-                                    {% if trip.chauffeur.profile.photo %}
-                                    <img src="{{ trip.chauffeur.profile.photo.url }}" class="user-avatar">
-                                    {% else %}
-                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center user-avatar">
-                                        <i class="bi bi-person text-white"></i>
-                                    </div>
-                                    {% endif %}
-                                    <div>
-                                        <div class="fw-bold small">{{ trip.chauffeur.get_full_name }}</div>
-                                        {% if trip.chauffeur.chauffeur_profile.vehicle_plate %}
-                                        <div class="text-muted small">{{ trip.chauffeur.chauffeur_profile.vehicle_plate }}</div>
+                        <div class="trip-body">
+                            <div class="row align-items-center d-none d-md-flex">
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <div class="h5 mb-1">{{ trip.scheduled_date|date:"d" }}</div>
+                                        <div class="text-muted small">{{ trip.scheduled_date|date:"M Y" }}</div>
+                                        {% if trip.started_at %}
+                                        <div class="small">{{ trip.started_at|date:"H:i" }}</div>
+                                        {% else %}
+                                        <div class="small text-muted">Non commencée</div>
                                         {% endif %}
                                     </div>
-                                {% else %}
-                                    <div class="text-muted small">Chauffeur non assigné</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="trip-mobile-actions">
-                                {% if trip.distance_km %}
-                                <div class="text-center me-3">
-                                    <div class="fw-bold small">{{ trip.distance_km|floatformat:1 }} km</div>
-                                    {% if trip.duration_minutes %}
-                                    <div class="text-muted small">{{ trip.duration_minutes }} min</div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-geo-alt text-primary me-2"></i>
+                                        <div>
+                                            <div class="fw-bold">{{ trip.pickup_location|default:"Point de départ" }}</div>
+                                            <div class="text-muted small">vers {{ trip.dropoff_location|default:"Destination" }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    {% if trip.chauffeur %}
+                                    <div class="d-flex align-items-center">
+                                        {% if trip.chauffeur.profile.photo %}
+                                        <img src="{{ trip.chauffeur.profile.photo.url }}" class="user-avatar me-2">
+                                        {% else %}
+                                        <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center user-avatar">
+                                            <i class="bi bi-person text-white"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-bold small">{{ trip.chauffeur.get_full_name }}</div>
+                                            {% if trip.chauffeur.chauffeur_profile.vehicle_plate %}
+                                            <div class="text-muted small">{{ trip.chauffeur.chauffeur_profile.vehicle_plate }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                     {% endif %}
                                 </div>
-                                {% endif %}
-
-                                {% if trip.rating %}
-                                <div class="rating-stars me-3">
-                                    {% for i in "12345" %}
-                                        {% if forloop.counter <= trip.rating.score %}★{% else %}☆{% endif %}
-                                    {% endfor %}
+                                
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        {% if trip.distance_km %}
+                                        <div class="fw-bold">{{ trip.distance_km|floatformat:1 }} km</div>
+                                        {% endif %}
+                                        {% if trip.duration_minutes %}
+                                        <div class="text-muted small">{{ trip.duration_minutes }} min</div>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                {% endif %}
+                                
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <div class="trip-status-badge status-{{ trip.status }}">
+                                            {% if trip.status == 'completed' %}
+                                                <i class="bi bi-check-circle-fill me-1"></i>
+                                            {% elif trip.status == 'cancelled' %}
+                                                <i class="bi bi-x-circle-fill me-1"></i>
+                                            {% elif trip.status == 'in_progress' %}
+                                                <i class="bi bi-play-circle-fill me-1"></i>
+                                            {% endif %}
+                                            {{ trip.get_status_display }}
+                                        </div>
+                                        
+                                        {% if trip.rating %}
+                                        <div class="rating-stars mt-2">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= trip.rating.score %}★{% else %}☆{% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="mt-2">
+                                            <button class="btn-details" onclick="showTripDetails({{ trip.id }})">
+                                                <i class="bi bi-eye me-1"></i>
+                                                Détails
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                <button class="btn-details" onclick="showTripDetails({{ trip.id }})">
-                                    <i class="bi bi-eye me-1"></i>
-                                    Détails
-                                </button>
+                            <!-- Version mobile (masquée sur desktop) -->
+                            <div class="d-md-none">
+                                <!-- En-tête mobile avec date et statut -->
+                                <div class="trip-mobile-header">
+                                    <div class="trip-mobile-date">
+                                        <div class="h5 mb-0">{{ trip.scheduled_date|date:"d M Y" }}</div>
+                                        {% if trip.started_at %}
+                                        <div class="small text-muted">{{ trip.started_at|date:"H:i" }}</div>
+                                        {% else %}
+                                        <div class="small text-muted">Non commencée</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="trip-mobile-status">
+                                        <div class="trip-status-badge status-{{ trip.status }}">
+                                            {% if trip.status == 'completed' %}
+                                                <i class="bi bi-check-circle-fill me-1"></i>
+                                            {% elif trip.status == 'cancelled' %}
+                                                <i class="bi bi-x-circle-fill me-1"></i>
+                                            {% elif trip.status == 'in_progress' %}
+                                                <i class="bi bi-play-circle-fill me-1"></i>
+                                            {% endif %}
+                                            {{ trip.get_status_display }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Itinéraire mobile -->
+                                <div class="trip-mobile-route">
+                                    <div class="mb-2">
+                                        <i class="bi bi-geo-alt text-primary"></i>
+                                        <strong>{{ trip.pickup_location|default:"Point de départ" }}</strong>
+                                    </div>
+                                    <div>
+                                        <i class="bi bi-flag text-success"></i>
+                                        <strong>{{ trip.dropoff_location|default:"Destination" }}</strong>
+                                    </div>
+                                </div>
+
+                                <!-- Détails mobile -->
+                                <div class="trip-mobile-details">
+                                    <div class="trip-mobile-user">
+                                        {% if trip.chauffeur %}
+                                            {% if trip.chauffeur.profile.photo %}
+                                            <img src="{{ trip.chauffeur.profile.photo.url }}" class="user-avatar">
+                                            {% else %}
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center user-avatar">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold small">{{ trip.chauffeur.get_full_name }}</div>
+                                                {% if trip.chauffeur.chauffeur_profile.vehicle_plate %}
+                                                <div class="text-muted small">{{ trip.chauffeur.chauffeur_profile.vehicle_plate }}</div>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <div class="text-muted small">Chauffeur non assigné</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="trip-mobile-actions">
+                                        {% if trip.distance_km %}
+                                        <div class="text-center me-3">
+                                            <div class="fw-bold small">{{ trip.distance_km|floatformat:1 }} km</div>
+                                            {% if trip.duration_minutes %}
+                                            <div class="text-muted small">{{ trip.duration_minutes }} min</div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+
+                                        {% if trip.rating %}
+                                        <div class="rating-stars me-3">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= trip.rating.score %}★{% else %}☆{% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+
+                                        <button class="btn-details" onclick="showTripDetails({{ trip.id }})">
+                                            <i class="bi bi-eye me-1"></i>
+                                            Détails
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            {% empty %}
-            <div class="empty-state">
+    {% empty %}
+    <div class="col-12">
+        <div class="empty-state">
                 <i class="bi bi-car-front-fill"></i>
                 <h3>Aucune course dans l'historique</h3>
                 <p class="text-muted">Vos courses terminées apparaîtront ici.</p>
@@ -868,8 +912,9 @@
                     </a>
                 </div>
             </div>
-            {% endfor %}
         </div>
+    {% endfor %}
+</div>
         
         <!-- Pagination -->
         {% if is_paginated %}
@@ -941,7 +986,7 @@ let allTrips = [];
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
     // Sauvegarder toutes les courses pour le filtrage
-    allTrips = Array.from(document.querySelectorAll('.trip-card'));
+    allTrips = Array.from(document.querySelectorAll('.trip-item'));
     
     // Animation d'apparition des cartes
     animateCards();
@@ -951,6 +996,26 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialiser les graphiques
     initCharts();
+    
+    // Gestion des filtres par onglets
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            
+            // Mettre à jour l'état actif
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Réinitialiser les statistiques actives
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Filtrer les courses
+            currentFilter = filter;
+            filterTrips(filter);
+        });
+    });
 });
 
 // Fonctions d'animation
@@ -1255,27 +1320,6 @@ function printHistory() {
     window.print();
 }
 
-// Gestion des filtres par onglets
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            const filter = this.dataset.filter;
-            
-            // Mettre à jour l'état actif
-            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Réinitialiser les statistiques actives
-            document.querySelectorAll('.stat-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            
-            // Filtrer les courses
-            currentFilter = filter;
-            filterTrips(filter);
-        });
-    });
-});
 
 // Données pour les graphiques (injectées depuis Django)
 const chartData = {
@@ -1285,197 +1329,71 @@ const chartData = {
 
 function initCharts() {
     // Ne pas initialiser les graphiques si les éléments n'existent pas
-    const monthlyChart = document.getElementById('monthlyChart');
-    const statusChart = document.getElementById('statusChart');
+    const monthlyChartEl = document.getElementById('monthlyChart');
+    const statusChartEl = document.getElementById('statusChart');
     
-    if (!monthlyChart || !statusChart) return;
+    if (!monthlyChartEl || !statusChartEl) return;
 
-// Graphique évolution mensuelle
-const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-new Chart(monthlyCtx, {
-    type: 'line',
-    data: {
-        labels: chartData.monthly.labels,
-        datasets: [{
-            label: 'Courses par mois',
-            data: chartData.monthly.data,
-            borderColor: '#007bff',
-            backgroundColor: 'rgba(0, 123, 255, 0.1)',
-            tension: 0.4,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
+    // Graphique évolution mensuelle
+    const monthlyCtx = monthlyChartEl.getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.monthly.labels,
+            datasets: [{
+                label: 'Courses par mois',
+                data: chartData.monthly.data,
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
         },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
                 }
             }
         }
-    }
-});
+    });
 
-// Graphique répartition par statut
-const statusCtx = document.getElementById('statusChart').getContext('2d');
-new Chart(statusCtx, {
-    type: 'doughnut',
-    data: {
-        labels: chartData.status.labels,
-        datasets: [{
-            data: chartData.status.data,
-            backgroundColor: [
-                '#28a745',  // Terminées
-                '#dc3545',  // Annulées
-                '#ffc107',  // En cours
-                '#6c757d'   // Autres
-            ]
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom'
+    // Graphique répartition par statut
+    const statusCtx = statusChartEl.getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.status.labels,
+            datasets: [{
+                data: chartData.status.data,
+                backgroundColor: [
+                    '#28a745',  // Terminées
+                    '#dc3545',  // Annulées
+                    '#ffc107',  // En cours
+                    '#6c757d'   // Autres
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
             }
         }
-    }
-});
-
-// Filtrage des courses
-document.querySelectorAll('.filter-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        // Mettre à jour l'onglet actif
-        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        
-        const filter = this.dataset.filter;
-        const trips = document.querySelectorAll('.trip-card');
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        const lastMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().slice(0, 7);
-        
-        trips.forEach(trip => {
-            let show = true;
-            
-            switch(filter) {
-                case 'completed':
-                    show = trip.dataset.status === 'completed';
-                    break;
-                case 'cancelled':
-                    show = trip.dataset.status === 'cancelled';
-                    break;
-                case 'this_month':
-                    show = trip.dataset.date === currentMonth;
-                    break;
-                case 'last_month':
-                    show = trip.dataset.date === lastMonth;
-                    break;
-                case 'all':
-                default:
-                    show = true;
-            }
-            
-            trip.style.display = show ? 'block' : 'none';
-        });
     });
-});
-
-// Afficher les détails d'une course
-function showTripDetails(tripId) {
-    fetch(`/api/trips/${tripId}/details/`)
-        .then(response => response.json())
-        .then(data => {
-            const content = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Informations générales</h6>
-                        <table class="table table-sm">
-                            <tr><td>Date:</td><td>${data.date}</td></tr>
-                            <tr><td>Heure:</td><td>${data.time}</td></tr>
-                            <tr><td>Statut:</td><td><span class="trip-status status-${data.status}">${data.status_display}</span></td></tr>
-                            <tr><td>Distance:</td><td>${data.distance || 'N/A'} km</td></tr>
-                            <tr><td>Durée:</td><td>${data.duration || 'N/A'} min</td></tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Chauffeur</h6>
-                        <table class="table table-sm">
-                            <tr><td>Nom:</td><td>${data.chauffeur.name}</td></tr>
-                            <tr><td>Véhicule:</td><td>${data.chauffeur.vehicle}</td></tr>
-                            <tr><td>Plaque:</td><td>${data.chauffeur.plate}</td></tr>
-                            <tr><td>Note:</td><td>${data.chauffeur.rating}/5 ⭐</td></tr>
-                        </table>
-                    </div>
-                </div>
-                
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Trajet</h6>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-geo-alt text-primary me-2"></i>
-                            <span>${data.pickup}</span>
-                            <i class="bi bi-arrow-right mx-3"></i>
-                            <i class="bi bi-flag text-danger me-2"></i>
-                            <span>${data.dropoff}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                ${data.checkpoints.length > 0 ? `
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Étapes de la course</h6>
-                        <div class="timeline">
-                            ${data.checkpoints.map(cp => `
-                                <div class="timeline-item">
-                                    <strong>${cp.type_display}</strong>
-                                    <small class="text-muted ms-2">${cp.time}</small>
-                                    ${cp.notes ? `<div class="small text-muted">${cp.notes}</div>` : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-                ` : ''}
-                
-                ${data.rating ? `
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Votre évaluation</h6>
-                        <div class="rating-stars">${'★'.repeat(data.rating.score)}${'☆'.repeat(5-data.rating.score)}</div>
-                        ${data.rating.comment ? `<p class="mt-2">"${data.rating.comment}"</p>` : ''}
-                    </div>
-                </div>
-                ` : ''}
-            `;
-            
-            document.getElementById('tripDetailsContent').innerHTML = content;
-            const modal = new bootstrap.Modal(document.getElementById('tripDetailsModal'));
-            modal.show();
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            alert('Erreur lors du chargement des détails');
-        });
-}
-
-// Exporter l'historique
-function exportHistory() {
-    window.open('/api/trips/export/?format=csv', '_blank');
-}
-
-// Imprimer l'historique
-function printHistory() {
-    window.print();
 }
 
 function deleteTrip(tripId) {

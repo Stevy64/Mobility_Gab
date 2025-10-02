@@ -28,6 +28,7 @@ urlpatterns = [
     path("api/chauffeur/availability/", views_advanced.toggle_chauffeur_availability, name="toggle_chauffeur_availability"),
     path("api/chauffeur/notifications/", views_advanced.get_chauffeur_notifications, name="chauffeur_notifications"),
     path("chauffeur_ride_requests_realtime/", views_advanced.ChauffeurRideRequestsRealtimeView.as_view(), name="chauffeur_ride_requests_realtime"),
+    path("api/ride-requests/<int:pk>/delete/", views_advanced.delete_ride_request_api, name="ride_request_delete_api"),
     
     # Suivi GPS en temps réel
     path("tracking/<int:pk>/", views.TripTrackingView.as_view(), name="trip_tracking"),
