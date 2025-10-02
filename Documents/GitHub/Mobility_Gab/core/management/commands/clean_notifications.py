@@ -74,3 +74,6 @@ class Command(BaseCommand):
                 self.style.SUCCESS("🎉 Aucune notification restante !")
             )
 
+
+
+

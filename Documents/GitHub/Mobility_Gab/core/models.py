@@ -24,6 +24,7 @@ class NotificationLog(TimeStampedModel):
         ("sos_alert", "Alerte SOS"),
         ("admin_message", "Message admin"),
         ("chat_message", "Message de chat"),
+        ("trip_confirmation", "Confirmation de course"),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

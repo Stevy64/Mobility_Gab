@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Mes Courses{% endblock %}
+
+{% block extra_css %}
+<style>
+.trip-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+.trip-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+.trip-card.archived {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+.status-badge {
+    font-size: 0.85rem;
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+}
+.filter-pill {
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h2 class="h3 mb-1"><i class="bi bi-list-check me-2"></i>Mes courses</h2>
+            <p class="text-muted mb-0">
+                {% if is_chauffeur %}
+                    Retrouvez vos courses planifiées, en cours ou terminées.
+                {% else %}
+                    Suivez toutes vos demandes de course et historique.
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <div class="btn-group" role="group">
+                <a href="?" class="btn btn-outline-primary btn-sm">Toutes</a>
+                <a href="?status=in_progress,scheduled" class="btn btn-outline-primary btn-sm">Actives</a>
+                <a href="?status=completed" class="btn btn-outline-primary btn-sm">Terminées</a>
+                <a href="?status=cancelled" class="btn btn-outline-primary btn-sm">Annulées</a>
+                <a href="?status=archived" class="btn btn-outline-secondary btn-sm">Archivées</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card trip-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Courses actives</p>
+                    <h4 class="mb-0">{{ active_count }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card trip-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Terminées</p>
+                    <h4 class="mb-0">{{ completed_count }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card trip-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Annulées</p>
+                    <h4 class="mb-0">{{ cancelled_count }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card trip-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Archivées</p>
+                    <h4 class="mb-0">{{ archived_count }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if trips %}
+    <div class="row g-3">
+        {% for trip in trips %}
+        <div class="col-lg-6">
+            <div class="card trip-card {% if trip.status == 'archived' or trip.is_archived_for request.user %}archived{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="mb-1">Course #{{ trip.id }}</h5>
+                            <p class="text-muted small mb-0">
+                                Planifiée le {{ trip.scheduled_date|date:"d/m/Y" }}{% if trip.started_at %} • Démarrée {{ trip.started_at|date:"d/m H:i" }}{% endif %}
+                            </p>
+                        </div>
+                        <span class="status-badge
+                            {% if trip.status == 'scheduled' %} bg-warning text-dark
+                            {% elif trip.status == 'in_progress' %} bg-success
+                            {% elif trip.status == 'completed' %} bg-primary
+                            {% elif trip.status == 'cancelled' %} bg-secondary
+                            {% elif trip.status == 'archived' %} bg-dark
+                            {% endif %}">
+                            {{ trip.get_status_display }}
+                        </span>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-geo-alt text-primary me-2"></i>
+                            <span class="fw-medium">{{ trip.ride_request.pickup_location|default:"Point de départ" }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-flag text-success me-2"></i>
+                            <span class="fw-medium">{{ trip.ride_request.dropoff_location|default:"Destination" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            {% if is_chauffeur %}
+                                <i class="bi bi-person"></i> Passager : {{ trip.parent.get_full_name|default:trip.parent.username }}
+                            {% else %}
+                                <i class="bi bi-steering-wheel"></i> Chauffeur : {{ trip.chauffeur.get_full_name|default:trip.chauffeur.username }}
+                            {% endif %}
+                        </div>
+                        <div class="btn-group">
+                        <a href="{% url 'courses:chauffeur_management' trip.id %}" class="btn btn-sm btn-outline-primary">
+                            Gérer
+                        </a>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="archiveTrip({{ trip.id }})">
+                            <i class="bi bi-archive"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTrip({{ trip.id }})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+            </li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="card trip-card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-inbox display-4 text-muted"></i>
+            <h5 class="mt-3">Aucune course pour le moment</h5>
+            <p class="text-muted mb-3">
+                {% if is_chauffeur %}
+                    Vous n'avez pas encore de courses assignées. Restez en ligne pour recevoir des demandes.
+                {% else %}
+                    Aucune course planifiée. Créez une nouvelle demande pour commencer.
+                {% endif %}
+            </p>
+            {% if is_parent %}
+            <a href="{% url 'subscriptions:ride_request_advanced' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Demander une course
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function archiveTrip(tripId) {
+    if (!confirm('Archiver cette course ?')) return;
+    fetch(`/courses/api/trip/${tripId}/archive/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Impossible d\'archiver cette course.');
+        }
+    });
+}
+
+function deleteTrip(tripId) {
+    if (!confirm('Supprimer définitivement cette course annulée ?')) return;
+    fetch(`/courses/api/trip/${tripId}/delete/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Suppression impossible.');
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1477,6 +1477,22 @@ function exportHistory() {
 function printHistory() {
     window.print();
 }
+
+function deleteTrip(tripId) {
+    if (!confirm('Supprimer cette course de votre historique ?')) return;
+    fetch(`/courses/api/trip/${tripId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Suppression impossible.');
+        }
+    });
+}
 </script>
 
 <style media="print">

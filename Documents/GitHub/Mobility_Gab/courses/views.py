@@ -5,7 +5,7 @@ Vues pour la gestion des courses en temps réel.
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, DetailView
+from django.views.generic import TemplateView, DetailView, ListView
 from django.http import JsonResponse
 from django.contrib import messages
 from django.utils import timezone
@@ -14,7 +14,57 @@ from django.db.models import Q
 from subscriptions.models import Trip, RideRequest
 from accounts.models import UserRoles
 from core.models import NotificationLog
+from core.notifications import notification_service
 from .models import TripMessage, TripUpdate
+
+
+def _trip_status_payload(trip: Trip) -> dict:
+    return {
+        "id": trip.id,
+        "status": trip.status,
+        "status_display": trip.get_status_display(),
+        "started_at": trip.started_at.isoformat() if trip.started_at else None,
+        "completed_at": trip.completed_at.isoformat() if trip.completed_at else None,
+        "chauffeur_confirmed": trip.chauffeur_has_confirmed,
+        "parent_confirmed": trip.parent_has_confirmed,
+        "awaiting_parent_confirmation": trip.awaiting_parent_confirmation,
+        "awaiting_chauffeur_confirmation": trip.awaiting_chauffeur_confirmation,
+    }
+
+
+def _notify_trip_user(trip: Trip, user, title: str, message: str, notification_type: str = "trip_update") -> None:
+    NotificationLog.objects.create(
+        user=user,
+        title=title,
+        message=message,
+        notification_type=notification_type,
+    )
+    try:
+        notification_service.send_notification(
+            user=user,
+            title=title,
+            message=message,
+            notification_type=notification_type,
+            channels=["in_app", "push"],
+        )
+    except Exception:  # pragma: no cover - notifications shouldn't break flow
+        pass
+
+
+def _finalize_trip_completion(trip: Trip) -> bool:
+    if trip.chauffeur_has_confirmed and trip.parent_has_confirmed and trip.status != "completed":
+        trip.mark_completed()
+        TripUpdate.objects.create(
+            trip=trip,
+            update_type="completed",
+            message="Course confirmée par les deux parties.",
+        )
+        completion_title = "Course clôturée"
+        completion_message = "La course est terminée et confirmée par les deux parties. Merci pour votre confiance !"
+        _notify_trip_user(trip, trip.parent, completion_title, completion_message, "trip_confirmation")
+        _notify_trip_user(trip, trip.chauffeur, completion_title, completion_message, "trip_confirmation")
+        return True
+    return False
 
 
 class TripManagementView(LoginRequiredMixin, DetailView):
@@ -44,6 +94,10 @@ class TripManagementView(LoginRequiredMixin, DetailView):
         # Déterminer le rôle de l'utilisateur
         context['is_chauffeur'] = self.request.user == trip.chauffeur
         context['is_parent'] = self.request.user == trip.parent
+        context['chauffeur_confirmed'] = trip.chauffeur_has_confirmed
+        context['parent_confirmed'] = trip.parent_has_confirmed
+        context['awaiting_parent_confirmation'] = trip.awaiting_parent_confirmation
+        context['awaiting_chauffeur_confirmation'] = trip.awaiting_chauffeur_confirmation
         
         # Vérifier si l'utilisateur a Mobility Plus pour le chat
         try:
@@ -179,6 +233,58 @@ class ActiveTripsView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class TripListView(LoginRequiredMixin, ListView):
+    """Liste paginée des courses pour le parent ou le chauffeur (hors archivées personnelles)."""
+
+    template_name = 'courses/trip_list.html'
+    context_object_name = 'trips'
+    paginate_by = 20
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Trip.objects.select_related('parent', 'chauffeur').order_by('-scheduled_date', '-started_at')
+        status = self.request.GET.get('status')
+        role_filter = self.request.GET.get('role')
+
+        if user.role == UserRoles.CHAUFFEUR:
+            queryset = queryset.filter(chauffeur=user, chauffeur_archived=False)
+        elif user.role == UserRoles.PARENT:
+            queryset = queryset.filter(parent=user, parent_archived=False)
+        else:
+            # Admin peut tout voir mais peut filtrer par rôle
+            if role_filter == 'chauffeur':
+                queryset = queryset.filter(chauffeur__isnull=False)
+            elif role_filter == 'parent':
+                queryset = queryset.filter(parent__isnull=False)
+
+        if status:
+            statuses = [s.strip() for s in status.split(',') if s.strip()]
+            queryset = queryset.filter(status__in=statuses)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        context.update({
+            'is_chauffeur': user.role == UserRoles.CHAUFFEUR,
+            'is_parent': user.role == UserRoles.PARENT,
+            'active_count': Trip.objects.filter(status__in=['in_progress', 'scheduled'], **self._role_filter(user)).count(),
+            'completed_count': Trip.objects.filter(status='completed', **self._role_filter(user)).count(),
+            'cancelled_count': Trip.objects.filter(status='cancelled', **self._role_filter(user)).count(),
+            'archived_count': Trip.objects.filter(status='archived', **self._role_filter(user)).count(),
+        })
+        return context
+
+    def _role_filter(self, user):
+        if user.role == UserRoles.CHAUFFEUR:
+            return {'chauffeur': user, 'chauffeur_archived': False}
+        if user.role == UserRoles.PARENT:
+            return {'parent': user, 'parent_archived': False}
+        return {}
+
+
 @login_required
 def send_message(request, trip_id):
     """
@@ -289,7 +395,6 @@ def update_trip_status(request, trip_id):
         trip.mark_completed()
     
     # Notifier le particulier
-    from core.notifications import notification_service
     notification_service.send_notification(
         user=trip.parent,
         title=f"🚗 {update.get_update_type_display()}",
@@ -377,12 +482,109 @@ def archive_trip(request, trip_id):
     if request.user != trip.chauffeur and request.user != trip.parent:
         return JsonResponse({'error': 'Accès non autorisé'}, status=403)
     
-    # Vérifier que la course est terminée
-    if trip.status != 'completed':
-        return JsonResponse({'error': 'Seules les courses terminées peuvent être archivées'}, status=400)
-    
-    # Archiver la course
-    if trip.archive():
-        return JsonResponse({'success': True, 'message': 'Course archivée avec succès'})
+    # Archiver pour l'utilisateur courant (per-user archive)
+    if trip.archive(request.user):
+        return JsonResponse({'success': True, 'message': 'Course archivée'})
+    return JsonResponse({'error': "Impossible d'archiver cette course"}, status=400)
+
+
+@login_required
+def start_trip(request, trip_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+    trip = get_object_or_404(Trip, pk=trip_id)
+
+    if request.user != trip.chauffeur:
+        return JsonResponse({"error": "Seul le chauffeur peut démarrer la course"}, status=403)
+    if trip.status not in {"scheduled", "in_progress"}:
+        return JsonResponse({"error": "Cette course ne peut pas être démarrée"}, status=400)
+
+    trip.mark_in_progress()
+    TripUpdate.objects.create(
+        trip=trip,
+        update_type="started",
+        message="Course démarrée par le chauffeur.",
+    )
+    _notify_trip_user(
+        trip,
+        trip.parent,
+        "Course démarrée",
+        f"{trip.chauffeur.get_full_name() or trip.chauffeur.username} a démarré la course.",
+    )
+
+    return JsonResponse({"success": True, "trip": _trip_status_payload(trip)})
+
+
+@login_required
+def confirm_trip_completion(request, trip_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+    trip = get_object_or_404(Trip, pk=trip_id)
+
+    if request.user not in {trip.chauffeur, trip.parent}:
+        return JsonResponse({"error": "Accès non autorisé"}, status=403)
+
+    if trip.status != "in_progress":
+        return JsonResponse({"error": "La course doit être en cours pour être confirmée"}, status=400)
+
+    now = timezone.now()
+    actor_role = "chauffeur" if request.user == trip.chauffeur else "parent"
+
+    if actor_role == "chauffeur":
+        if trip.chauffeur_has_confirmed:
+            return JsonResponse({"error": "Vous avez déjà confirmé la fin"}, status=400)
+        trip.chauffeur_confirmed_completion_at = now
     else:
-        return JsonResponse({'error': 'Impossible d\'archiver cette course'}, status=400)
+        if trip.parent_has_confirmed:
+            return JsonResponse({"error": "Vous avez déjà confirmé la fin"}, status=400)
+        trip.parent_confirmed_completion_at = now
+
+    trip.save(
+        update_fields=[
+            "chauffeur_confirmed_completion_at",
+            "parent_confirmed_completion_at",
+        ]
+    )
+
+    just_completed = _finalize_trip_completion(trip)
+
+    TripUpdate.objects.create(
+        trip=trip,
+        update_type="completed" if just_completed else "destination_reached",
+        message=(
+            "Confirmation de fin de course par le chauffeur."
+            if actor_role == "chauffeur"
+            else "Confirmation de fin de course par le particulier."
+        ),
+    )
+
+    counterpart = trip.parent if actor_role == "chauffeur" else trip.chauffeur
+    _notify_trip_user(
+        trip,
+        counterpart,
+        "Confirmation reçue",
+        f"{request.user.get_full_name() or request.user.username} a confirmé la fin de la course.",
+        "trip_confirmation",
+    )
+
+    return JsonResponse({"success": True, "trip": _trip_status_payload(trip)})
+
+
+@login_required
+def delete_trip(request, trip_id):
+    """Permettre à l'utilisateur de supprimer localement une course annulée."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+
+    trip = get_object_or_404(Trip, pk=trip_id)
+
+    if request.user not in {trip.parent, trip.chauffeur}:
+        return JsonResponse({'error': 'Accès non autorisé'}, status=403)
+
+    if trip.status not in {'cancelled', 'completed', 'archived'}:
+        return JsonResponse({'error': 'Seules les courses annulées ou terminées peuvent être supprimées'}, status=400)
+
+    trip.archive(request.user)
+    return JsonResponse({'success': True})

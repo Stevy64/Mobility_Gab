@@ -104,7 +104,7 @@ class TripTrackingView(LoginRequiredMixin, DetailView):
         trip = self.get_object()
         
         # Récupérer tous les checkpoints de la course
-        checkpoints = trip.checkpoints.all().order_by('created_at')
+        checkpoints = trip.checkpoints.all().order_by('timestamp')
         
         # Marquer le checkpoint actuel
         current_checkpoint = None
@@ -672,7 +672,23 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
                 })
             
             chauffeur = get_object_or_404(User, id=chauffeur_id, role=UserRoles.CHAUFFEUR)
-            
+
+            # Empêcher les doublons de demandes actives pour ce chauffeur
+            if ChauffeurSubscriptionRequest.objects.filter(
+                parent=request.user,
+                chauffeur=chauffeur,
+                status__in=[
+                    ChauffeurSubscriptionRequest.PENDING,
+                    ChauffeurSubscriptionRequest.PAYMENT_PENDING,
+                    ChauffeurSubscriptionRequest.ACCEPTED,
+                    ChauffeurSubscriptionRequest.ACTIVE,
+                ],
+            ).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': "Une demande est déjà en cours avec ce chauffeur."
+                })
+
             # Créer la demande d'abonnement
             subscription_request = ChauffeurSubscriptionRequest.objects.create(
                 parent=request.user,
@@ -1363,3 +1379,22 @@ def user_has_mobility_plus(user):
         return mobility_plus.is_active and mobility_plus.status == 'active'
     except:
         return False
+
+
+@login_required
+def delete_chauffeur_request(request, request_id):
+    """Permettre au parent de supprimer une demande refusée ou annulée."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Méthode non autorisée'})
+
+    subscription_request = get_object_or_404(
+        ChauffeurSubscriptionRequest,
+        id=request_id,
+        parent=request.user,
+    )
+
+    if subscription_request.status not in {'rejected', 'cancelled'}:
+        return JsonResponse({'success': False, 'error': 'Cette demande ne peut pas être supprimée'})
+
+    subscription_request.delete()
+    return JsonResponse({'success': True})

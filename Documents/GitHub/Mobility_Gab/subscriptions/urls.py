@@ -55,6 +55,7 @@ urlpatterns = [
     path("payment/<int:payment_id>/", views.PaymentPageView.as_view(), name="payment_page"),
     path("payment/process/<int:payment_id>/", views.process_payment, name="process_payment"),
     path("chauffeur-respond/<int:request_id>/", views.chauffeur_respond_to_request, name="chauffeur_respond_to_request"),
+    path("chauffeur-request/<int:request_id>/delete/", views.delete_chauffeur_request, name="delete_chauffeur_request"),
     
     # === CHAT ===
     path("chat/", views.chat_list, name="chat_list"),

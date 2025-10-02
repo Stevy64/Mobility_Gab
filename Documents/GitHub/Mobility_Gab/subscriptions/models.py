@@ -175,6 +175,10 @@ class Trip(models.Model):
     duration_minutes = models.PositiveIntegerField(null=True, blank=True)
     average_speed_kmh = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     shared_tracking_url = models.URLField(blank=True)
+    chauffeur_confirmed_completion_at = models.DateTimeField(null=True, blank=True)
+    parent_confirmed_completion_at = models.DateTimeField(null=True, blank=True)
+    chauffeur_archived = models.BooleanField(default=False)
+    parent_archived = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-scheduled_date", "-started_at"]
@@ -185,20 +189,84 @@ class Trip(models.Model):
     def mark_in_progress(self):
         if not self.started_at:
             self.started_at = timezone.now()
+        self.chauffeur_confirmed_completion_at = None
+        self.parent_confirmed_completion_at = None
+        self.chauffeur_archived = False
+        self.parent_archived = False
         self.status = "in_progress"
-        self.save(update_fields=["status", "started_at"])
+        self.save(
+            update_fields=[
+                "status",
+                "started_at",
+                "chauffeur_confirmed_completion_at",
+                "parent_confirmed_completion_at",
+                "chauffeur_archived",
+                "parent_archived",
+            ]
+        )
 
     def mark_completed(self):
         self.status = "completed"
         self.completed_at = timezone.now()
-        self.save(update_fields=["status", "completed_at"])
-    
-    def archive(self):
-        """Archiver une course terminée."""
-        if self.status == "completed":
-            self.status = "archived"
-            self.save(update_fields=["status"])
+        self.save(
+            update_fields=[
+                "status",
+                "completed_at",
+                "chauffeur_confirmed_completion_at",
+                "parent_confirmed_completion_at",
+            ]
+        )
+
+    def archive(self, user=None):
+        """Archiver une course terminée pour un utilisateur (ou globalement)."""
+        if user is None:
+            if self.status == "completed":
+                self.status = "archived"
+                self.save(update_fields=["status"])
+                return True
+            return False
+
+        if user == self.chauffeur:
+            if not self.chauffeur_archived:
+                self.chauffeur_archived = True
+                self.save(update_fields=["chauffeur_archived"])
             return True
+        if user == self.parent:
+            if not self.parent_archived:
+                self.parent_archived = True
+                self.save(update_fields=["parent_archived"])
+            return True
+        return False
+
+    @property
+    def chauffeur_has_confirmed(self) -> bool:
+        return self.chauffeur_confirmed_completion_at is not None
+
+    @property
+    def parent_has_confirmed(self) -> bool:
+        return self.parent_confirmed_completion_at is not None
+
+    @property
+    def awaiting_parent_confirmation(self) -> bool:
+        return (
+            self.chauffeur_has_confirmed
+            and not self.parent_has_confirmed
+            and self.status == "in_progress"
+        )
+
+    @property
+    def awaiting_chauffeur_confirmation(self) -> bool:
+        return (
+            self.parent_has_confirmed
+            and not self.chauffeur_has_confirmed
+            and self.status == "in_progress"
+        )
+
+    def is_archived_for(self, user) -> bool:
+        if user == self.chauffeur:
+            return self.chauffeur_archived
+        if user == self.parent:
+            return self.parent_archived
         return False
 
 
@@ -713,6 +781,17 @@ class ChauffeurSubscriptionRequest(models.Model):
     def get_final_price(self):
         """Obtenir le prix final (contre-offre ou prix proposé)."""
         return self.chauffeur_counter_offer or self.proposed_price_monthly
+
+    def get_status_badge(self):
+        return {
+            'pending': ('warning', 'En attente'),
+            'accepted': ('success', 'Acceptée'),
+            'rejected': ('danger', 'Refusée'),
+            'payment_pending': ('info', 'Paiement en attente'),
+            'active': ('success', 'Actif'),
+            'cancelled': ('secondary', 'Annulé'),
+            'expired': ('secondary', 'Expiré'),
+        }.get(self.status, ('secondary', self.get_status_display()))
 
 
 class ChauffeurSubscription(models.Model):

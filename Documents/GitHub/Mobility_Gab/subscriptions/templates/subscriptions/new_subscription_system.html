@@ -296,10 +296,17 @@
                                     </p>
                                 </div>
                                 <div class="text-end">
-                                    <span class="badge bg-warning">En attente</span>
+                                    {% with badge=request.get_status_badge %}
+                                    <span class="badge bg-{{ badge.0 }}">{{ badge.1 }}</span>
+                                    {% endwith %}
                                     <p class="text-muted small mt-1">
                                         Expire le {{ request.expires_at|date:"d/m/Y" }}
                                     </p>
+                                    {% if request.status == 'rejected' or request.status == 'cancelled' %}
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="deleteRequest({{ request.id }})">
+                                        <i class="bi bi-trash"></i> Supprimer
+                                    </button>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -637,6 +644,51 @@ function respondToRequest(requestId, action) {
     .then(data => {
         if (data.success) {
             alert(data.message);
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue');
+    });
+}
+
+function deleteRequest(requestId) {
+    if (!confirm('Supprimer cette demande ?')) return;
+    fetch(`/subscriptions/chauffeur-request/${requestId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue');
+    });
+}
+
+function cancelParentRequest(requestId) {
+    if (!confirm('Annuler cette demande ?')) return;
+    fetch(`/subscriptions/api/ride-requests/${requestId}/cancel/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
             location.reload();
         } else {
             alert('Erreur: ' + data.error);

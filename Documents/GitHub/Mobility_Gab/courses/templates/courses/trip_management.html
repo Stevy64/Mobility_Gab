@@ -154,15 +154,74 @@
                         Programmée pour {{ pickup_time|time:"H:i" }}
                     {% endif %}
                 </p>
-                
-                {% if trip.status == 'completed' %}
-                <div class="mt-3">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="archiveTrip()">
-                        <i class="bi bi-archive me-1"></i>
-                        Archiver la course
-                    </button>
+
+                <div class="mt-4 d-grid gap-2">
+                    {% if trip.status == 'in_progress' %}
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <span class="badge bg-success w-100 py-2 {% if not chauffeur_confirmed %}opacity-50{% endif %}"
+                                      title="{% if chauffeur_confirmed %}Confirmé{% else %}En attente{% endif %}">
+                                    <i class="bi bi-steering-wheel me-1"></i> Chauffeur
+                                    {% if chauffeur_confirmed %}<br><small>Confirmé</small>{% endif %}
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <span class="badge bg-primary w-100 py-2 {% if not parent_confirmed %}opacity-50{% endif %}"
+                                      title="{% if parent_confirmed %}Confirmé{% else %}En attente{% endif %}">
+                                    <i class="bi bi-person-check me-1"></i> Passager
+                                    {% if parent_confirmed %}<br><small>Confirmé</small>{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if is_chauffeur %}
+                        {% if trip.status == 'scheduled' %}
+                            <button class="btn btn-primary" id="startTripBtn" onclick="startTrip()">
+                                <i class="bi bi-play-fill me-1"></i>Démarrer la course
+                            </button>
+                        {% endif %}
+                        {% if trip.status == 'in_progress' %}
+                            <button class="btn btn-success" id="chauffeurConfirmBtn" onclick="confirmTrip('chauffeur')"
+                                    data-confirmed="{{ chauffeur_confirmed|yesno:'true,false' }}">
+                                <i class="bi bi-check2-circle me-1"></i>
+                                {% if chauffeur_confirmed %}Confirmation envoyée{% else %}Confirmer l'arrivée{% endif %}
+                            </button>
+                            {% if awaiting_parent_confirmation %}
+                                <div class="alert alert-info mb-0" role="alert">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    En attente de la confirmation du particulier.
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                        {% if trip.status == 'in_progress' %}
+                            <button class="btn btn-success" id="parentConfirmBtn" onclick="confirmTrip('parent')"
+                                    data-confirmed="{{ parent_confirmed|yesno:'true,false' }}">
+                                <i class="bi bi-check2-circle me-1"></i>
+                                {% if parent_confirmed %}Confirmation envoyée{% else %}Confirmer l'arrivée{% endif %}
+                            </button>
+                            {% if awaiting_chauffeur_confirmation %}
+                                <div class="alert alert-warning mb-0" role="alert">
+                                    <i class="bi bi-hourglass-split me-1"></i>
+                                    En attente de la confirmation du chauffeur.
+                                </div>
+                            {% elif chauffeur_confirmed and not parent_confirmed %}
+                                <div class="alert alert-info mb-0" role="alert">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Le chauffeur a confirmé l'arrivée. Merci de confirmer la vôtre.
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+
+                    {% if trip.status == 'completed' %}
+                        <button class="btn btn-outline-secondary btn-sm" onclick="archiveTrip()">
+                            <i class="bi bi-archive me-1"></i>
+                            Archiver la course
+                        </button>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
 
             <!-- Informations du trajet -->
@@ -316,6 +375,12 @@
             </div>
         </div>
     </div>
+    <input type="hidden" id="contextIsChauffeur" value="{{ is_chauffeur|yesno:'true,false' }}">
+    <input type="hidden" id="contextIsParent" value="{{ is_parent|yesno:'true,false' }}">
+    <input type="hidden" id="contextChauffeurConfirmed" value="{{ chauffeur_confirmed|yesno:'true,false' }}">
+    <input type="hidden" id="contextParentConfirmed" value="{{ parent_confirmed|yesno:'true,false' }}">
+    <input type="hidden" id="contextAwaitingParent" value="{{ awaiting_parent_confirmation|yesno:'true,false' }}">
+    <input type="hidden" id="contextAwaitingChauffeur" value="{{ awaiting_chauffeur_confirmation|yesno:'true,false' }}">
 </div>
 
 {% if is_chauffeur %}
@@ -366,6 +431,137 @@
 <script>
 const tripId = {{ trip.id }};
 let messagesInterval;
+
+function toggleLoading(button, isLoading, defaultText) {
+    if (!button) return;
+    if (isLoading) {
+        button.disabled = true;
+        button.dataset.originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Patientez…';
+    } else {
+        button.disabled = false;
+        button.innerHTML = defaultText || button.dataset.originalText || button.innerHTML;
+    }
+}
+
+function refreshTripStatus(trip) {
+    if (!trip) return;
+    const statusBadge = document.querySelector('.trip-status');
+    if (statusBadge) {
+        statusBadge.className = `trip-status ${trip.status}`;
+    }
+
+    const chauffeurBadge = document.querySelector('.badge.bg-success');
+    const parentBadge = document.querySelector('.badge.bg-primary');
+    const chauffeurBtn = document.getElementById('chauffeurConfirmBtn');
+    const parentBtn = document.getElementById('parentConfirmBtn');
+    const startBtn = document.getElementById('startTripBtn');
+
+    if (trip.status === 'in_progress' && startBtn) {
+        startBtn.remove();
+    }
+
+    if (chauffeurBadge) {
+        chauffeurBadge.classList.toggle('opacity-50', !trip.chauffeur_confirmed);
+        chauffeurBadge.setAttribute('title', trip.chauffeur_confirmed ? 'Confirmé' : 'En attente');
+    }
+    if (parentBadge) {
+        parentBadge.classList.toggle('opacity-50', !trip.parent_confirmed);
+        parentBadge.setAttribute('title', trip.parent_confirmed ? 'Confirmé' : 'En attente');
+    }
+
+    if (chauffeurBtn) {
+        chauffeurBtn.disabled = trip.chauffeur_confirmed;
+        chauffeurBtn.innerHTML = trip.chauffeur_confirmed
+            ? '<i class="bi bi-check2-circle me-1"></i>Confirmation envoyée'
+            : '<i class="bi bi-check2-circle me-1"></i>Confirmer l\'arrivée';
+    }
+    if (parentBtn) {
+        parentBtn.disabled = trip.parent_confirmed;
+        parentBtn.innerHTML = trip.parent_confirmed
+            ? '<i class="bi bi-check2-circle me-1"></i>Confirmation envoyée'
+            : '<i class="bi bi-check2-circle me-1"></i>Confirmer l\'arrivée';
+    }
+
+    if (trip.status === 'completed') {
+        const archiveBtn = document.querySelector('button[onclick="archiveTrip()"]');
+        if (archiveBtn) archiveBtn.classList.remove('d-none');
+    }
+}
+
+function flashAlert(message, type = 'success') {
+    const existing = document.querySelector('.trip-status + .alert');
+    if (existing) {
+        const alertInstance = bootstrap.Alert.getOrCreateInstance(existing);
+        alertInstance.close();
+    }
+    const container = document.createElement('div');
+    container.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+    container.role = 'alert';
+    container.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    const target = document.querySelector('.trip-status');
+    if (target) {
+        target.parentNode.insertBefore(container, target.nextSibling);
+        setTimeout(() => {
+            const alert = bootstrap.Alert.getOrCreateInstance(container);
+            alert.close();
+        }, 4000);
+    }
+}
+
+function startTrip() {
+    const button = document.getElementById('startTripBtn');
+    toggleLoading(button, true);
+
+    fetch(`/courses/api/trip/${tripId}/start/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            refreshTripStatus(data.trip);
+            flashAlert('Course démarrée avec succès !');
+        } else {
+            alert(data.error || 'Impossible de démarrer la course.');
+        }
+    })
+    .catch(() => alert('Erreur de connexion.'))
+    .finally(() => toggleLoading(button, false, '<i class="bi bi-play-fill me-1"></i>Démarrer la course'));
+}
+
+function confirmTrip(actor) {
+    const button = actor === 'chauffeur'
+        ? document.getElementById('chauffeurConfirmBtn')
+        : document.getElementById('parentConfirmBtn');
+
+    if (button && button.disabled) return;
+
+    toggleLoading(button, true);
+
+    fetch(`/courses/api/trip/${tripId}/confirm/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            refreshTripStatus(data.trip);
+            flashAlert('Confirmation envoyée !');
+        } else {
+            alert(data.error || 'Impossible de confirmer la course.');
+        }
+    })
+    .catch(() => alert('Erreur de connexion.'))
+    .finally(() => toggleLoading(button, false));
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     {% if has_mobility_plus %}

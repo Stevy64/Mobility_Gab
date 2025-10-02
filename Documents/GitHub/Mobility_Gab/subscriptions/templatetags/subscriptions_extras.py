@@ -15,3 +15,6 @@ def user_has_mobility_plus(user):
     except:
         return False
 
+
+
+

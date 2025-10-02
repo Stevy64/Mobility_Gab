@@ -1,11 +1,162 @@
 {% extends 'core/dashboard/base.html' %}
 
-{% block dashboard_title %}Administration (legacy){% endblock %}
-{% block dashboard_subtitle %}Vue statique à migrer vers le nouvel espace admin réservé staff{% endblock %}
+{% block dashboard_title %}Tableau de bord Administrateur{% endblock %}
+{% block dashboard_subtitle %}Supervisez les courses, abonnements et suspensions en temps réel.{% endblock %}
+
+{% block dashboard_actions %}
+<div class="btn-group">
+    <a href="/admin/" class="btn btn-outline-primary"><i class="bi bi-gear"></i> Admin Django</a>
+    <a href="/subscriptions/history/" class="btn btn-outline-secondary"><i class="bi bi-clock-history"></i> Historique global</a>
+</div>
+{% endblock %}
 
 {% block dashboard_content %}
-<div class="alert alert-warning" role="alert">
-    Un nouvel espace admin dédié aux utilisateurs <code>is_staff</code> est disponible via l'onglet "Espace admin". Cette page sera retirée après migration complète.
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <p class="text-muted text-uppercase small mb-1">Particuliers actifs</p>
+                <h3 class="mb-0">{{ kpis.parents_count }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <p class="text-muted text-uppercase small mb-1">Chauffeurs actifs</p>
+                <h3 class="mb-0">{{ kpis.active_drivers }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <p class="text-muted text-uppercase small mb-1">Abonnements en retard</p>
+                <h3 class="mb-0 text-warning">{{ kpis.overdue_subscriptions }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <p class="text-muted text-uppercase small mb-1">Comptes suspendus</p>
+                <h3 class="mb-0 text-danger">{{ kpis.suspended_accounts }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-xl-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Courses récentes</h5>
+                    <small class="text-muted">Suivez les statuts critiques et en cours</small>
+                </div>
+                <div class="badge bg-light text-dark">
+                    <span class="me-2"><i class="bi bi-clock-history"></i> En cours: {{ trip_filters.in_progress }}</span>
+                    <span class="me-2"><i class="bi bi-calendar-event"></i> Programmées: {{ trip_filters.scheduled }}</span>
+                    <span><i class="bi bi-check2-circle"></i> Term. 7j: {{ trip_filters.completed_week }}</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Particulier</th>
+                            <th>Chauffeur</th>
+                            <th>Statut</th>
+                            <th>Dernière mise à jour</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trip in trip_segments %}
+                        <tr>
+                            <td>#{{ trip.id }}</td>
+                            <td>{{ trip.parent.get_full_name|default:trip.parent.username }}</td>
+                            <td>{{ trip.chauffeur.get_full_name|default:trip.chauffeur.username }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if trip.status == 'in_progress' %} bg-success
+                                    {% elif trip.status == 'scheduled' %} bg-warning text-dark
+                                    {% elif trip.status == 'completed' %} bg-primary
+                                    {% else %} bg-secondary
+                                    {% endif %}">
+                                    {{ trip.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ trip.updated_at|default:trip.started_at|date:"d/m H:i" }}</td>
+                            <td>
+                                <a href="{% url 'courses:chauffeur_management' trip.id %}" class="btn btn-sm btn-outline-primary">Ouvrir</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">Aucune course récente.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Abonnements</h5>
+                    <small class="text-muted">Contrôlez les paiements et suspensions</small>
+                </div>
+                <div class="badge bg-light text-dark">
+                    <span class="me-2"><i class="bi bi-check-circle"></i> Actifs: {{ subscription_filters.active }}</span>
+                    <span class="me-2"><i class="bi bi-exclamation-triangle"></i> Retard: {{ subscription_filters.overdue }}</span>
+                    <span class="me-2"><i class="bi bi-slash-circle"></i> Suspendus: {{ subscription_filters.suspended }}</span>
+                    <span><i class="bi bi-x-circle"></i> Annulés: {{ subscription_filters.cancelled }}</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Parent</th>
+                            <th>Chauffeur</th>
+                            <th>Plan</th>
+                            <th>Statut</th>
+                            <th>Échéance</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscription in subscription_segments %}
+                        <tr>
+                            <td>{{ subscription.parent.get_full_name|default:subscription.parent.username }}</td>
+                            <td>{{ subscription.chauffeur.get_full_name|default:subscription.chauffeur.username }}</td>
+                            <td>{{ subscription.plan.name }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if subscription.status == 'active' %} bg-success
+                                    {% elif subscription.status == 'overdue' %} bg-warning text-dark
+                                    {% elif subscription.status == 'suspended' %} bg-danger
+                                    {% else %} bg-secondary
+                                    {% endif %}">
+                                    {{ subscription.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ subscription.next_due_date|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'subscriptions:manage_subscription' subscription.id %}" class="btn btn-sm btn-outline-primary">Gérer</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">Aucun abonnement récent.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

@@ -1,745 +1,215 @@
 {% extends 'base.html' %}
 
-{% block page_title %}Demandes de course - Mobility Gab{% endblock %}
+{% block page_title %}Demandes de course en temps réel{% endblock %}
 
 {% block extra_css %}
 <style>
-.ride-request-card {
-    background: white;
-    border: 2px solid #e9ecef;
-    border-radius: 1rem;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+.hero-banner {
+    background: linear-gradient(135deg, rgba(15, 74, 166, 0.1), rgba(27, 187, 138, 0.1));
+    border-radius: 1.25rem;
+    padding: 2.25rem;
+    border: 1px solid rgba(15, 74, 166, 0.08);
 }
-
-.ride-request-card:hover {
-    border-color: var(--mg-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(22, 105, 201, 0.15);
-}
-
-.ride-request-card.urgent {
-    border-color: #dc3545;
-    background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), rgba(255, 255, 255, 1));
-}
-
-.ride-request-card.new {
-    border-color: var(--mg-secondary);
-    background: linear-gradient(135deg, rgba(27, 187, 138, 0.05), rgba(255, 255, 255, 1));
-}
-
-.request-header {
+.hero-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
     background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
-    color: white;
-    padding: 1rem;
-    margin: -1px -1px 1rem -1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2rem;
+    margin-right: 1.5rem;
 }
-
-.request-actions {
-    gap: 0.5rem;
-}
-
-.btn-accept {
-    background: linear-gradient(135deg, var(--mg-secondary), #0c9b6f);
+.request-card {
     border: none;
-    color: white;
+    border-radius: 1.25rem;
+    background: #fff;
+    box-shadow: 0 25px 60px -35px rgba(33, 37, 41, 0.4);
+    transition: transform 0.25s ease, box-shadow 0.3s ease;
 }
-
-.btn-accept:hover {
-    background: linear-gradient(135deg, #0c9b6f, var(--mg-secondary));
-    color: white;
-    transform: translateY(-1px);
+.request-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 35px 70px -45px rgba(15, 74, 166, 0.45);
 }
-
-.distance-badge {
-    background: rgba(22, 105, 201, 0.1);
+.request-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    background: #f8fbff;
+    border-radius: 1rem;
+    padding: 1rem;
+    margin: 1.25rem 0;
+}
+.request-meta .meta-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #345;
+}
+.request-meta .meta-item i {
+    font-size: 1rem;
+    margin-right: 0.6rem;
     color: var(--mg-primary);
-    border: 1px solid rgba(22, 105, 201, 0.2);
 }
-
-.time-badge {
-    background: rgba(255, 193, 7, 0.1);
-    color: #856404;
-    border: 1px solid rgba(255, 193, 7, 0.2);
+.badge-pill {
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.75rem;
 }
-
-.pulse {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-}
-
-.availability-toggle {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    z-index: 1000;
-}
-
-.availability-toggle .btn {
-    border-radius: 50px;
-    padding: 1rem 1.5rem;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.no-requests {
+.empty-state {
+    border-radius: 1.25rem;
+    border: 1px dashed rgba(15, 74, 166, 0.25);
+    padding: 3rem;
+    background: rgba(248, 250, 255, 0.85);
     text-align: center;
-    padding: 3rem 1rem;
-    color: #6c757d;
 }
-
-@media (max-width: 768px) {
-    .request-actions {
-        flex-direction: column;
-    }
-    
-    .availability-toggle {
-        bottom: 1rem;
-        right: 1rem;
-    }
+.empty-state i {
+    font-size: 3.2rem;
+    color: var(--mg-primary);
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- En-tête avec statut -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="h4 mb-1">🚗 Demandes de course</h2>
-                    <p class="text-muted mb-0">
-                        <span id="status-text">Mise à jour automatique</span> • 
-                        <span id="last-update">Chargement...</span>
-                    </p>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <div class="badge bg-primary">
-                        <span id="requests-count">0</span> demandes
-                    </div>
-                    <div class="badge bg-warning position-relative" id="notifications-badge" style="display: none;">
+    <div class="hero-banner mb-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <div class="hero-icon">
                         <i class="bi bi-bell-fill"></i>
-                        <span id="notifications-count">0</span>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-dot" style="display: none;">
-                            !
-                        </span>
-                    </div>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="refreshRequests()">
-                        <i class="bi bi-arrow-clockwise"></i>
-                        Actualiser
-                    </button>
-                </div>
             </div>
+            <div>
+                <h2 class="h4 mb-1">Demandes de course</h2>
+                <p class="text-muted mb-0">Recevez, examinez et acceptez les demandes des particuliers.</p>
+            </div>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary-subtle text-primary-emphasis badge-pill">
+                <i class="bi bi-activity me-1"></i>
+                <span id="requestsCount">0</span> demande(s)
+            </span>
+            <p class="text-muted small mb-0">Actualisation automatique toutes les 20 secondes.</p>
         </div>
     </div>
 
-    <!-- Section Notifications -->
-    <div class="row mb-4" id="notifications-section" style="display: none;">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-warning text-dark">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="bi bi-bell me-2"></i>
-                            Notifications récentes
-                        </h5>
-                        <button class="btn btn-sm btn-outline-dark" onclick="toggleNotifications()">
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body" id="notifications-container">
-                    <!-- Les notifications seront chargées ici -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Liste des demandes -->
-    <div class="row" id="requests-container">
-        <!-- Les demandes seront chargées ici -->
-        <div class="col-12">
-            <div class="no-requests" id="no-requests">
-                <i class="bi bi-car-front" style="font-size: 4rem; opacity: 0.3;"></i>
-                <h5 class="mt-3">Aucune demande de course</h5>
-                <p>Les nouvelles demandes apparaîtront ici automatiquement</p>
-                <button class="btn btn-outline-primary" onclick="refreshRequests()">
-                    <i class="bi bi-arrow-clockwise me-2"></i>
-                    Vérifier maintenant
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bouton de disponibilité flottant -->
-    <div class="availability-toggle">
-        <button type="button" class="btn" id="availability-btn" onclick="toggleAvailability()">
-            <i class="bi bi-power" id="availability-icon"></i>
-            <span id="availability-text">Disponible</span>
-        </button>
-    </div>
-</div>
-
-<!-- Modal de confirmation -->
-<div class="modal fade" id="confirmModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmModalTitle">Confirmer l'action</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="confirmModalBody">
-                <!-- Contenu dynamique -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-primary" id="confirmModalAction">Confirmer</button>
-            </div>
-        </div>
-    </div>
+    <div id="requestsContainer" class="row g-4"></div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Variables globales
-let pollingInterval;
-let notificationsInterval;
-let isAvailable = {{ is_available|yesno:"true,false" }};
-let currentRequests = [];
-let currentNotifications = [];
-let lastNotificationCheck = new Date();
+const container = document.getElementById('requestsContainer');
+const countBadge = document.getElementById('requestsCount');
 
-// Initialisation
-document.addEventListener('DOMContentLoaded', function() {
-    initializeInterface();
-    startPolling();
-    updateAvailabilityUI();
-});
-
-function initializeInterface() {
-    // Charger les demandes initiales
-    refreshRequests();
-    
-    // Charger les notifications
-    refreshNotifications();
-    
-    // Mettre à jour l'interface de disponibilité
-    updateAvailabilityUI();
-}
-
-function startPolling() {
-    // Polling toutes les 5 secondes pour les demandes
-    pollingInterval = setInterval(refreshRequests, 5000);
-    
-    // Polling toutes les 10 secondes pour les notifications
-    notificationsInterval = setInterval(refreshNotifications, 10000);
-}
-
-function refreshRequests() {
-    if (!isAvailable) {
-        updateStatus('Indisponible - Polling arrêté');
-        return;
-    }
-    
-    updateStatus('Vérification des demandes...');
-    
-    fetch('/subscriptions/api/ride-requests/realtime/')
+function fetchRequests() {
+    fetch('{% url "subscriptions:ride_requests_realtime" %}')
         .then(response => response.json())
         .then(data => {
-            if (data.requests) {
-                updateRequestsList(data.requests);
-                updateStatus('Dernière mise à jour: ' + new Date().toLocaleTimeString());
-                document.getElementById('requests-count').textContent = data.requests.length;
-            } else {
-                updateStatus('Erreur de récupération');
+            if (data.error) {
+                console.error(data.error);
+                return;
             }
+            countBadge.textContent = data.requests.length;
+            renderRequests(data.requests);
         })
-        .catch(error => {
-            console.error('Erreur:', error);
-            updateStatus('Erreur de connexion');
-        });
+        .catch(error => console.error('Erreur polling', error));
 }
 
-function updateRequestsList(requests) {
-    const container = document.getElementById('requests-container');
-    let noRequestsDiv = document.getElementById('no-requests');
-    
-    if (requests.length === 0) {
-        // Afficher le message "aucune demande"
-        if (!noRequestsDiv) {
-            // Créer l'élément s'il n'existe pas
-            noRequestsDiv = document.createElement('div');
-            noRequestsDiv.id = 'no-requests';
-            noRequestsDiv.className = 'col-12';
-            noRequestsDiv.innerHTML = `
-                <div class="no-requests">
-                    <i class="bi bi-car-front" style="font-size: 4rem; opacity: 0.3;"></i>
-                    <h5 class="mt-3">Aucune demande de course</h5>
-                    <p>Les nouvelles demandes apparaîtront ici automatiquement</p>
-                    <button class="btn btn-outline-primary" onclick="refreshRequests()">
-                        <i class="bi bi-arrow-clockwise me-2"></i>
-                        Vérifier maintenant
-                    </button>
+function renderRequests(requests) {
+    container.innerHTML = '';
+    if (!requests.length) {
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="bi bi-calendar-heart"></i>
+                    <h4 class="mt-3 mb-2">Aucune demande pour le moment</h4>
+                    <p class="text-muted mb-0">Restez disponible pour recevoir les prochaines sollicitations.</p>
                 </div>
-            `;
-        }
-        container.innerHTML = '';
-        container.appendChild(noRequestsDiv);
+            </div>`;
         return;
     }
     
-    // Cacher le message "aucune demande" et afficher les demandes
-    if (noRequestsDiv) {
-        noRequestsDiv.remove();
-    }
-    
-    // Générer les cartes de demandes
-    const requestsHTML = requests.map(request => createRequestCard(request)).join('');
-    container.innerHTML = requestsHTML;
-    
-    // Animer les nouvelles demandes
-    const newRequests = requests.filter(req => !currentRequests.find(cr => cr.id === req.id));
-    if (newRequests.length > 0) {
-        showNotification(`${newRequests.length} nouvelle(s) demande(s) !`, 'success');
-        
-        // Faire clignoter les nouvelles demandes
-        newRequests.forEach(req => {
-            const card = document.querySelector(`[data-request-id="${req.id}"]`);
-            if (card) {
-                card.classList.add('new', 'pulse');
-                setTimeout(() => {
-                    card.classList.remove('pulse');
-                }, 3000);
-            }
-        });
-    }
-    
-    currentRequests = requests;
-}
-
-function createRequestCard(request) {
-    const urgentClass = request.created_ago > 10 ? 'urgent' : '';
-    const distanceBadge = request.distance_km ? 
-        `<span class="badge distance-badge me-2">${request.distance_km}km</span>` : '';
-    const timeBadge = `<span class="badge time-badge">${request.created_ago}min</span>`;
-    
-    return `
-        <div class="col-md-6 col-lg-4 mb-4" data-request-id="${request.id}">
-            <div class="card ride-request-card ${urgentClass}">
-                <div class="request-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">
-                            <i class="bi bi-person-circle me-2"></i>
-                            ${request.parent_name}
-                        </h6>
+    requests.forEach(request => {
+        const card = document.createElement('div');
+        card.className = 'col-xl-6';
+        card.innerHTML = `
+            <div class="card request-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            ${distanceBadge}
-                            ${timeBadge}
+                            <h4 class="mb-1">${request.parent_name}</h4>
+                            <p class="text-muted small mb-0">Demande reçue il y a ${request.created_ago} min</p>
                         </div>
+                        <span class="badge bg-primary-subtle text-primary-emphasis badge-pill">
+                            ${request.distance_km ? `${request.distance_km} km` : 'Distance inconnue'}
+                        </span>
                     </div>
-                </div>
-                
-                <div class="card-body">
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-geo-alt text-primary me-2"></i>
-                            <strong>Départ:</strong>
-                        </div>
-                        <div class="ps-4 text-muted">${request.pickup_location}</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-flag text-success me-2"></i>
-                            <strong>Destination:</strong>
-                        </div>
-                        <div class="ps-4 text-muted">${request.dropoff_location}</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-clock text-info me-2"></i>
-                            <strong>Heure souhaitée:</strong>
-                            <span class="ms-2">${request.pickup_time}</span>
-                        </div>
-                    </div>
-                    
-                    ${request.notes ? `
-                        <div class="mb-3">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-chat-dots text-warning me-2"></i>
-                                <strong>Instructions:</strong>
+
+                    <div class="request-meta">
+                        <div class="meta-item">
+                            <i class="bi bi-geo-alt"></i>
+                            <div>
+                                <strong>Départ</strong><br>${request.pickup_location}
                             </div>
-                            <div class="ps-4 text-muted small">${request.notes}</div>
                         </div>
-                    ` : ''}
+                        <div class="meta-item">
+                            <i class="bi bi-flag"></i>
+                            <div>
+                                <strong>Destination</strong><br>${request.dropoff_location}
                 </div>
-                
-                <div class="card-footer bg-light">
-                    <div class="d-flex request-actions">
-                        <button type="button" class="btn btn-accept flex-fill" onclick="acceptRequest(${request.id}, '${request.parent_name}')">
-                            <i class="bi bi-check-circle me-2"></i>
-                            Accepter
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-clock-history"></i>
+                            <div>
+                                <strong>Heure</strong><br>${request.pickup_time}
+                    </div>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-chat-dots"></i>
+                            <div>
+                                <strong>Notes</strong><br>${request.notes || 'Aucune indication'}
+                    </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            <i class="bi bi-lightning-charge text-warning"></i>
+                            Décidez rapidement pour répondre au particulier.
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-danger" onclick="respondRequest('${request.decline_url}', false)">
+                                <i class="bi bi-x-lg me-1"></i> Refuser
                         </button>
-                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="declineRequest(${request.id}, '${request.parent_name}')">
-                            <i class="bi bi-x-circle me-2"></i>
-                            Refuser
+                            <button class="btn btn-success" onclick="respondRequest('${request.accept_url}', true)">
+                                <i class="bi bi-check-lg me-1"></i> Accepter
                         </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    `;
+            </div>`;
+        container.appendChild(card);
+    });
 }
 
-function acceptRequest(requestId, parentName) {
-    showConfirmModal(
-        'Accepter la course',
-        `Voulez-vous accepter la demande de course de <strong>${parentName}</strong> ?<br><br>
-        <small class="text-muted">En acceptant, vous vous engagez à effectuer cette course et le suivi GPS sera activé.</small>`,
-        'Accepter la course',
-        () => processRequest(requestId, 'accept')
-    );
-}
-
-function declineRequest(requestId, parentName) {
-    showConfirmModal(
-        'Refuser la course',
-        `Voulez-vous refuser la demande de course de <strong>${parentName}</strong> ?`,
-        'Refuser',
-        () => processRequest(requestId, 'decline')
-    );
-}
-
-function processRequest(requestId, action) {
-    const url = action === 'accept' ? 
-        `/subscriptions/ride-requests/${requestId}/accept/` : 
-        `/subscriptions/ride-requests/${requestId}/decline/`;
-    
-    // Désactiver temporairement les boutons
-    const card = document.querySelector(`[data-request-id="${requestId}"]`);
-    if (card) {
-        const buttons = card.querySelectorAll('button');
-        buttons.forEach(btn => {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Traitement...';
-        });
-    }
-    
+function respondRequest(url, accepted) {
     fetch(url, {
         method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/json'
-        }
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            showNotification(
-                action === 'accept' ? 'Course acceptée ! Redirection vers le suivi...' : 'Demande refusée',
-                'success'
-            );
-            
-            if (action === 'accept' && data.tracking_url) {
-                setTimeout(() => {
-                    window.location.href = data.tracking_url;
-                }, 1500);
-            } else {
-                // Supprimer la carte de la liste
-                if (card) {
-                    card.style.transform = 'scale(0.8)';
-                    card.style.opacity = '0';
-                    setTimeout(() => card.remove(), 300);
-                }
-                refreshRequests();
-            }
+        if (data.success !== false) {
+            fetchRequests();
         } else {
-            showNotification('Erreur: ' + data.error, 'error');
-            // Réactiver les boutons
-            refreshRequests();
+            alert(data.error || 'Action impossible.');
         }
     })
-    .catch(error => {
-        console.error('Erreur:', error);
-        showNotification('Erreur de connexion', 'error');
-        refreshRequests();
-    });
+    .catch(() => alert('Erreur réseau.'));
 }
 
-function toggleAvailability() {
-    isAvailable = !isAvailable;
-    
-    // TODO: Envoyer la mise à jour au serveur
-    fetch('/subscriptions/api/chauffeur/availability/', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ is_available: isAvailable })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            updateAvailabilityUI();
-            showNotification(
-                isAvailable ? 'Vous êtes maintenant disponible' : 'Vous êtes maintenant indisponible',
-                'success'
-            );
-            
-            if (isAvailable) {
-                startPolling();
-            } else {
-                clearInterval(pollingInterval);
-                document.getElementById('requests-container').innerHTML = 
-                    '<div class="col-12"><div class="alert alert-warning text-center">Vous êtes indisponible. Activez votre disponibilité pour recevoir des demandes.</div></div>';
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        isAvailable = !isAvailable; // Revenir à l'état précédent
-        updateAvailabilityUI();
-    });
-}
-
-function updateAvailabilityUI() {
-    const btn = document.getElementById('availability-btn');
-    const icon = document.getElementById('availability-icon');
-    const text = document.getElementById('availability-text');
-    
-    if (isAvailable) {
-        btn.className = 'btn btn-success';
-        icon.className = 'bi bi-power me-2';
-        text.textContent = 'Disponible';
-    } else {
-        btn.className = 'btn btn-secondary';
-        icon.className = 'bi bi-power me-2';
-        text.textContent = 'Indisponible';
-    }
-}
-
-function updateStatus(message) {
-    document.getElementById('status-text').textContent = message;
-    document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
-}
-
-function showConfirmModal(title, body, actionText, callback) {
-    document.getElementById('confirmModalTitle').textContent = title;
-    document.getElementById('confirmModalBody').innerHTML = body;
-    document.getElementById('confirmModalAction').textContent = actionText;
-    
-    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
-    modal.show();
-    
-    // Nettoyer les anciens event listeners
-    const actionBtn = document.getElementById('confirmModalAction');
-    const newActionBtn = actionBtn.cloneNode(true);
-    actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
-    
-    // Ajouter le nouveau event listener
-    newActionBtn.addEventListener('click', () => {
-        modal.hide();
-        callback();
-    });
-}
-
-function showNotification(message, type = 'info') {
-    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
-    
-    const toastId = 'toast-' + Date.now();
-    const bgClass = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
-    
-    const toastHTML = `
-        <div id="${toastId}" class="toast ${bgClass} text-white" role="alert">
-            <div class="toast-body">
-                <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info-circle'} me-2"></i>
-                ${message}
-            </div>
-        </div>
-    `;
-    
-    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-    
-    const toastElement = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastElement, { delay: 4000 });
-    toast.show();
-    
-    toastElement.addEventListener('hidden.bs.toast', () => {
-        toastElement.remove();
-    });
-}
-
-function createToastContainer() {
-    const container = document.createElement('div');
-    container.className = 'toast-container position-fixed top-0 end-0 p-3';
-    container.style.zIndex = '1080';
-    document.body.appendChild(container);
-    return container;
-}
-
-// Nettoyer avant fermeture
-window.addEventListener('beforeunload', function() {
-    if (pollingInterval) {
-        clearInterval(pollingInterval);
-    }
-});
-
-// Gérer la visibilité de la page
-document.addEventListener('visibilitychange', function() {
-    if (document.hidden) {
-        // Page masquée, réduire la fréquence
-        if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = setInterval(refreshRequests, 30000); // 30 secondes
-        }
-    } else {
-        // Page visible, reprendre le polling normal
-        if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = setInterval(refreshRequests, 5000); // 5 secondes
-        }
-        refreshRequests();
-    }
-});
-
-// === FONCTIONS DE NOTIFICATIONS ===
-
-function refreshNotifications() {
-    fetch('/subscriptions/api/chauffeur/notifications/')
-        .then(response => response.json())
-        .then(data => {
-            if (data.notifications) {
-                updateNotificationsDisplay(data.notifications, data.unread_count);
-                checkForNewNotifications(data.notifications);
-            }
-        })
-        .catch(error => {
-            console.error('Erreur notifications:', error);
-        });
-}
-
-function updateNotificationsDisplay(notifications, unreadCount) {
-    const badge = document.getElementById('notifications-badge');
-    const countSpan = document.getElementById('notifications-count');
-    const dot = document.getElementById('notification-dot');
-    
-    if (unreadCount > 0) {
-        badge.style.display = 'block';
-        countSpan.textContent = unreadCount;
-        dot.style.display = 'block';
-        
-        // Faire clignoter si nouvelles notifications
-        const newNotifications = notifications.filter(n => 
-            !currentNotifications.find(cn => cn.id === n.id)
-        );
-        
-        if (newNotifications.length > 0) {
-            badge.classList.add('pulse');
-            setTimeout(() => badge.classList.remove('pulse'), 3000);
-            
-            // Afficher toast pour nouvelles notifications
-            newNotifications.forEach(notif => {
-                if (notif.type === 'trip_request') {
-                    showNotification('🚗 ' + notif.title, notif.message, 'warning');
-                }
-            });
-        }
-    } else {
-        badge.style.display = 'none';
-        dot.style.display = 'none';
-    }
-    
-    currentNotifications = notifications;
-}
-
-function checkForNewNotifications(notifications) {
-    // Vérifier s'il y a de nouvelles demandes de course
-    const tripRequests = notifications.filter(n => n.type === 'trip_request');
-    
-    if (tripRequests.length > 0) {
-        // Actualiser la liste des demandes
-        refreshRequests();
-    }
-}
-
-function toggleNotifications() {
-    const section = document.getElementById('notifications-section');
-    const container = document.getElementById('notifications-container');
-    
-    if (section.style.display === 'none') {
-        // Afficher les notifications
-        section.style.display = 'block';
-        
-        // Charger le contenu
-        const notificationsHTML = currentNotifications.map(notif => `
-            <div class="alert alert-${notif.type === 'trip_request' ? 'warning' : 'info'} mb-2">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <strong>${notif.title}</strong><br>
-                        <small>${notif.message}</small>
-                    </div>
-                    <small class="text-muted">${notif.created_at}</small>
-                </div>
-            </div>
-        `).join('');
-        
-        container.innerHTML = notificationsHTML || '<p class="text-muted">Aucune notification récente</p>';
-        
-        // Ajouter bouton pour marquer toutes comme lues
-        if (currentNotifications.some(n => !n.is_read)) {
-            const markAllBtn = `
-                <div class="text-center mt-3">
-                    <button class="btn btn-sm btn-outline-primary" onclick="markAllNotificationsRead()">
-                        <i class="bi bi-check2-all me-1"></i>
-                        Marquer toutes comme lues
-                    </button>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', markAllBtn);
-        }
-    } else {
-        section.style.display = 'none';
-    }
-}
-
-function markAllNotificationsRead() {
-    fetch('/courses/api/notifications/mark-read/', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Actualiser les notifications
-            refreshNotifications();
-            showNotification('Notifications marquées comme lues', 'Toutes vos notifications ont été marquées comme lues.', 'success');
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-    });
-}
-
-// Ajouter le clic sur le badge notifications
-document.addEventListener('DOMContentLoaded', function() {
-    const badge = document.getElementById('notifications-badge');
-    if (badge) {
-        badge.style.cursor = 'pointer';
-        badge.addEventListener('click', toggleNotifications);
-    }
-});
-
+fetchRequests();
+setInterval(fetchRequests, 20000);
 </script>
 {% endblock %}

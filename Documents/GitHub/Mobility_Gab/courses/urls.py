@@ -9,7 +9,8 @@ app_name = 'courses'
 
 urlpatterns = [
     # Menu principal de gestion des courses
-    path('', views.CoursesMenuView.as_view(), name='menu'),
+    path('', views.TripListView.as_view(), name='list'),
+    path('menu/', views.CoursesMenuView.as_view(), name='menu'),
     
     # Vue des courses actives (la belle page !)
     path('actives/', views.ActiveTripsView.as_view(), name='active_trips'),
@@ -17,7 +18,12 @@ urlpatterns = [
     # Gestion d'une course spécifique
     path('chauffeur/<int:pk>/', views.TripManagementView.as_view(), name='chauffeur_management'),
     path('particulier/<int:pk>/', views.TripManagementView.as_view(), name='particulier_management'),
-    
+
+    # Actions sur la course
+    path('api/trip/<int:trip_id>/start/', views.start_trip, name='start_trip'),
+    path('api/trip/<int:trip_id>/confirm/', views.confirm_trip_completion, name='confirm_trip_completion'),
+    path('api/trip/<int:trip_id>/delete/', views.delete_trip, name='delete_trip'),
+
     # APIs pour le chat et les mises à jour
     path('api/trip/<int:trip_id>/messages/', views.get_messages, name='get_messages'),
     path('api/trip/<int:trip_id>/send-message/', views.send_message, name='send_message'),

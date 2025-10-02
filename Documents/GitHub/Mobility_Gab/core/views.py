@@ -13,7 +13,9 @@ from django.views.generic import TemplateView
 from django.contrib.auth import get_user_model
 
 from accounts.models import ChauffeurBadge, UserRoles
-from subscriptions.models import Subscription, Trip
+from django.db.models import Count, Q
+
+from subscriptions.models import Subscription, Trip, SubscriptionStatus
 
 User = get_user_model()
 
@@ -135,21 +137,33 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )
 
         elif role == UserRoles.ADMIN or user.is_staff:
+            trips = Trip.objects.select_related("parent", "chauffeur").order_by("-scheduled_date", "-started_at")[:20]
+            subscriptions = (
+                Subscription.objects.select_related("parent", "chauffeur", "plan")
+                .order_by("-start_date")[:20]
+            )
+
             context.update(
                 {
                     "kpis": {
                         "parents_count": Subscription.objects.values("parent").distinct().count(),
-                        "active_drivers": Subscription.objects.filter(status="active").values("chauffeur").distinct().count(),
-                        "overdue_subscriptions": Subscription.objects.filter(status="overdue").count(),
-                        "churn_rate": "5%",  # Placeholder for MVP
+                        "active_drivers": Subscription.objects.filter(status=SubscriptionStatus.ACTIVE).values("chauffeur").distinct().count(),
+                        "overdue_subscriptions": Subscription.objects.filter(status=SubscriptionStatus.OVERDUE).count(),
+                        "suspended_accounts": Subscription.objects.filter(status=SubscriptionStatus.SUSPENDED).values("parent").distinct().count(),
                     },
-                    "recent_subscriptions": Subscription.objects.select_related("parent", "chauffeur", "plan").order_by("-start_date")[:6],
-                    "weekly_report": {
-                        "trips_completed": Trip.objects.filter(status="completed", scheduled_date__gte=today - timedelta(days=7)).count(),
-                        "new_subscriptions": Subscription.objects.filter(start_date__gte=today - timedelta(days=7)).count(),
-                        "suspensions": Subscription.objects.filter(status="suspended", start_date__gte=today - timedelta(days=7)).count(),
+                    "trip_segments": trips,
+                    "subscription_segments": subscriptions,
+                    "trip_filters": {
+                        "in_progress": Trip.objects.filter(status="in_progress").count(),
+                        "scheduled": Trip.objects.filter(status="scheduled").count(),
+                        "completed_week": Trip.objects.filter(status="completed", completed_at__date__gte=today - timedelta(days=7)).count(),
                     },
-                    "admin_notifications": [],
+                    "subscription_filters": {
+                        "active": Subscription.objects.filter(status=SubscriptionStatus.ACTIVE).count(),
+                        "overdue": Subscription.objects.filter(status=SubscriptionStatus.OVERDUE).count(),
+                        "suspended": Subscription.objects.filter(status=SubscriptionStatus.SUSPENDED).count(),
+                        "cancelled": Subscription.objects.filter(status=SubscriptionStatus.CANCELLED).count(),
+                    },
                 }
             )
 
