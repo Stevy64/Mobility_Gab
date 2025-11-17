@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Cursor extensions
+.cursor/
+
 .Python
 env/
 venv/
