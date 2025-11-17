@@ -176,16 +176,20 @@ class RideRequestForm(forms.Form):
         
         # Utiliser les chauffeurs recommandés triés ou fallback sur tous
         if recommended_chauffeurs:
-            # Préserver l'ordre des chauffeurs recommandés
-            self.fields['suggested_chauffeur'].queryset = User.objects.filter(
-                id__in=[c.id for c in recommended_chauffeurs]
-            ).select_related('chauffeur_profile')
+            # Créer un queryset à partir des IDs en préservant l'ordre
+            from django.db.models import Case, When, IntegerField
             
-            # Réordonner selon la liste recommandée
-            chauffeur_order = {c.id: i for i, c in enumerate(recommended_chauffeurs)}
-            chauffeurs_list = list(self.fields['suggested_chauffeur'].queryset)
-            chauffeurs_list.sort(key=lambda x: chauffeur_order.get(x.id, 999))
-            self.fields['suggested_chauffeur'].queryset = chauffeurs_list
+            chauffeur_ids = [c.id for c in recommended_chauffeurs]
+            
+            # Créer une clause CASE WHEN pour préserver l'ordre exact
+            preserved_order = Case(
+                *[When(pk=pk, then=pos) for pos, pk in enumerate(chauffeur_ids)],
+                output_field=IntegerField()
+            )
+            
+            self.fields['suggested_chauffeur'].queryset = User.objects.filter(
+                id__in=chauffeur_ids
+            ).select_related('chauffeur_profile').order_by(preserved_order)
         else:
             # Fallback : tous les chauffeurs disponibles
             self.fields['suggested_chauffeur'].queryset = User.objects.filter(
