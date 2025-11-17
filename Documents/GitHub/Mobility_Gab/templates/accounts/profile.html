@@ -1,79 +1,480 @@
 {% extends 'base.html' %}
 
-{% block page_title %}Profil - Mobility Gab{% endblock %}
+{% block page_title %}Mon profil - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Design moderne profil consultation */
+.profile-header {
+    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    color: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.profile-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-10px, -10px) scale(1.05); }
+}
+
+.profile-photo-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-photo {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.profile-photo-placeholder {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 5px solid white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.profile-photo-placeholder i {
+    font-size: 4rem;
+    color: #FF8C00;
+}
+
+.profile-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.info-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.info-card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #FF8C00;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-card-title i {
+    font-size: 1.5rem;
+}
+
+.info-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #111827;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-badge.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.status-badge.suspended {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.btn-edit {
+    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-edit:hover {
+    background: linear-gradient(135deg, #FFA500, #FFB733);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
+    color: white;
+}
+
+.notification-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+}
+
+.toggle-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.toggle-indicator.enabled {
+    background: #10b981;
+}
+
+.toggle-indicator.disabled {
+    background: #ef4444;
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        padding: 1.5rem;
+    }
+    
+    .profile-photo, .profile-photo-placeholder {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .profile-badge {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+    
+    .info-card {
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-4">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body text-center">
-                {% if object.profile.photo %}
-                    <img src="{{ object.profile.photo.url }}" alt="Photo de profil" class="rounded-circle mb-3" width="120" height="120">
-                {% else %}
-                    <i class="bi bi-person-circle text-muted display-1"></i>
-                {% endif %}
-                <h5 class="fw-bold">{{ object.get_full_name|default:object.email }}</h5>
-                <p class="text-muted mb-0">{{ object.get_role_display }}</p>
-                {% if object.is_suspended %}
-                    <span class="badge bg-danger mt-2">Compte suspendu</span>
-                {% endif %}
+<div class="container py-4">
+    <!-- Header profil -->
+    <div class="profile-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="profile-photo-wrapper">
+                        {% if object.profile.photo %}
+                            <img src="{{ object.profile.photo.url }}" alt="Photo de profil" class="profile-photo">
+                        {% else %}
+                            <div class="profile-photo-placeholder">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        {% endif %}
+                        <div class="profile-badge">
+                            {% if object.role == 'chauffeur' %}
+                                <i class="bi bi-car-front-fill"></i>
+                            {% elif object.role == 'parent' %}
+                                <i class="bi bi-person-heart"></i>
+                            {% else %}
+                                <i class="bi bi-shield-check"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-2">
+                            {{ object.get_full_name|default:object.username }}
+                        </h1>
+                        <p class="mb-2 opacity-90 d-flex align-items-center gap-2">
+                            <i class="bi bi-person-badge"></i>
+                            {{ object.get_role_display }}
+                        </p>
+                        {% if object.is_suspended %}
+                            <span class="status-badge suspended">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Compte suspendu
+                            </span>
+                        {% else %}
+                            <span class="status-badge active">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Compte actif
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6 class="fw-bold">Notifications</h6>
-                <p class="small text-muted">Push activées : {{ object.profile.push_notifications_enabled|yesno:"Oui,Non" }}</p>
-                <p class="small text-muted">SMS activés : {{ object.profile.sms_notifications_enabled|yesno:"Oui,Non" }}</p>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'accounts:profile_edit' %}" class="btn-edit">
+                    <i class="bi bi-pencil-square"></i>
+                    Modifier mon profil
+                </a>
             </div>
         </div>
     </div>
-    <div class="col-lg-8">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="h5 fw-bold mb-0">Informations principales</h4>
-                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-primary btn-sm">Modifier</a>
+
+    <div class="row">
+        <!-- Colonne gauche -->
+        <div class="col-lg-4">
+            <!-- Carte informations principales -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h5 class="info-card-title mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        Informations
+                    </h5>
                 </div>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <span class="text-muted small">Email</span>
-                        <p class="mb-0">{{ object.email }}</p>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-envelope"></i>
+                        Email
                     </div>
-                    <div class="col-md-6">
-                        <span class="text-muted small">Téléphone</span>
-                        <p class="mb-0">{{ object.profile.phone|default:"Non renseigné" }}</p>
+                    <div class="info-value">{{ object.email }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-telephone"></i>
+                        Téléphone
                     </div>
-                    <div class="col-md-6">
-                        <span class="text-muted small">Date d'inscription</span>
-                        <p class="mb-0">{{ object.date_joined|date:"d F Y" }}</p>
+                    <div class="info-value">{{ object.profile.phone|default:"Non renseigné" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-calendar-check"></i>
+                        Membre depuis
                     </div>
+                    <div class="info-value">{{ object.date_joined|date:"d F Y" }}</div>
+                </div>
+            </div>
+
+            <!-- Carte notifications -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h5 class="info-card-title mb-0">
+                        <i class="bi bi-bell"></i>
+                        Notifications
+                    </h5>
+                </div>
+                <div class="info-item">
+                    <div class="notification-toggle">
+                        <div class="toggle-indicator {% if object.profile.push_notifications_enabled %}enabled{% else %}disabled{% endif %}"></div>
+                        <span class="info-label mb-0">
+                            <i class="bi bi-phone-vibrate"></i>
+                            Notifications Push
+                        </span>
+                    </div>
+                    <div class="info-value small">{{ object.profile.push_notifications_enabled|yesno:"Activées,Désactivées" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="notification-toggle">
+                        <div class="toggle-indicator {% if object.profile.sms_notifications_enabled %}enabled{% else %}disabled{% endif %}"></div>
+                        <span class="info-label mb-0">
+                            <i class="bi bi-chat-dots"></i>
+                            Notifications SMS
+                        </span>
+                    </div>
+                    <div class="info-value small">{{ object.profile.sms_notifications_enabled|yesno:"Activées,Désactivées" }}</div>
                 </div>
             </div>
         </div>
 
-        {% if object.role == 'parent' %}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h4 class="h5 fw-bold mb-3">Contacts d'urgence</h4>
-                <p class="mb-1"><strong>Nom :</strong> {{ object.parent_profile.emergency_contact_name|default:"Non renseigné" }}</p>
-                <p class="mb-0"><strong>Téléphone :</strong> {{ object.parent_profile.emergency_contact_phone|default:"Non renseigné" }}</p>
+        <!-- Colonne droite -->
+        <div class="col-lg-8">
+            {% if object.role == 'parent' %}
+            <!-- Carte contacts d'urgence -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h5 class="info-card-title mb-0">
+                        <i class="bi bi-telephone-forward"></i>
+                        Contacts d'urgence
+                    </h5>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-person"></i>
+                                Nom du contact
+                            </div>
+                            <div class="info-value">{{ object.parent_profile.emergency_contact_name|default:"Non renseigné" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-telephone-fill"></i>
+                                Téléphone d'urgence
+                            </div>
+                            <div class="info-value">{{ object.parent_profile.emergency_contact_phone|default:"Non renseigné" }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        {% endif %}
+            {% endif %}
 
-        {% if object.role == 'chauffeur' %}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h4 class="h5 fw-bold mb-3">Véhicule</h4>
-                <p class="mb-1"><strong>Immatriculation :</strong> {{ object.chauffeur_profile.vehicle_plate|default:"Non renseigné" }}</p>
-                <p class="mb-1"><strong>Marque :</strong> {{ object.chauffeur_profile.vehicle_make|default:"-" }}</p>
-                <p class="mb-1"><strong>Modèle :</strong> {{ object.chauffeur_profile.vehicle_model|default:"-" }}</p>
-                <p class="mb-0"><strong>Zone :</strong> {{ object.chauffeur_profile.zone|default:"Non renseigné" }}</p>
+            {% if object.role == 'chauffeur' %}
+            <!-- Carte véhicule -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h5 class="info-card-title mb-0">
+                        <i class="bi bi-car-front-fill"></i>
+                        Informations véhicule
+                    </h5>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-hash"></i>
+                                Plaque d'immatriculation
+                            </div>
+                            <div class="info-value">
+                                <span class="badge" style="background: #374151; color: white; font-size: 1rem; padding: 0.5rem 1rem;">
+                                    {{ object.chauffeur_profile.vehicle_plate|default:"Non renseigné" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-palette"></i>
+                                Couleur
+                            </div>
+                            <div class="info-value">{{ object.chauffeur_profile.vehicle_color|default:"Non renseigné" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-car-front"></i>
+                                Marque
+                            </div>
+                            <div class="info-value">{{ object.chauffeur_profile.vehicle_make|default:"Non renseigné" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-speedometer2"></i>
+                                Modèle
+                            </div>
+                            <div class="info-value">{{ object.chauffeur_profile.vehicle_model|default:"Non renseigné" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-geo-alt"></i>
+                                Zone d'activité
+                            </div>
+                            <div class="info-value">{{ object.chauffeur_profile.zone|default:"Toutes zones" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="bi bi-star-fill"></i>
+                                Note de fiabilité
+                            </div>
+                            <div class="info-value">
+                                {% if object.chauffeur_profile.reliability_score %}
+                                    {{ object.chauffeur_profile.reliability_score|floatformat:1 }}/5.0
+                                    <span class="text-warning">★★★★★</span>
+                                {% else %}
+                                    Nouveau chauffeur
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+            {% endif %}
+
+            <!-- Carte bio (si présente) -->
+            {% if object.profile.bio %}
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h5 class="info-card-title mb-0">
+                        <i class="bi bi-file-text"></i>
+                        À propos de moi
+                    </h5>
+                </div>
+                <p class="mb-0">{{ object.profile.bio }}</p>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
-
-
