@@ -23,7 +23,7 @@ from core.models import NotificationLog
 from core.utils import get_estimated_arrival_time, calculate_distance
 from core.notifications import notification_service
 from .forms import RideRequestForm
-from .models import RideRequest, RideRequestStatus, Trip, Checkpoint, ChauffeurSubscriptionRequest
+from .models import RideRequest, RideRequestStatus, Trip, Checkpoint
 from .utils import find_available_chauffeurs
 from datetime import timedelta
 
@@ -480,116 +480,6 @@ def get_ride_requests_realtime(request):
         }, status=500)
 
 
-@login_required
-def get_pending_requests_count(request):
-    """
-    API pour obtenir le nombre de demandes en attente pour un chauffeur.
-    
-    Compte:
-    - Les demandes de courses (RideRequest) en statut 'pending'
-    - Les demandes d'abonnement (ChauffeurSubscriptionRequest) en statut 'pending'
-    
-    Utilisé pour afficher un badge de notification en temps réel.
-    """
-    if request.user.role != UserRoles.CHAUFFEUR:
-        return JsonResponse({'error': 'Accès non autorisé'}, status=403)
-    
-    try:
-        cutoff_time = timezone.now() - timedelta(hours=24)  # Demandes des 24 dernières heures
-        
-        # Compter les demandes de courses en attente
-        ride_requests_count = RideRequest.objects.filter(
-            status='pending',
-            requested_at__gte=cutoff_time
-        ).count()
-        
-        # Compter les demandes d'abonnement en attente pour ce chauffeur
-        subscription_requests_count = ChauffeurSubscriptionRequest.objects.filter(
-            chauffeur=request.user,
-            status='pending',
-            created_at__gte=cutoff_time
-        ).count()
-        
-        total_count = ride_requests_count + subscription_requests_count
-        
-        return JsonResponse({
-            'total_count': total_count,
-            'ride_requests': ride_requests_count,
-            'subscription_requests': subscription_requests_count,
-            'timestamp': timezone.now().isoformat()
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'error': str(e),
-            'timestamp': timezone.now().isoformat()
-        }, status=500)
-
-
-@login_required
-def get_subscription_requests_realtime(request):
-    """
-    API pour récupérer les demandes d'abonnement en temps réel pour un chauffeur.
-    
-    Utilisé par les chauffeurs pour voir les nouvelles demandes d'abonnement
-    sans recharger la page.
-    """
-    if request.user.role != UserRoles.CHAUFFEUR:
-        return JsonResponse({'error': 'Accès non autorisé'}, status=403)
-    
-    try:
-        # Récupérer les demandes en attente pour ce chauffeur
-        cutoff_time = timezone.now() - timedelta(days=7)  # Demandes des 7 derniers jours
-        
-        pending_requests = ChauffeurSubscriptionRequest.objects.filter(
-            chauffeur=request.user,
-            status='pending',
-            created_at__gte=cutoff_time
-        ).select_related('parent').order_by('-created_at')[:10]
-        
-        requests_data = []
-        for sub_request in pending_requests:
-            # Calculer le temps écoulé depuis la création
-            created_ago = (timezone.now() - sub_request.created_at).total_seconds() // 60  # en minutes
-            
-            # Formater la fréquence
-            frequency_display = dict(ChauffeurSubscriptionRequest.FREQUENCY_CHOICES).get(
-                sub_request.frequency, 
-                sub_request.frequency
-            )
-            
-            requests_data.append({
-                'id': sub_request.id,
-                'type': 'subscription',
-                'parent_name': sub_request.parent.get_full_name() or sub_request.parent.username,
-                'title': sub_request.title,
-                'description': sub_request.description,
-                'pickup_location': sub_request.pickup_location,
-                'dropoff_location': sub_request.dropoff_location,
-                'pickup_time': sub_request.pickup_time.strftime('%H:%M'),
-                'return_time': sub_request.return_time.strftime('%H:%M') if sub_request.return_time else None,
-                'frequency': frequency_display,
-                'proposed_price': float(sub_request.proposed_price_monthly),
-                'child_name': sub_request.child_name,
-                'special_requirements': sub_request.special_requirements,
-                'created_ago': int(created_ago),
-                'expires_at': sub_request.expires_at.isoformat(),
-                'accept_url': f'/subscriptions/api/subscription-request/{sub_request.id}/accept/',
-                'reject_url': f'/subscriptions/api/subscription-request/{sub_request.id}/reject/'
-            })
-        
-        return JsonResponse({
-            'requests': requests_data,
-            'timestamp': timezone.now().isoformat()
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'error': str(e),
-            'timestamp': timezone.now().isoformat()
-        }, status=500)
-
-
 class ChauffeurRideRequestsRealtimeView(LoginRequiredMixin, TemplateView):
     """
     Vue pour les chauffeurs pour voir les demandes de course en temps réel.
@@ -940,4 +830,93 @@ def toggle_chauffeur_availability(request):
         return JsonResponse({
             'success': False,
             'error': str(e)
+        }, status=500)
+
+
+@login_required
+def get_pending_requests_count(request):
+    """
+    API pour récupérer le nombre total de demandes en attente (courses + abonnements).
+    """
+    if request.user.role != UserRoles.CHAUFFEUR:
+        return JsonResponse({'error': 'Accès non autorisé'}, status=403)
+    
+    try:
+        from .models import ChauffeurSubscriptionRequest, SubscriptionRequestStatus
+        
+        # Compter les demandes de course en attente
+        ride_requests_count = RideRequest.objects.filter(
+            status=RideRequestStatus.PENDING
+        ).exclude(
+            chauffeur_archived=True
+        ).count()
+        
+        # Compter les demandes d'abonnement en attente pour ce chauffeur
+        subscription_requests_count = ChauffeurSubscriptionRequest.objects.filter(
+            chauffeur=request.user,
+            status=SubscriptionRequestStatus.PENDING
+        ).count()
+        
+        total_count = ride_requests_count + subscription_requests_count
+        
+        return JsonResponse({
+            'ride_requests_count': ride_requests_count,
+            'subscription_requests_count': subscription_requests_count,
+            'total_count': total_count,
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'timestamp': timezone.now().isoformat()
+        }, status=500)
+
+
+@login_required
+def get_subscription_requests_realtime(request):
+    """
+    API pour récupérer les demandes d'abonnement en temps réel pour un chauffeur.
+    """
+    if request.user.role != UserRoles.CHAUFFEUR:
+        return JsonResponse({'error': 'Accès non autorisé'}, status=403)
+    
+    try:
+        from .models import ChauffeurSubscriptionRequest, SubscriptionRequestStatus
+        
+        # Récupérer les demandes d'abonnement en attente pour ce chauffeur
+        subscription_requests = ChauffeurSubscriptionRequest.objects.filter(
+            chauffeur=request.user,
+            status=SubscriptionRequestStatus.PENDING
+        ).select_related('parent').order_by('-created_at')
+        
+        requests_data = []
+        for req in subscription_requests:
+            requests_data.append({
+                'id': req.id,
+                'parent_name': req.parent.get_full_name() or req.parent.username,
+                'parent_email': req.parent.email,
+                'parent_phone': req.parent.phone if hasattr(req.parent, 'phone') else '',
+                'title': req.title or 'Demande d\'abonnement',
+                'description': req.description or '',
+                'pickup_location': req.pickup_location or '',
+                'dropoff_location': req.dropoff_location or '',
+                'frequency': req.get_frequency_display() if hasattr(req, 'get_frequency_display') else req.frequency,
+                'proposed_price': float(req.proposed_price) if req.proposed_price else 0,
+                'created_at': req.created_at.strftime('%d/%m/%Y %H:%M'),
+                'created_ago_minutes': int((timezone.now() - req.created_at).total_seconds() // 60),
+            })
+        
+        return JsonResponse({
+            'requests': requests_data,
+            'count': len(requests_data),
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'requests': [],
+            'count': 0,
+            'timestamp': timezone.now().isoformat()
         }, status=500)

@@ -270,9 +270,20 @@
             flex: 0 0 auto !important;
             min-width: auto !important;
             max-width: none !important;
+            width: auto !important;
             overflow: visible !important;
             text-overflow: clip !important;
             white-space: nowrap !important;
+            padding: 0.625rem 1.25rem !important;
+        }
+        
+        /* Forcer l'affichage du texte complet dans le span */
+        .dashboard-actions .btn-group .btn span,
+        .dashboard-actions .btn-group .btn .btn-text-full {
+            display: inline !important;
+            overflow: visible !important;
+            max-width: none !important;
+            width: auto !important;
         }
     }
 </style>

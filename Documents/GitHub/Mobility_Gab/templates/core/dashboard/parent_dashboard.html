@@ -1,7 +1,270 @@
 {% extends 'core/dashboard/base.html' %}
 
-{% block dashboard_title %}Bienvenue, {{ user.first_name|default:user.email }}{% endblock %}
-{% block dashboard_subtitle %}Suivez vos abonnements et trajets en cours.{% endblock %}
+{% block dashboard_title %}Tableau de bord{% endblock %}
+{% block dashboard_subtitle %}Gérez vos courses et abonnements{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    /* Dashboard optimisé - réduction espaces */
+    .dashboard {
+        padding: 1rem 0 !important;
+    }
+    
+    .dashboard-header {
+        margin-bottom: 1rem !important;
+        padding: 1.25rem !important;
+    }
+    
+    .dashboard-title {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.125rem !important;
+    }
+    
+    .dashboard-subtitle {
+        font-size: 0.9375rem !important;
+    }
+    
+    /* KPI Cards compacts */
+    .card-kpi {
+        padding: 1rem !important;
+    }
+    
+    .card-kpi .bg-primary,
+    .card-kpi .bg-success,
+    .card-kpi .bg-warning {
+        width: 50px !important;
+        height: 50px !important;
+        padding: 0.75rem !important;
+    }
+    
+    .card-kpi .fs-4 {
+        font-size: 1.5rem !important;
+    }
+    
+    .card-kpi h3 {
+        font-size: 1.75rem !important;
+    }
+    
+    .card-kpi .small {
+        font-size: 0.8125rem !important;
+    }
+    
+    /* Cards sections */
+    .card {
+        margin-bottom: 1rem !important;
+    }
+    
+    .card .card-body {
+        padding: 1.25rem !important;
+    }
+    
+    .card h5 {
+        font-size: 1.125rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    /* Listes en mode grille moderne */
+    .list-group-flush {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .list-group-item {
+        border: 1px solid var(--gray-200) !important;
+        border-radius: var(--radius-md) !important;
+        padding: 0.875rem;
+        background: var(--white);
+        box-shadow: var(--shadow-sm);
+        transition: all var(--transition-fast);
+    }
+    
+    .list-group-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    /* Checkpoints en grille */
+    #checkpoint-feed {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    #checkpoint-feed .list-group-item {
+        padding: 0.625rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        border-left: 3px solid var(--primary);
+    }
+    
+    /* Notifications en grille */
+    #notification-feed {
+        display: grid;
+        gap: 0.5rem;
+    }
+    
+    #notification-feed .list-group-item {
+        padding: 0.875rem;
+        border-left: 3px solid var(--info);
+    }
+    
+    /* Paiements en grille */
+    .card-body .list-group-flush {
+        gap: 0.5rem;
+    }
+    
+    /* Sections espacement optimisé */
+    .row.g-4 {
+        gap: 1rem !important;
+    }
+    
+    .row.g-4.mt-1 {
+        margin-top: 1rem !important;
+    }
+    
+    /* Carte réduite */
+    .ratio-16x9 {
+        --bs-aspect-ratio: 56.25%;
+    }
+    
+    /* Responsive pour mobile - correction débordement et espaces inutiles */
+    @media (max-width: 767px) {
+        /* Dashboard ultra compact mobile */
+        .dashboard {
+            padding: 0.25rem 0 !important;
+        }
+        
+        .dashboard-header {
+            padding: 0.875rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .dashboard-title {
+            font-size: 1.125rem !important;
+        }
+        
+        .dashboard-subtitle {
+            font-size: 0.8125rem !important;
+        }
+        
+        /* Boutons en grille sur mobile - 3 colonnes pour SOS visible */
+        .dashboard-actions .btn-group {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.375rem;
+            width: 100%;
+        }
+        
+        .dashboard-actions .btn {
+            font-size: 0.6875rem;
+            padding: 0.5rem 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.125rem;
+            min-height: 60px;
+        }
+        
+        .dashboard-actions .btn i {
+            font-size: 1rem;
+        }
+        
+        /* KPI cards ultra compacts mobile - CORRECTION ESPACE TOTAL */
+        .card-kpi {
+            padding: 0.5rem !important;
+            margin-bottom: 0.375rem !important;
+            min-height: auto !important;
+        }
+        
+        .card-kpi .d-flex {
+            gap: 0.5rem;
+        }
+        
+        .card-kpi .bg-primary,
+        .card-kpi .bg-success,
+        .card-kpi .bg-warning {
+            width: 32px !important;
+            height: 32px !important;
+            padding: 0.375rem !important;
+            flex-shrink: 0;
+        }
+        
+        .card-kpi .fs-4 {
+            font-size: 1rem !important;
+        }
+        
+        .card-kpi h3 {
+            font-size: 1.125rem !important;
+            margin-bottom: 0 !important;
+            line-height: 1.2;
+        }
+        
+        .card-kpi .small,
+        .card-kpi p {
+            font-size: 0.625rem !important;
+            margin-bottom: 0.125rem !important;
+            line-height: 1.2;
+        }
+        
+        .card-kpi .ms-3 {
+            margin-left: 0.5rem !important;
+        }
+        
+        /* Réduire l'espace entre les sections */
+        .row.g-4 {
+            margin-bottom: 0.5rem !important;
+        }
+        
+        /* Cards sections mobile ultra compacts */
+        .card .card-body {
+            padding: 0.875rem !important;
+        }
+        
+        .card h5 {
+            font-size: 0.9375rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        /* Cards pleine largeur */
+        .col-lg-7, .col-lg-5 {
+            width: 100%;
+        }
+        
+        /* Listes plus compactes sur mobile */
+        .list-group-item {
+            padding: 0.5rem !important;
+            font-size: 0.8125rem;
+        }
+        
+        /* Ratio de la carte réduit sur mobile */
+        .ratio-16x9 {
+            --bs-aspect-ratio: 60%;
+        }
+        
+        /* Réduire espaces entre sections - CORRECTION ESPACE */
+        .row.g-4 {
+            gap: 0.5rem !important;
+            margin-top: 0.5rem !important;
+        }
+        
+        .row.g-4.mt-1 {
+            margin-top: 0.5rem !important;
+        }
+        
+        /* Container réduit */
+        .container-fluid {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block dashboard_actions %}
 <div class="btn-group" role="group">

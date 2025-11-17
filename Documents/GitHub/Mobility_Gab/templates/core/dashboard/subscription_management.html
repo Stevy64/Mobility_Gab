@@ -199,6 +199,32 @@
     .section-header {
         padding: 1rem;
     }
+    
+    /* Correction du débordement pour "Gestion des Abonnements" */
+    .section-header .d-flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    
+    .section-header .d-flex .d-flex {
+        flex-direction: column !important;
+        width: 100%;
+        gap: 0.5rem;
+    }
+    
+    .section-header .btn {
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.875rem;
+        padding: 0.625rem 1rem;
+    }
+    
+    .section-header h4 {
+        font-size: 1.125rem;
+    }
 }
 </style>
 {% endblock %}

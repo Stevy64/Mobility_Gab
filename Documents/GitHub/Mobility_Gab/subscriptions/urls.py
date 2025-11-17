@@ -26,10 +26,10 @@ urlpatterns = [
     path("api/ride-requests/<int:pk>/cancel/", views_advanced.cancel_ride_request_api, name="cancel_ride_request_api"),
     path("api/ride-requests/realtime/", views_advanced.get_ride_requests_realtime, name="ride_requests_realtime"),
     path("api/subscription-requests/realtime/", views_advanced.get_subscription_requests_realtime, name="subscription_requests_realtime"),
+    path("api/chauffeur/pending-count/", views_advanced.get_pending_requests_count, name="pending_requests_count"),
     path("api/parent/ride-requests/status/", views_advanced.get_parent_ride_requests_status, name="parent_ride_requests_status"),
     path("api/chauffeur/availability/", views_advanced.toggle_chauffeur_availability, name="toggle_chauffeur_availability"),
     path("api/chauffeur/notifications/", views_advanced.get_chauffeur_notifications, name="chauffeur_notifications"),
-    path("api/chauffeur/pending-count/", views_advanced.get_pending_requests_count, name="pending_requests_count"),
     path("chauffeur_ride_requests_realtime/", views_advanced.ChauffeurRideRequestsRealtimeView.as_view(), name="chauffeur_ride_requests_realtime"),
     path("api/ride-requests/<int:pk>/delete/", views_advanced.delete_ride_request_api, name="ride_request_delete_api"),
     
@@ -66,10 +66,6 @@ urlpatterns = [
     path("manage-subscribers/", views_subscription_management.ManageSubscribersView.as_view(), name="manage_subscribers"),
     path("api/chauffeur-subscription/<int:subscription_id>/cancel/", views_subscription_management.cancel_chauffeur_subscription, name="cancel_chauffeur_subscription"),
     path("api/chauffeur-subscription/<int:subscription_id>/delete/", views_subscription_management.delete_chauffeur_subscription_record, name="delete_chauffeur_subscription_record"),
-    path("api/subscription-request/<int:request_id>/accept/", views_subscription_management.accept_subscription_request, name="accept_subscription_request"),
-    path("api/subscription-request/<int:request_id>/reject/", views_subscription_management.reject_subscription_request, name="reject_subscription_request"),
-    path("api/subscription-request/<int:request_id>/details/", views_subscription_management.view_subscription_request_details, name="view_subscription_request_details"),
-    path("api/subscriber/<int:subscription_id>/details/", views_subscription_management.view_subscriber_details, name="view_subscriber_details"),
     
     # === CHAT ===
     path("chat/", views.chat_list, name="chat_list"),

@@ -1,0 +1,525 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Évaluer la course - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Design moderne inspiré Heetch - Simple, rapide, efficace */
+:root {
+    --orange-primary: #FF8C00;
+    --orange-light: #FFA500;
+}
+
+.rating-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.rating-card {
+    background: white;
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rating-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.rating-header h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.rating-header p {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+/* Avatar de l'utilisateur */
+.user-avatar-section {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.user-avatar-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #f8f9fa;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.user-avatar-placeholder-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange-primary), var(--orange-light));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+    box-shadow: 0 4px 20px rgba(255, 140, 0, 0.3);
+    margin-bottom: 1rem;
+}
+
+.user-name-large {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.25rem;
+}
+
+.user-role-large {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+/* Étoiles (modèle Heetch) */
+.stars-section {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.stars-section label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.stars-container {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.star {
+    font-size: 3rem;
+    color: #e9ecef;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.star:hover,
+.star.active {
+    color: #FFD700;
+    transform: scale(1.15);
+}
+
+.star.active {
+    animation: starPop 0.3s ease;
+}
+
+@keyframes starPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1.15); }
+}
+
+/* Questions rapides (max 3 - modèle Heetch) */
+.questions-section {
+    margin-bottom: 2rem;
+}
+
+.question-item {
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.question-item:hover {
+    background: #fff;
+    border-color: var(--orange-light);
+    box-shadow: 0 4px 16px rgba(255, 140, 0, 0.1);
+}
+
+.question-item.selected {
+    background: rgba(255, 140, 0, 0.1);
+    border-color: var(--orange-primary);
+}
+
+.question-text {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #212529;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.question-text i {
+    font-size: 1.25rem;
+    color: var(--orange-primary);
+}
+
+.toggle-switch {
+    position: relative;
+    width: 56px;
+    height: 32px;
+    background: #dee2e6;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.question-item.selected .toggle-switch {
+    background: var(--orange-primary);
+}
+
+.toggle-circle {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.question-item.selected .toggle-circle {
+    left: 28px;
+}
+
+/* Commentaire optionnel */
+.comment-section {
+    margin-bottom: 2rem;
+}
+
+.comment-section label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.comment-textarea {
+    width: 100%;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 100px;
+    transition: all 0.3s ease;
+}
+
+.comment-textarea:focus {
+    outline: none;
+    border-color: var(--orange-primary);
+    box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
+}
+
+.comment-counter {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
+/* Bouton de soumission */
+.submit-button {
+    width: 100%;
+    padding: 1.125rem;
+    background: linear-gradient(135deg, var(--orange-primary), var(--orange-light));
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.submit-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 140, 0, 0.4);
+}
+
+.submit-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Skip button */
+.skip-button {
+    width: 100%;
+    padding: 0.875rem;
+    background: transparent;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    color: #6c757d;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.skip-button:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .rating-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .stars-container {
+        gap: 0.5rem;
+    }
+    
+    .star {
+        font-size: 2.5rem;
+    }
+    
+    .question-item {
+        padding: 1rem 1.25rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rating-container">
+    <div class="rating-card">
+        <!-- En-tête -->
+        <div class="rating-header">
+            <h2>Comment s'est passé votre trajet ?</h2>
+            <p>Votre avis aide à améliorer la communauté Mobility Gab</p>
+        </div>
+
+        <!-- Avatar de l'utilisateur évalué -->
+        <div class="user-avatar-section">
+            {% if other_user_info.avatar %}
+                <img src="{{ other_user_info.avatar.url }}" alt="Avatar" class="user-avatar-large">
+            {% else %}
+                <div class="user-avatar-placeholder-large">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+            {% endif %}
+            <div class="user-name-large">{{ other_user_info.name }}</div>
+            <div class="user-role-large">{{ other_user_info.role }}</div>
+        </div>
+
+        <!-- Formulaire d'évaluation -->
+        <form method="POST" id="ratingForm">
+            {% csrf_token %}
+            
+            <!-- Étoiles (obligatoire) -->
+            <div class="stars-section">
+                <label>Donnez une note</label>
+                <div class="stars-container" id="starsContainer">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <input type="hidden" name="stars" id="starsInput" required>
+            </div>
+
+            <!-- Questions rapides -->
+            <div class="questions-section">
+                <!-- À l'heure -->
+                <div class="question-item" data-question="was_on_time">
+                    <div class="question-text">
+                        <i class="bi bi-clock-fill"></i>
+                        <span>À l'heure</span>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="toggle-circle"></div>
+                    </div>
+                    <input type="hidden" name="was_on_time" value="false">
+                </div>
+
+                <!-- Courtois -->
+                <div class="question-item" data-question="was_polite">
+                    <div class="question-text">
+                        <i class="bi bi-emoji-smile-fill"></i>
+                        <span>Courtois et respectueux</span>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="toggle-circle"></div>
+                    </div>
+                    <input type="hidden" name="was_polite" value="false">
+                </div>
+
+                {% if not is_chauffeur %}
+                <!-- Conduite sûre (pour évaluer un chauffeur) -->
+                <div class="question-item" data-question="was_safe">
+                    <div class="question-text">
+                        <i class="bi bi-shield-check-fill"></i>
+                        <span>Conduite sûre et confortable</span>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="toggle-circle"></div>
+                    </div>
+                    <input type="hidden" name="was_safe" value="false">
+                </div>
+
+                <!-- Véhicule propre (pour évaluer un chauffeur) -->
+                <div class="question-item" data-question="vehicle_clean">
+                    <div class="question-text">
+                        <i class="bi bi-car-front-fill"></i>
+                        <span>Véhicule propre et bien entretenu</span>
+                    </div>
+                    <div class="toggle-switch">
+                        <div class="toggle-circle"></div>
+                    </div>
+                    <input type="hidden" name="vehicle_clean" value="false">
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Commentaire optionnel -->
+            <div class="comment-section">
+                <label for="commentTextarea">Commentaire (optionnel)</label>
+                <textarea 
+                    class="comment-textarea" 
+                    id="commentTextarea" 
+                    name="comment" 
+                    maxlength="500"
+                    placeholder="Partagez votre expérience..."></textarea>
+                <div class="comment-counter">
+                    <span id="charCount">0</span> / 500 caractères
+                </div>
+            </div>
+
+            <!-- Bouton de soumission -->
+            <button type="submit" class="submit-button" id="submitButton" disabled>
+                <i class="bi bi-send-fill"></i>
+                <span>Envoyer mon évaluation</span>
+            </button>
+
+            <!-- Bouton pour passer -->
+            <button type="button" class="skip-button" onclick="skipRating()">
+                Passer pour le moment
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedStars = 0;
+
+// Gestion des étoiles
+document.querySelectorAll('.star').forEach(star => {
+    star.addEventListener('click', function() {
+        selectedStars = parseInt(this.dataset.value);
+        document.getElementById('starsInput').value = selectedStars;
+        updateStars();
+        validateForm();
+    });
+
+    star.addEventListener('mouseenter', function() {
+        const value = parseInt(this.dataset.value);
+        highlightStars(value);
+    });
+});
+
+document.getElementById('starsContainer').addEventListener('mouseleave', function() {
+    highlightStars(selectedStars);
+});
+
+function highlightStars(count) {
+    document.querySelectorAll('.star').forEach((star, index) => {
+        if (index < count) {
+            star.classList.add('active');
+        } else {
+            star.classList.remove('active');
+        }
+    });
+}
+
+function updateStars() {
+    highlightStars(selectedStars);
+}
+
+// Gestion des questions (toggle)
+document.querySelectorAll('.question-item').forEach(item => {
+    item.addEventListener('click', function() {
+        const input = this.querySelector('input[type="hidden"]');
+        const isSelected = this.classList.contains('selected');
+        
+        this.classList.toggle('selected');
+        input.value = isSelected ? 'false' : 'true';
+    });
+});
+
+// Compteur de caractères
+const commentTextarea = document.getElementById('commentTextarea');
+const charCount = document.getElementById('charCount');
+
+commentTextarea.addEventListener('input', function() {
+    charCount.textContent = this.value.length;
+});
+
+// Validation du formulaire
+function validateForm() {
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = selectedStars === 0;
+}
+
+// Passer l'évaluation
+function skipRating() {
+    if (confirm('Êtes-vous sûr de vouloir passer l\'évaluation ? Vous ne pourrez plus évaluer cette course plus tard.')) {
+        window.location.href = '{% url "courses:active_trips" %}';
+    }
+}
+
+// Animation au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    // Animer les étoiles au chargement
+    document.querySelectorAll('.star').forEach((star, index) => {
+        setTimeout(() => {
+            star.style.animation = 'fadeInUp 0.3s ease';
+        }, index * 50);
+    });
+});
+</script>
+{% endblock %}
+

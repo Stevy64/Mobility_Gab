@@ -4,123 +4,382 @@
 
 {% block extra_css %}
 <style>
+/* Header Banner - Orange glassmorphism fluide */
 .hero-banner {
-    background: linear-gradient(135deg, rgba(15, 74, 166, 0.1), rgba(27, 187, 138, 0.1));
-    border-radius: 1.25rem;
-    padding: 2.25rem;
-    border: 1px solid rgba(15, 74, 166, 0.08);
+    position: relative;
+    background: linear-gradient(135deg, #FF8C00 0%, #FFA500 50%, #FFB733 100%);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--white);
+    box-shadow: 0 8px 32px rgba(255, 140, 0, 0.25);
+    overflow: hidden;
 }
+
+/* Effet fluide transparent animé */
+.hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite;
+}
+
+.hero-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(-20px, -20px) scale(1.1);
+    }
+}
+
 .hero-icon {
-    width: 70px;
-    height: 70px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
-    font-size: 2rem;
-    margin-right: 1.5rem;
+    color: var(--white);
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
 }
+
+.hero-banner h2 {
+    color: var(--white);
+    margin-bottom: 0.25rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+.hero-banner .text-muted {
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+/* Onglets modernes */
+.nav-tabs {
+    border-bottom: 2px solid var(--gray-200);
+    margin-bottom: 1.5rem;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: var(--gray-600);
+    font-weight: 600;
+    padding: 0.875rem 1.5rem;
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--primary);
+    border-bottom-color: var(--primary-light);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary);
+    background: transparent;
+    border-bottom-color: var(--primary);
+}
+
+/* Cards optimisées */
 .request-card {
     border: none;
-    border-radius: 1.25rem;
-    background: #fff;
-    box-shadow: 0 25px 60px -35px rgba(33, 37, 41, 0.4);
-    transition: transform 0.25s ease, box-shadow 0.3s ease;
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-base);
+    height: 100%;
 }
+
 .request-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 35px 70px -45px rgba(15, 74, 166, 0.45);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
 }
+
+.request-card.border-warning {
+    border-left: 4px solid var(--warning) !important;
+}
+
+/* Meta grid responsive */
 .request-meta {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    background: #f8fbff;
-    border-radius: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    background: var(--gray-100);
+    border-radius: var(--radius-md);
     padding: 1rem;
-    margin: 1.25rem 0;
+    margin: 1rem 0;
 }
+
 .request-meta .meta-item {
     display: flex;
-    align-items: center;
-    font-size: 0.9rem;
-    color: #345;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-700);
 }
+
 .request-meta .meta-item i {
-    font-size: 1rem;
-    margin-right: 0.6rem;
-    color: var(--mg-primary);
+    font-size: 1.125rem;
+    color: var(--primary);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
 }
-.badge-pill {
-    border-radius: 999px;
-    padding: 0.35rem 0.85rem;
+
+.request-meta .meta-item strong {
+    display: block;
     font-size: 0.75rem;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.125rem;
 }
+
+/* Badges */
+.badge-pill {
+    border-radius: var(--radius-full);
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Empty state */
 .empty-state {
-    border-radius: 1.25rem;
-    border: 1px dashed rgba(15, 74, 166, 0.25);
-    padding: 3rem;
-    background: rgba(248, 250, 255, 0.85);
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--gray-300);
+    padding: 3rem 2rem;
+    background: var(--gray-100);
     text-align: center;
 }
+
 .empty-state i {
-    font-size: 3.2rem;
-    color: var(--mg-primary);
+    font-size: 3rem;
+    color: var(--primary);
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    margin-top: 1rem;
+    color: var(--gray-700);
+}
+
+/* Buttons groupes */
+.btn-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-group .btn {
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+}
+
+/* Responsive Mobile */
+@media (max-width: 767px) {
+    /* Hero banner compact */
+    .hero-banner {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-banner .d-flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    
+    .hero-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+    
+    .hero-banner h2 {
+        font-size: 1.25rem;
+    }
+    
+    .hero-banner .text-end {
+        text-align: left !important;
+        width: 100%;
+    }
+    
+    /* Onglets responsive */
+    .nav-tabs .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .nav-tabs .nav-link i {
+        font-size: 1rem;
+    }
+    
+    /* Cards pleine largeur */
+    .col-xl-6 {
+        width: 100%;
+    }
+    
+    .request-card {
+        margin-bottom: 1rem;
+    }
+    
+    .request-card .card-body {
+        padding: 1rem !important;
+    }
+    
+    /* Meta grid 1 colonne sur mobile */
+    .request-meta {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+    
+    .request-meta .meta-item {
+        font-size: 0.8125rem;
+    }
+    
+    /* Boutons empilés */
+    .request-card .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .request-card .btn {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Titres cards */
+    .request-card h4 {
+        font-size: 1.125rem;
+    }
+    
+    /* Justification responsive */
+    .request-card .d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    
+    .request-card .d-flex.justify-content-between:last-child {
+        margin-top: 1rem;
+    }
+    
+    /* Empty state compact */
+    .empty-state {
+        padding: 2rem 1rem;
+    }
+    
+    .empty-state i {
+        font-size: 2.5rem;
+    }
+    
+    .empty-state h4 {
+        font-size: 1.125rem;
+    }
+}
+
+/* Responsive Tablet */
+@media (min-width: 768px) and (max-width: 1199px) {
+    .request-meta {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Container optimization */
+.container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+@media (min-width: 1200px) {
+    .container-fluid {
+        padding: 0 2rem;
+    }
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="hero-banner mb-4 d-flex align-items-center justify-content-between">
+    <!-- Hero Banner Compact -->
+    <div class="hero-banner d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center">
             <div class="hero-icon">
                 <i class="bi bi-bell-fill"></i>
             </div>
             <div>
-                <h2 class="h4 mb-1">Demandes en temps réel</h2>
-                <p class="text-muted mb-0">Recevez, examinez et acceptez les demandes des particuliers.</p>
+                <h2>Demandes temps réel</h2>
+                <p class="text-muted mb-0">Gérez vos demandes en direct</p>
             </div>
         </div>
         <div class="text-end">
-            <span class="badge bg-primary-subtle text-primary-emphasis badge-pill">
+            <span class="badge badge-pill" style="background: rgba(255, 255, 255, 0.25); color: white;">
                 <i class="bi bi-activity me-1"></i>
-                <span id="totalCount">0</span> demande(s) totales
+                <span id="totalCount">0</span> total
             </span>
-            <p class="text-muted small mb-0">Actualisation automatique toutes les 20 secondes.</p>
+            <p class="text-muted small mb-0 mt-1">Actualisation auto • 20s</p>
         </div>
     </div>
 
-    <!-- Onglets pour basculer entre les types de demandes -->
-    <ul class="nav nav-tabs mb-4" role="tablist">
+    <!-- Onglets -->
+    <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="rides-tab" data-bs-toggle="tab" data-bs-target="#rides-pane" type="button" role="tab">
-                <i class="bi bi-car-front me-2"></i>
-                Demandes de course
+                <i class="bi bi-car-front me-1"></i>
+                Courses
                 <span id="ridesCount" class="badge bg-primary rounded-pill ms-2">0</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="subscriptions-tab" data-bs-toggle="tab" data-bs-target="#subscriptions-pane" type="button" role="tab">
-                <i class="bi bi-calendar-check me-2"></i>
-                Demandes d'abonnement
+                <i class="bi bi-calendar-check me-1"></i>
+                Abonnements
                 <span id="subscriptionsCount" class="badge bg-warning rounded-pill ms-2">0</span>
             </button>
         </li>
     </ul>
 
-    <!-- Contenu des onglets -->
+    <!-- Contenu -->
     <div class="tab-content">
-        <!-- Onglet Demandes de course -->
         <div class="tab-pane fade show active" id="rides-pane" role="tabpanel">
-            <div id="ridesContainer" class="row g-4"></div>
+            <div id="ridesContainer" class="row g-3"></div>
         </div>
-        
-        <!-- Onglet Demandes d'abonnement -->
         <div class="tab-pane fade" id="subscriptions-pane" role="tabpanel">
-            <div id="subscriptionsContainer" class="row g-4"></div>
+            <div id="subscriptionsContainer" class="row g-3"></div>
         </div>
     </div>
 </div>
@@ -348,7 +607,13 @@ function respondRequest(url, accepted) {
     .then(response => response.json())
     .then(data => {
         if (data.success !== false) {
-            fetchAllRequests();
+            if (accepted) {
+                // Rediriger vers la page des courses actives après acceptation
+                window.location.href = '/courses/actives/';
+            } else {
+                // Rafraîchir la liste après refus
+                fetchAllRequests();
+            }
         } else {
             alert(data.error || 'Action impossible.');
         }
@@ -357,6 +622,9 @@ function respondRequest(url, accepted) {
 }
 
 function respondSubscriptionRequest(url, requestId) {
+    // Déterminer si c'est une acceptation ou un refus
+    const isAccept = url.includes('/accept/');
+    
     fetch(url, {
         method: 'POST',
         headers: {
@@ -368,8 +636,14 @@ function respondSubscriptionRequest(url, requestId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message || 'Demande traitée avec succès');
-            fetchAllRequests();
+            if (isAccept) {
+                // Rediriger vers la page de gestion des abonnés après acceptation
+                window.location.href = '/subscriptions/manage-subscribers/';
+            } else {
+                // Rafraîchir la liste après refus
+                alert(data.message || 'Demande refusée');
+                fetchAllRequests();
+            }
         } else {
             alert(data.error || 'Action impossible.');
         }

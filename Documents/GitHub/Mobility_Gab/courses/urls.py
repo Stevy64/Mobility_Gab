@@ -37,4 +37,10 @@ urlpatterns = [
     
     # API pour archiver une course
     path('api/trip/<int:trip_id>/archive/', views.archive_trip, name='archive_trip'),
+    
+    # API pour récupérer la position GPS en temps réel
+    path('api/trip/<int:trip_id>/gps-location/', views.get_trip_gps_location, name='get_trip_gps_location'),
+    
+    # Évaluation de trajet
+    path('trip/<int:pk>/rate/', views.TripRatingView.as_view(), name='rate_trip'),
 ]

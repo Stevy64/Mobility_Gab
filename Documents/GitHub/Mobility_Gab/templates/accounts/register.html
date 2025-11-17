@@ -5,328 +5,316 @@
 
 {% block extra_css %}
 <style>
-    .register-page {
+    /* Register Page - Modern Premium Design */
+    
+    body {
+        background: linear-gradient(135deg, var(--gray-100) 0%, var(--white) 100%);
+    }
+    
+    /* Register Container */
+    .register-wrapper {
         min-height: calc(100vh - 200px);
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: var(--space-2xl) var(--space-md);
-        background: 
-            linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 15, 0.92) 100%),
-            url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop') center/cover fixed;
-        position: relative;
+        padding: 2rem 0;
     }
     
-    .register-page::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(circle at 70% 50%, rgba(255, 152, 0, 0.15) 0%, transparent 60%);
-        pointer-events: none;
-    }
-    
-    .register-container {
+    /* Register Card */
+    .register-card {
         width: 100%;
         max-width: 600px;
-        position: relative;
-        z-index: 2;
-        animation: fadeInUp 0.6s ease-out;
-    }
-    
-    .register-card {
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
+        background: var(--white);
         border-radius: var(--radius-xl);
-        padding: var(--space-2xl);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: var(--shadow-xl);
+        padding: 2.5rem 2rem;
+        animation: fadeInUp 0.5s ease-out;
     }
     
-    .register-header {
-        text-align: center;
-        margin-bottom: var(--space-xl);
+    @media (min-width: 768px) {
+        .register-card {
+            padding: 3rem;
+        }
     }
     
-    .register-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto var(--space-lg);
-        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
-        border-radius: 50%;
+    /* Logo */
+    .register-logo {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.5rem;
-        color: var(--mg-white);
-        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4);
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md), var(--shadow-glow);
+        margin: 0 auto 1.5rem;
     }
     
+    .register-logo i {
+        font-size: 2rem;
+        color: var(--white);
+    }
+    
+    /* Title */
     .register-title {
-        font-size: var(--font-size-3xl);
-        font-weight: 800;
-        color: var(--mg-secondary);
-        margin-bottom: var(--space-sm);
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--dark);
+        text-align: center;
+        margin-bottom: 0.5rem;
     }
     
+    /* Subtitle */
     .register-subtitle {
-        font-size: var(--font-size-base);
-        color: var(--mg-gray-600);
+        font-size: 1rem;
+        color: var(--gray-600);
+        text-align: center;
+        margin-bottom: 2rem;
     }
     
     /* Role Selector */
     .role-selector {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: var(--space-md);
-        margin-bottom: var(--space-xl);
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+        padding: 0.5rem;
+        background: var(--gray-100);
+        border-radius: var(--radius-lg);
     }
     
     .role-option {
-        position: relative;
+        padding: 0.875rem 1rem;
+        text-align: center;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        background: transparent;
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        text-decoration: none;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: var(--space-lg);
-        border: 3px solid var(--mg-gray-300);
-        border-radius: var(--radius-lg);
-        background: var(--mg-white);
-        cursor: pointer;
-        transition: all var(--transition-base);
-        text-decoration: none;
-        color: var(--mg-gray-800);
-        min-height: 120px;
+        gap: 0.5rem;
     }
     
     .role-option:hover {
-        border-color: var(--mg-primary);
-        transform: translateY(-4px);
-        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.2);
-        color: var(--mg-gray-800);
+        background: var(--white);
+        color: var(--primary);
     }
     
     .role-option.active {
-        border-color: var(--mg-primary);
-        background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(245, 124, 0, 0.1));
-        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: var(--white);
+        box-shadow: var(--shadow-sm);
     }
     
-    .role-option i {
-        font-size: 2.5rem;
-        margin-bottom: var(--space-sm);
-        color: var(--mg-primary);
+    /* Form Group */
+    .form-group {
+        margin-bottom: 1.25rem;
     }
     
-    .role-option-title {
-        font-size: var(--font-size-lg);
-        font-weight: 700;
-    }
-    
-    /* Form Styles */
-    .register-form .form-row {
+    /* Form Row (2 columns) */
+    .form-row {
         display: grid;
         grid-template-columns: 1fr;
-        gap: var(--space-lg);
-        margin-bottom: var(--space-lg);
+        gap: 1rem;
     }
     
     @media (min-width: 768px) {
-        .register-form .form-row-2 {
+        .form-row {
             grid-template-columns: 1fr 1fr;
         }
     }
     
-    .register-form .form-group {
-        margin-bottom: var(--space-lg);
-    }
-    
-    .register-form .form-label {
+    /* Form Label */
+    .form-label {
         display: block;
-        margin-bottom: var(--space-sm);
-        font-size: var(--font-size-sm);
+        font-size: 0.875rem;
         font-weight: 600;
-        color: var(--mg-gray-800);
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
     }
     
-    .register-form .form-control,
-    .register-form select {
+    /* Form Control */
+    .form-control {
         width: 100%;
-        padding: var(--space-md) var(--space-lg);
-        font-size: var(--font-size-base);
-        color: var(--mg-gray-900);
-        background: var(--mg-white);
-        border: 2px solid var(--mg-gray-300);
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+        font-family: var(--font-primary);
+        color: var(--gray-900);
+        background: var(--gray-100);
+        border: 2px solid transparent;
         border-radius: var(--radius-md);
-        transition: all var(--transition-base);
-        min-height: 52px;
-    }
-    
-    .register-form .form-control:focus,
-    .register-form select:focus {
-        border-color: var(--mg-primary);
+        transition: all var(--transition-fast);
         outline: none;
-        box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
     
-    .register-form .errorlist {
+    .form-control:focus {
+        background: var(--white);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(255, 165, 0, 0.1);
+    }
+    
+    .form-control::placeholder {
+        color: var(--gray-400);
+    }
+    
+    /* Select */
+    select.form-control {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236C757D' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+    }
+    
+    /* Textarea */
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    /* Error Messages */
+    .errorlist {
         list-style: none;
         padding: 0;
-        margin: var(--space-sm) 0 0 0;
+        margin: 0.5rem 0 0;
     }
     
-    .register-form .errorlist li {
-        color: var(--mg-danger);
-        font-size: var(--font-size-sm);
-        padding: var(--space-xs) var(--space-sm);
-        background: rgba(244, 67, 54, 0.1);
+    .errorlist li {
+        font-size: 0.875rem;
+        color: var(--danger);
+        padding: 0.5rem;
+        background: var(--danger-light);
         border-radius: var(--radius-sm);
-        margin-top: var(--space-xs);
+        margin-bottom: 0.5rem;
     }
     
-    .register-form .helptext {
+    /* Help Text */
+    .form-text {
         display: block;
-        margin-top: var(--space-xs);
-        font-size: var(--font-size-xs);
-        color: var(--mg-gray-500);
+        font-size: 0.8125rem;
+        color: var(--gray-500);
+        margin-top: 0.25rem;
     }
     
-    .register-btn {
+    /* Submit Button */
+    .btn-submit {
         width: 100%;
-        padding: var(--space-lg) var(--space-xl);
-        font-size: var(--font-size-lg);
-        font-weight: 700;
-        color: var(--mg-white);
-        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        padding: 1rem;
+        font-family: var(--font-primary);
+        font-size: 1.0625rem;
+        font-weight: 600;
+        color: var(--white);
+        background: linear-gradient(135deg, var(--success) 0%, #0D9488 100%);
         border: none;
-        border-radius: var(--radius-full);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
         cursor: pointer;
         transition: all var(--transition-base);
-        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
-        min-height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--space-sm);
+        margin-top: 1rem;
     }
     
-    .register-btn:hover {
+    .btn-submit:hover {
         transform: translateY(-2px);
-        box-shadow: 0 15px 40px rgba(255, 152, 0, 0.4);
+        box-shadow: var(--shadow-lg), 0 0 20px rgba(16, 185, 129, 0.3);
     }
     
-    .register-btn:active {
+    .btn-submit:active {
         transform: translateY(0);
     }
     
-    .register-footer {
+    /* Login Link */
+    .login-link {
         text-align: center;
-        margin-top: var(--space-xl);
-        padding-top: var(--space-xl);
-        border-top: 1px solid var(--mg-gray-200);
+        font-size: 0.9375rem;
+        color: var(--gray-600);
+        margin-top: 1.5rem;
     }
     
-    .register-footer-text {
-        font-size: var(--font-size-sm);
-        color: var(--mg-gray-600);
-    }
-    
-    .register-footer-link {
-        color: var(--mg-primary);
+    .login-link a {
+        color: var(--primary);
         font-weight: 600;
         text-decoration: none;
         transition: color var(--transition-fast);
     }
     
-    .register-footer-link:hover {
-        color: var(--mg-primary-dark);
+    .login-link a:hover {
+        color: var(--primary-dark);
         text-decoration: underline;
     }
     
-    @media (max-width: 768px) {
-        .register-page {
-            background-attachment: scroll;
-            padding: var(--space-lg) var(--space-sm);
-        }
-        
-        .register-card {
-            padding: var(--space-xl) var(--space-lg);
-        }
-        
-        .role-selector {
-            grid-template-columns: 1fr;
-        }
+    /* Hide the role field (we'll use the role selector instead) */
+    input[name="role"] {
+        display: none;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="register-page">
-    <div class="register-container">
+<div class="container">
+    <div class="register-wrapper">
         <div class="register-card">
-            <div class="register-header">
-                <div class="register-icon">
-                    <i class="bi bi-person-plus-fill"></i>
-                </div>
-                <h1 class="register-title">Créer un compte</h1>
-                <p class="register-subtitle">Rejoignez Mobility Gab en quelques clics</p>
+            <!-- Logo -->
+            <div class="register-logo">
+                <i class="bi bi-person-plus-fill"></i>
             </div>
+            
+            <!-- Title -->
+            <h1 class="register-title">Créer un compte</h1>
+            <p class="register-subtitle">Rejoignez Mobility Gab dès aujourd'hui</p>
             
             <!-- Role Selector -->
             <div class="role-selector">
+                <a href="?role=parent" class="role-option {% if form.initial.role == 'parent' or form.fields.role.initial == 'parent' %}active{% endif %}">
+                    <i class="bi bi-people"></i>
+                    <span>Particulier</span>
+                </a>
                 <a href="?role=chauffeur" class="role-option {% if form.initial.role == 'chauffeur' or form.fields.role.initial == 'chauffeur' %}active{% endif %}">
                     <i class="bi bi-steering-wheel"></i>
-                    <span class="role-option-title">Chauffeur</span>
-                </a>
-                <a href="?role=parent" class="role-option {% if form.initial.role == 'parent' or form.fields.role.initial == 'parent' %}active{% endif %}">
-                    <i class="bi bi-shield-check"></i>
-                    <span class="role-option-title">Superviseur</span>
+                    <span>Chauffeur</span>
                 </a>
             </div>
             
-            <form method="post" class="register-form" novalidate>
+            <!-- Register Form -->
+            <form method="post" novalidate>
                 {% csrf_token %}
                 {{ form.role }}
-                
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-circle-fill"></i>
-                        {% for error in form.non_field_errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
                 
                 <!-- Username -->
                 <div class="form-group">
                     <label for="{{ form.username.id_for_label }}" class="form-label">
-                        <i class="bi bi-person-fill"></i> {{ form.username.label }}
+                        <i class="bi bi-person"></i> {{ form.username.label }}
                     </label>
                     {{ form.username }}
                     {% if form.username.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.username.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
+                    <ul class="errorlist">
+                        {% for error in form.username.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                     {% endif %}
                 </div>
                 
-                <!-- First & Last Name -->
-                <div class="form-row form-row-2">
+                <!-- First Name & Last Name -->
+                <div class="form-row">
                     <div class="form-group">
                         <label for="{{ form.first_name.id_for_label }}" class="form-label">
                             {{ form.first_name.label }}
                         </label>
                         {{ form.first_name }}
                         {% if form.first_name.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.first_name.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
+                        <ul class="errorlist">
+                            {% for error in form.first_name.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
                         {% endif %}
                     </div>
                     
@@ -336,11 +324,11 @@
                         </label>
                         {{ form.last_name }}
                         {% if form.last_name.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.last_name.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
+                        <ul class="errorlist">
+                            {% for error in form.last_name.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
                         {% endif %}
                     </div>
                 </div>
@@ -348,61 +336,61 @@
                 <!-- Email -->
                 <div class="form-group">
                     <label for="{{ form.email.id_for_label }}" class="form-label">
-                        <i class="bi bi-envelope-fill"></i> {{ form.email.label }}
+                        <i class="bi bi-envelope"></i> {{ form.email.label }}
                     </label>
                     {{ form.email }}
                     {% if form.email.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.email.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
+                    <ul class="errorlist">
+                        {% for error in form.email.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                     {% endif %}
                 </div>
                 
                 <!-- Phone -->
                 <div class="form-group">
                     <label for="{{ form.phone.id_for_label }}" class="form-label">
-                        <i class="bi bi-telephone-fill"></i> {{ form.phone.label }}
+                        <i class="bi bi-phone"></i> {{ form.phone.label }}
                     </label>
                     {{ form.phone }}
                     {% if form.phone.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.phone.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
+                    <ul class="errorlist">
+                        {% for error in form.phone.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                     {% endif %}
                 </div>
                 
                 <!-- Address -->
                 <div class="form-group">
                     <label for="{{ form.address.id_for_label }}" class="form-label">
-                        <i class="bi bi-geo-alt-fill"></i> {{ form.address.label }}
+                        <i class="bi bi-geo-alt"></i> {{ form.address.label }}
                     </label>
                     {{ form.address }}
                     {% if form.address.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.address.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
+                    <ul class="errorlist">
+                        {% for error in form.address.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                     {% endif %}
                 </div>
                 
                 <!-- Passwords -->
-                <div class="form-row form-row-2">
+                <div class="form-row">
                     <div class="form-group">
                         <label for="{{ form.password1.id_for_label }}" class="form-label">
-                            <i class="bi bi-lock-fill"></i> {{ form.password1.label }}
+                            <i class="bi bi-lock"></i> {{ form.password1.label }}
                         </label>
                         {{ form.password1 }}
                         {% if form.password1.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.password1.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
+                        <ul class="errorlist">
+                            {% for error in form.password1.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
                         {% endif %}
                     </div>
                     
@@ -412,48 +400,45 @@
                         </label>
                         {{ form.password2 }}
                         {% if form.password2.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.password2.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
+                        <ul class="errorlist">
+                            {% for error in form.password2.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
                         {% endif %}
                     </div>
                 </div>
                 
-                <!-- Vehicle Placeholder (pour chauffeur) -->
-                {% if form.vehicle_placeholder %}
+                <!-- Vehicle Placeholder (Chauffeur only) -->
+                {% if form.fields.vehicle_placeholder %}
                 <div class="form-group">
                     <label for="{{ form.vehicle_placeholder.id_for_label }}" class="form-label">
-                        <i class="bi bi-car-front-fill"></i> {{ form.vehicle_placeholder.label }}
+                        <i class="bi bi-car-front"></i> {{ form.vehicle_placeholder.label }}
                     </label>
                     {{ form.vehicle_placeholder }}
                     {% if form.vehicle_placeholder.help_text %}
-                        <span class="helptext">{{ form.vehicle_placeholder.help_text }}</span>
+                    <small class="form-text">{{ form.vehicle_placeholder.help_text }}</small>
                     {% endif %}
                     {% if form.vehicle_placeholder.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.vehicle_placeholder.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
+                    <ul class="errorlist">
+                        {% for error in form.vehicle_placeholder.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                     {% endif %}
                 </div>
                 {% endif %}
                 
-                <button type="submit" class="register-btn">
-                    <i class="bi bi-rocket-takeoff-fill"></i>
-                    <span>Créer mon compte</span>
+                <!-- Submit Button -->
+                <button type="submit" class="btn-submit">
+                    Créer mon compte
+                    <i class="bi bi-arrow-right ms-2"></i>
                 </button>
             </form>
             
-            <div class="register-footer">
-                <p class="register-footer-text">
-                    Déjà inscrit ? 
-                    <a href="{% url 'accounts:login' %}" class="register-footer-link">
-                        Se connecter
-                    </a>
-                </p>
+            <!-- Login Link -->
+            <div class="login-link">
+                Déjà inscrit ? <a href="{% url 'accounts:login' %}">Se connecter</a>
             </div>
         </div>
     </div>

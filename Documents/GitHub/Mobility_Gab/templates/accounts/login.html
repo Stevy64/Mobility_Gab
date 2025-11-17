@@ -5,269 +5,278 @@
 
 {% block extra_css %}
 <style>
-    .login-page {
+    /* Login Page - Modern Premium Design */
+    
+    body {
+        background: linear-gradient(135deg, var(--gray-100) 0%, var(--white) 100%);
+    }
+    
+    /* Login Container */
+    .login-wrapper {
         min-height: calc(100vh - 200px);
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: var(--space-2xl) var(--space-md);
-        background: 
-            linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 15, 0.92) 100%),
-            url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop') center/cover fixed;
-        position: relative;
+        padding: 2rem 0;
     }
     
-    .login-page::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(circle at 30% 50%, rgba(255, 152, 0, 0.1) 0%, transparent 60%);
-        pointer-events: none;
-    }
-    
-    .login-container {
-        width: 100%;
-        max-width: 480px;
-        position: relative;
-        z-index: 2;
-        animation: fadeInUp 0.6s ease-out;
-    }
-    
+    /* Login Card */
     .login-card {
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
+        width: 100%;
+        max-width: 450px;
+        background: var(--white);
         border-radius: var(--radius-xl);
-        padding: var(--space-2xl);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: var(--shadow-xl);
+        padding: 3rem 2rem;
+        animation: fadeInUp 0.5s ease-out;
     }
     
-    .login-header {
-        text-align: center;
-        margin-bottom: var(--space-2xl);
+    @media (min-width: 768px) {
+        .login-card {
+            padding: 3rem;
+        }
     }
     
-    .login-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto var(--space-lg);
-        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
-        border-radius: 50%;
+    /* Logo */
+    .login-logo {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.5rem;
-        color: var(--mg-white);
-        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4);
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md), var(--shadow-glow);
+        margin: 0 auto 1.5rem;
     }
     
+    .login-logo i {
+        font-size: 2rem;
+        color: var(--white);
+    }
+    
+    /* Title */
     .login-title {
-        font-size: var(--font-size-3xl);
-        font-weight: 800;
-        color: var(--mg-secondary);
-        margin-bottom: var(--space-sm);
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--dark);
+        text-align: center;
+        margin-bottom: 0.5rem;
     }
     
+    /* Subtitle */
     .login-subtitle {
-        font-size: var(--font-size-base);
-        color: var(--mg-gray-600);
+        font-size: 1rem;
+        color: var(--gray-600);
+        text-align: center;
+        margin-bottom: 2rem;
     }
     
-    .login-form .form-group {
-        margin-bottom: var(--space-lg);
+    /* Form Group */
+    .form-group {
+        margin-bottom: 1.5rem;
     }
     
-    .login-form .form-label {
+    /* Form Label */
+    .form-label {
         display: block;
-        margin-bottom: var(--space-sm);
-        font-size: var(--font-size-sm);
+        font-size: 0.9375rem;
         font-weight: 600;
-        color: var(--mg-gray-800);
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
     }
     
-    .login-form .form-control {
+    /* Form Control */
+    .form-control {
         width: 100%;
-        padding: var(--space-md) var(--space-lg);
-        font-size: var(--font-size-base);
-        color: var(--mg-gray-900);
-        background: var(--mg-white);
-        border: 2px solid var(--mg-gray-300);
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+        font-family: var(--font-primary);
+        color: var(--gray-900);
+        background: var(--gray-100);
+        border: 2px solid transparent;
         border-radius: var(--radius-md);
-        transition: all var(--transition-base);
-        min-height: 52px;
-    }
-    
-    .login-form .form-control:focus {
-        border-color: var(--mg-primary);
+        transition: all var(--transition-fast);
         outline: none;
-        box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
     
-    .login-form .errorlist {
+    .form-control:focus {
+        background: var(--white);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(255, 165, 0, 0.1);
+    }
+    
+    .form-control::placeholder {
+        color: var(--gray-400);
+    }
+    
+    /* Error Messages */
+    .errorlist {
         list-style: none;
         padding: 0;
-        margin: var(--space-sm) 0 0 0;
+        margin: 0.5rem 0 0;
     }
     
-    .login-form .errorlist li {
-        color: var(--mg-danger);
-        font-size: var(--font-size-sm);
-        padding: var(--space-xs) var(--space-sm);
-        background: rgba(244, 67, 54, 0.1);
+    .errorlist li {
+        font-size: 0.875rem;
+        color: var(--danger);
+        padding: 0.5rem;
+        background: var(--danger-light);
         border-radius: var(--radius-sm);
-        margin-top: var(--space-xs);
+        margin-bottom: 0.5rem;
     }
     
-    .login-btn {
+    /* Submit Button */
+    .btn-submit {
         width: 100%;
-        padding: var(--space-lg) var(--space-xl);
-        font-size: var(--font-size-lg);
-        font-weight: 700;
-        color: var(--mg-white);
-        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        padding: 1rem;
+        font-family: var(--font-primary);
+        font-size: 1.0625rem;
+        font-weight: 600;
+        color: var(--white);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         border: none;
-        border-radius: var(--radius-full);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
         cursor: pointer;
         transition: all var(--transition-base);
-        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
-        min-height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--space-sm);
     }
     
-    .login-btn:hover {
+    .btn-submit:hover {
         transform: translateY(-2px);
-        box-shadow: 0 15px 40px rgba(255, 152, 0, 0.4);
+        box-shadow: var(--shadow-lg), var(--shadow-glow);
     }
     
-    .login-btn:active {
+    .btn-submit:active {
         transform: translateY(0);
     }
     
-    .login-footer {
+    /* Divider */
+    .divider {
+        display: flex;
+        align-items: center;
         text-align: center;
-        margin-top: var(--space-xl);
-        padding-top: var(--space-xl);
-        border-top: 1px solid var(--mg-gray-200);
+        margin: 1.5rem 0;
+        color: var(--gray-500);
+        font-size: 0.875rem;
     }
     
-    .login-footer-text {
-        font-size: var(--font-size-sm);
-        color: var(--mg-gray-600);
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid var(--gray-300);
     }
     
-    .login-footer-link {
-        color: var(--mg-primary);
+    .divider span {
+        padding: 0 1rem;
+    }
+    
+    /* Register Link */
+    .register-link {
+        text-align: center;
+        font-size: 0.9375rem;
+        color: var(--gray-600);
+        margin-top: 1.5rem;
+    }
+    
+    .register-link a {
+        color: var(--primary);
         font-weight: 600;
         text-decoration: none;
         transition: color var(--transition-fast);
     }
     
-    .login-footer-link:hover {
-        color: var(--mg-primary-dark);
+    .register-link a:hover {
+        color: var(--primary-dark);
         text-decoration: underline;
-    }
-    
-    @media (max-width: 768px) {
-        .login-page {
-            background-attachment: scroll;
-            padding: var(--space-lg) var(--space-sm);
-        }
-        
-        .login-card {
-            padding: var(--space-xl) var(--space-lg);
-        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="login-page">
-    <div class="login-container">
+<div class="container">
+    <div class="login-wrapper">
         <div class="login-card">
-            <div class="login-header">
-                <div class="login-icon">
-                    <i class="bi bi-person-lock"></i>
-                </div>
-                <h1 class="login-title">Connexion</h1>
-                <p class="login-subtitle">Accédez à votre espace Mobility Gab</p>
+            <!-- Logo -->
+            <div class="login-logo">
+                <i class="bi bi-car-front-fill"></i>
             </div>
             
-            <form method="post" class="login-form" novalidate>
+            <!-- Title -->
+            <h1 class="login-title">Connexion</h1>
+            <p class="login-subtitle">Accédez à votre espace Mobility Gab</p>
+            
+            <!-- Login Form -->
+            <form method="post" novalidate>
                 {% csrf_token %}
                 
+                <!-- Non-field errors -->
                 {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-circle-fill"></i>
-                        {% for error in form.non_field_errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
+                <div class="errorlist">
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </div>
                 {% endif %}
                 
+                <!-- Username Field -->
                 <div class="form-group">
-                    <label for="{{ form.username.id_for_label }}" class="form-label">
-                        <i class="bi bi-person-fill"></i> Nom d'utilisateur
+                    <label for="id_username" class="form-label">
+                        <i class="bi bi-person"></i> Nom d'utilisateur
                     </label>
-                    <input 
-                        type="text" 
-                        name="{{ form.username.name }}" 
-                        id="{{ form.username.id_for_label }}"
-                        class="form-control {% if form.username.errors %}is-invalid{% endif %}"
-                        placeholder="Entrez votre nom d'utilisateur"
-                        required
-                        autocomplete="username"
-                        value="{{ form.username.value|default:'' }}"
-                    >
+                    <input type="text" 
+                           name="{{ form.username.name }}" 
+                           id="id_username" 
+                           class="form-control"
+                           placeholder="Entrez votre nom d'utilisateur"
+                           {% if form.username.value %}value="{{ form.username.value }}"{% endif %}
+                           required>
                     {% if form.username.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.username.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
+                    <ul class="errorlist">
+                        {% for error in form.username.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                     {% endif %}
                 </div>
                 
+                <!-- Password Field -->
                 <div class="form-group">
-                    <label for="{{ form.password.id_for_label }}" class="form-label">
-                        <i class="bi bi-lock-fill"></i> Mot de passe
+                    <label for="id_password" class="form-label">
+                        <i class="bi bi-lock"></i> Mot de passe
                     </label>
-                    <input 
-                        type="password" 
-                        name="{{ form.password.name }}" 
-                        id="{{ form.password.id_for_label }}"
-                        class="form-control {% if form.password.errors %}is-invalid{% endif %}"
-                        placeholder="Entrez votre mot de passe"
-                        required
-                        autocomplete="current-password"
-                    >
+                    <input type="password" 
+                           name="{{ form.password.name }}" 
+                           id="id_password" 
+                           class="form-control"
+                           placeholder="Entrez votre mot de passe"
+                           required>
                     {% if form.password.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.password.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
+                    <ul class="errorlist">
+                        {% for error in form.password.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                     {% endif %}
                 </div>
                 
-                <button type="submit" class="login-btn">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    <span>Se connecter</span>
+                <!-- Submit Button -->
+                <button type="submit" class="btn-submit">
+                    Se connecter
+                    <i class="bi bi-arrow-right ms-2"></i>
                 </button>
             </form>
             
-            <div class="login-footer">
-                <p class="login-footer-text">
-                    Pas encore de compte ? 
-                    <a href="{% url 'accounts:register' %}" class="login-footer-link">
-                        Créer un compte
-                    </a>
-                </p>
+            <!-- Divider -->
+            <div class="divider">
+                <span>ou</span>
+            </div>
+            
+            <!-- Register Link -->
+            <div class="register-link">
+                Pas encore de compte ? <a href="{% url 'accounts:register' %}">Créer un compte</a>
             </div>
         </div>
     </div>

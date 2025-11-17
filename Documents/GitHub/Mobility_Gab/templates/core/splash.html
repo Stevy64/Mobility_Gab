@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <!-- Meta Tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+    <meta name="theme-color" content="#FFA500">
+    
+    <!-- Title -->
+    <title>Mobility Gab - Bienvenue</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Urbanist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom Theme CSS -->
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    
+    <style>
+        /* Splash Screen - X-Road Inspired */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-primary);
+            overflow: hidden;
+            background: var(--dark);
+        }
+        
+        /* Splash Container */
+        .splash-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        /* Background Image */
+        .splash-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+        
+        /* Overlay */
+        .splash-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                180deg,
+                rgba(15, 20, 25, 0.8) 0%,
+                rgba(15, 20, 25, 0.9) 100%
+            );
+            z-index: 2;
+        }
+        
+        /* Content */
+        .splash-content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            max-width: 500px;
+        }
+        
+        /* Logo */
+        .splash-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-2xl), var(--shadow-glow);
+            margin-bottom: 2rem;
+            animation: scaleIn 0.8s ease-out, float 3s ease-in-out 0.8s infinite;
+        }
+        
+        .splash-logo i {
+            font-size: 4rem;
+            color: var(--white);
+        }
+        
+        /* Title */
+        .splash-title {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+        }
+        
+        /* Subtitle */
+        .splash-subtitle {
+            font-size: 1.125rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 3rem;
+            line-height: 1.6;
+            animation: fadeInUp 0.8s ease-out 0.5s both;
+        }
+        
+        /* GO Button Container */
+        .go-button-container {
+            position: relative;
+            animation: fadeInUp 0.8s ease-out 0.7s both;
+        }
+        
+        /* Arrows Above Button */
+        .go-arrows {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .go-arrows i {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* GO Button */
+        .go-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 120px;
+            height: 120px;
+            background: var(--dark);
+            border: 4px solid rgba(255, 165, 0, 0.3);
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .go-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius-full);
+            transition: all var(--transition-base);
+        }
+        
+        .go-button:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .go-button:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-2xl), var(--shadow-glow);
+            transform: scale(1.05);
+        }
+        
+        .go-button span {
+            position: relative;
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--white);
+            letter-spacing: 0.1em;
+        }
+        
+        /* Terms */
+        .splash-terms {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            animation: fadeIn 1s ease-out 1s both;
+        }
+        
+        .splash-terms a {
+            color: var(--primary-light);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color var(--transition-fast);
+        }
+        
+        .splash-terms a:hover {
+            border-bottom-color: var(--primary-light);
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-container">
+        <!-- Background Image -->
+        <img src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop" 
+             alt="Mobility Gab" 
+             class="splash-bg"
+             loading="eager">
+        
+        <!-- Overlay -->
+        <div class="splash-overlay"></div>
+        
+        <!-- Content -->
+        <div class="splash-content">
+            <!-- Logo -->
+            <div class="splash-logo">
+                <i class="bi bi-car-front-fill"></i>
+            </div>
+            
+            <!-- Title -->
+            <h1 class="splash-title">Mobility Gab</h1>
+            
+            <!-- Subtitle -->
+            <p class="splash-subtitle">
+                Le temps est venu pour vos déplacements de voyager sur les meilleures routes.
+            </p>
+            
+            <!-- GO Button -->
+            <div class="go-button-container">
+                <!-- Arrows -->
+                <div class="go-arrows">
+                    <i class="bi bi-chevron-up"></i>
+                    <i class="bi bi-chevron-up"></i>
+                    <i class="bi bi-chevron-up"></i>
+                </div>
+                
+                <!-- Button -->
+                <a href="{% url 'core:landing' %}" class="go-button">
+                    <span>GO</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Terms -->
+        <div class="splash-terms">
+            En continuant, vous acceptez nos <a href="#">Conditions</a> et <a href="#">Politique de confidentialité</a>
+        </div>
+    </div>
+</body>
+</html>
+

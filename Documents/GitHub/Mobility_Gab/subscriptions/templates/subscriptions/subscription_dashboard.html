@@ -237,6 +237,36 @@
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
     }
+    
+    /* Correction débordement header */
+    .dashboard-header .row {
+        flex-direction: column !important;
+    }
+    
+    .dashboard-header .col-md-4 {
+        text-align: left !important;
+        margin-top: 1rem;
+    }
+    
+    .dashboard-header .d-flex {
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        gap: 0.75rem !important;
+    }
+    
+    .dashboard-header .d-flex .action-btn {
+        width: 100%;
+    }
+    
+    /* Boutons dans les cards */
+    .d-flex.gap-2 {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .d-flex.gap-2 .btn {
+        width: 100% !important;
+    }
 }
 </style>
 {% endblock %}

@@ -1,454 +1,328 @@
 {% extends 'base.html' %}
-{% load static %}
 
-{% block page_title %}Espace Superviseur - Mobility Gab{% endblock %}
+{% block page_title %}Espace Particulier - Mobility Gab{% endblock %}
 
 {% block extra_css %}
 <style>
-    .dashboard-page {
-        padding: var(--space-2xl) 0;
-        background: linear-gradient(180deg, var(--mg-gray-100) 0%, var(--mg-white) 100%);
-        min-height: calc(100vh - 200px);
+.particulier-welcome {
+    background: linear-gradient(135deg, var(--mg-primary), #0f4aa6);
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.action-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.quick-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+    color: white;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .particulier-welcome {
+        padding: 1.5rem;
     }
     
-    /* Welcome Banner */
-    .welcome-banner {
-        background: linear-gradient(135deg, var(--mg-secondary) 0%, var(--mg-gray-900) 100%);
-        border-radius: var(--radius-xl);
-        padding: var(--space-2xl);
-        margin-bottom: var(--space-2xl);
-        color: var(--mg-white);
-        position: relative;
-        overflow: hidden;
-        animation: fadeInUp 0.6s ease-out;
-    }
-    
-    .welcome-banner::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -20%;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(255, 152, 0, 0.2) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-    
-    .welcome-content {
-        position: relative;
-        z-index: 2;
-    }
-    
-    .welcome-title {
-        font-size: clamp(1.5rem, 4vw, 2rem);
-        font-weight: 800;
-        margin-bottom: var(--space-sm);
-    }
-    
-    .welcome-subtitle {
-        font-size: var(--font-size-base);
-        opacity: 0.9;
-        margin-bottom: var(--space-xl);
-    }
-    
-    .quick-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: var(--space-lg);
-    }
-    
-    .stat-item {
-        text-align: center;
-        padding: var(--space-md);
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: var(--radius-md);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .stat-number {
-        font-size: var(--font-size-2xl);
-        font-weight: 800;
-        margin-bottom: var(--space-xs);
-    }
-    
-    .stat-label {
-        font-size: var(--font-size-sm);
-        opacity: 0.9;
-    }
-    
-    /* Actions Grid */
-    .actions-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: var(--space-xl);
-        margin-bottom: var(--space-2xl);
-    }
-    
-    @media (min-width: 768px) {
-        .actions-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    
-    @media (min-width: 1024px) {
-        .actions-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-    
-    .action-card {
-        background: var(--mg-white);
-        border-radius: var(--radius-lg);
-        padding: var(--space-2xl);
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--mg-gray-200);
-        text-align: center;
-        transition: all var(--transition-base);
-        cursor: pointer;
-        text-decoration: none;
-        display: flex;
+    .particulier-welcome .row {
         flex-direction: column;
-        align-items: center;
-        animation: fadeInUp 0.6s ease-out;
     }
     
-    .action-card:nth-child(2) {
-        animation-delay: 0.1s;
-    }
-    
-    .action-card:nth-child(3) {
-        animation-delay: 0.2s;
-    }
-    
-    .action-card:nth-child(4) {
-        animation-delay: 0.3s;
-    }
-    
-    .action-card:nth-child(5) {
-        animation-delay: 0.4s;
-    }
-    
-    .action-card:nth-child(6) {
-        animation-delay: 0.5s;
-    }
-    
-    .action-card:hover {
-        transform: translateY(-8px);
-        box-shadow: var(--shadow-xl);
-        border-color: var(--mg-primary);
+    .particulier-welcome .col-md-4 {
+        margin-top: 1rem;
     }
     
     .action-icon {
-        width: 80px;
-        height: 80px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
         font-size: 2.5rem;
-        margin-bottom: var(--space-lg);
-        transition: transform var(--transition-base);
     }
     
-    .action-card:hover .action-icon {
-        transform: scale(1.1) rotate(5deg);
+    /* Boutons et actions en grille */
+    .d-flex.gap-2, .d-flex.gap-3 {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem !important;
     }
     
-    .action-icon-primary {
-        background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(245, 124, 0, 0.2));
-        color: var(--mg-primary);
+    .d-flex.gap-2 .btn, .d-flex.gap-3 .btn {
+        width: 100%;
+        font-size: 0.8125rem;
+        padding: 0.625rem 0.5rem;
     }
     
-    .action-icon-success {
-        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(56, 142, 60, 0.2));
-        color: var(--mg-success);
+    /* Cards en grille */
+    .row.g-4 {
+        gap: 1rem !important;
     }
-    
-    .action-icon-info {
-        background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(25, 118, 210, 0.2));
-        color: var(--mg-info);
-    }
-    
-    .action-icon-warning {
-        background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(245, 124, 0, 0.2));
-        color: var(--mg-warning);
-    }
-    
-    .action-icon-danger {
-        background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(211, 47, 47, 0.2));
-        color: var(--mg-danger);
-    }
-    
-    .action-title {
-        font-size: var(--font-size-xl);
-        font-weight: 700;
-        color: var(--mg-gray-900);
-        margin-bottom: var(--space-sm);
-    }
-    
-    .action-desc {
-        font-size: var(--font-size-sm);
-        color: var(--mg-gray-600);
-        line-height: 1.6;
-    }
-    
-    /* Recent Activity Section */
-    .recent-activity {
-        background: var(--mg-white);
-        border-radius: var(--radius-lg);
-        padding: var(--space-2xl);
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--mg-gray-200);
-        animation: fadeInUp 0.6s ease-out 0.6s both;
-    }
-    
-    .section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: var(--space-xl);
-    }
-    
-    .section-title {
-        font-size: var(--font-size-2xl);
-        font-weight: 700;
-        color: var(--mg-gray-900);
-    }
-    
-    .view-all-link {
-        color: var(--mg-primary);
-        font-weight: 600;
-        text-decoration: none;
-        font-size: var(--font-size-sm);
-        transition: color var(--transition-fast);
-    }
-    
-    .view-all-link:hover {
-        color: var(--mg-primary-dark);
-    }
-    
-    .activity-list {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-md);
-    }
-    
-    .activity-item {
-        display: flex;
-        align-items: start;
-        gap: var(--space-lg);
-        padding: var(--space-lg);
-        background: var(--mg-gray-100);
-        border-radius: var(--radius-md);
-        transition: background var(--transition-fast);
-    }
-    
-    .activity-item:hover {
-        background: var(--mg-gray-200);
-    }
-    
-    .activity-icon {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        font-size: 1.5rem;
-        flex-shrink: 0;
-    }
-    
-    .activity-content {
-        flex: 1;
-    }
-    
-    .activity-title {
-        font-weight: 600;
-        color: var(--mg-gray-900);
-        margin-bottom: var(--space-xs);
-    }
-    
-    .activity-desc {
-        font-size: var(--font-size-sm);
-        color: var(--mg-gray-600);
-    }
-    
-    .activity-time {
-        font-size: var(--font-size-xs);
-        color: var(--mg-gray-500);
-        margin-top: var(--space-xs);
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: var(--space-3xl) var(--space-md);
-        color: var(--mg-gray-500);
-    }
-    
-    .empty-state i {
-        font-size: 4rem;
-        margin-bottom: var(--space-lg);
-        opacity: 0.3;
-    }
-    
-    .empty-state-text {
-        font-size: var(--font-size-lg);
-        margin-bottom: var(--space-md);
-    }
-    
-    @media (max-width: 768px) {
-        .welcome-banner {
-            padding: var(--space-xl) var(--space-lg);
-        }
-        
-        .quick-stats {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        
-        .action-icon {
-            width: 64px;
-            height: 64px;
-            font-size: 2rem;
-        }
-        
-        .activity-item {
-            flex-direction: column;
-            text-align: center;
-        }
-    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-page">
-    <div class="container">
-        <!-- Welcome Banner -->
-        <div class="welcome-banner">
-            <div class="welcome-content">
-                <h1 class="welcome-title">
-                    <i class="bi bi-house-heart"></i>
-                    Bienvenue, {{ user.get_full_name|default:user.username }}
+<div class="container-fluid">
+    <!-- En-tête de bienvenue -->
+    <div class="particulier-welcome">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">
+                    <i class="bi bi-house-heart me-2"></i>
+                    Bienvenue dans votre espace particulier
                 </h1>
-                <p class="welcome-subtitle">
-                    Gérez vos courses et demandes de transport en toute simplicité
+                <p class="mb-0 opacity-90">
+                    {{ user.get_full_name|default:user.username }}, gérez vos courses et demandes en toute simplicité
                 </p>
-                
+            </div>
+            <div class="col-md-4">
                 <div class="quick-stats">
-                    <div class="stat-item">
-                        <div class="stat-number">{{ active_trips|default:0 }}</div>
-                        <div class="stat-label">Trajets actifs</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ pending_requests|default:0 }}</div>
-                        <div class="stat-label">En attente</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ total_trips|default:0 }}</div>
-                        <div class="stat-label">Total trajets</div>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <div class="stat-number">3</div>
+                                <small>Courses ce mois</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <div class="stat-number">4.8</div>
+                                <small>Note moyenne</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <div class="stat-number">0</div>
+                                <small>En cours</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Actions Grid -->
-        <div class="actions-grid">
-            <a href="{% url 'subscriptions:subscription_request' %}" class="action-card">
-                <div class="action-icon action-icon-primary">
-                    <i class="bi bi-plus-circle-fill"></i>
+    </div>
+
+    <!-- Actions principales -->
+    <div class="row">
+        <!-- Nouvelle course -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card action-card">
+                <div class="card-body text-center p-4">
+                    <div class="action-icon text-primary">
+                        <i class="bi bi-plus-circle"></i>
+                    </div>
+                    <h4 class="card-title mb-3">Nouvelle Course</h4>
+                    <p class="card-text text-muted mb-4">
+                        Demandez un chauffeur avec nos critères avancés
+                    </p>
+                    <a href="{% url 'subscriptions:ride_request_advanced' %}" 
+                       class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-car-front me-2"></i>
+                        Demander une course
+                    </a>
                 </div>
-                <h3 class="action-title">Nouvelle demande</h3>
-                <p class="action-desc">
-                    Créez une demande de course ou d'abonnement mensuel
-                </p>
-            </a>
-            
-            <a href="{% url 'subscriptions:ride_request_advanced' %}" class="action-card">
-                <div class="action-icon action-icon-success">
-                    <i class="bi bi-car-front-fill"></i>
-                </div>
-                <h3 class="action-title">Course temps réel</h3>
-                <p class="action-desc">
-                    Demandez une course immédiate avec suivi GPS
-                </p>
-            </a>
-            
-            <a href="{% url 'subscriptions:my_subscriptions' %}" class="action-card">
-                <div class="action-icon action-icon-info">
-                    <i class="bi bi-calendar-check-fill"></i>
-                </div>
-                <h3 class="action-title">Mes abonnements</h3>
-                <p class="action-desc">
-                    Consultez et gérez vos abonnements mensuels actifs
-                </p>
-            </a>
-            
-            <a href="{% url 'subscriptions:trip_history' %}" class="action-card">
-                <div class="action-icon action-icon-warning">
-                    <i class="bi bi-clock-history"></i>
-                </div>
-                <h3 class="action-title">Historique</h3>
-                <p class="action-desc">
-                    Accédez à l'historique complet de vos trajets
-                </p>
-            </a>
-            
-            <a href="{% url 'courses:menu' %}" class="action-card">
-                <div class="action-icon action-icon-primary">
-                    <i class="bi bi-geo-alt-fill"></i>
-                </div>
-                <h3 class="action-title">Suivi GPS</h3>
-                <p class="action-desc">
-                    Suivez vos courses en temps réel sur la carte
-                </p>
-            </a>
-            
-            <a href="{% url 'accounts:profile' %}" class="action-card">
-                <div class="action-icon action-icon-info">
-                    <i class="bi bi-person-circle"></i>
-                </div>
-                <h3 class="action-title">Mon profil</h3>
-                <p class="action-desc">
-                    Gérez vos informations et préférences
-                </p>
-            </a>
+            </div>
         </div>
-        
-        <!-- Recent Activity -->
-        <div class="recent-activity">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <i class="bi bi-activity"></i>
-                    Activité récente
-                </h2>
-                <a href="{% url 'subscriptions:trip_history' %}" class="view-all-link">
-                    Tout voir <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-            
-            {% if recent_activities %}
-            <div class="activity-list">
-                {% for activity in recent_activities %}
-                <div class="activity-item">
-                    <div class="activity-icon action-icon-{{ activity.type|default:'primary' }}">
-                        <i class="bi bi-{{ activity.icon|default:'bell-fill' }}"></i>
+
+        <!-- Mes demandes temps réel -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card action-card">
+                <div class="card-body text-center p-4">
+                    <div class="action-icon text-warning">
+                        <i class="bi bi-clock-history"></i>
                     </div>
-                    <div class="activity-content">
-                        <div class="activity-title">{{ activity.title }}</div>
-                        <div class="activity-desc">{{ activity.description }}</div>
-                        <div class="activity-time">{{ activity.created_at|timesince }} ago</div>
+                    <h4 class="card-title mb-3">Demandes en Cours</h4>
+                    <p class="card-text text-muted mb-4">
+                        Suivez vos demandes en temps réel
+                    </p>
+                    <a href="{% url 'core:parent_dashboard' %}" 
+                       class="btn btn-warning btn-lg w-100">
+                        <i class="bi bi-bell me-2"></i>
+                        Voir mes demandes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestion complète -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card action-card">
+                <div class="card-body text-center p-4">
+                    <div class="action-icon text-success">
+                        <i class="bi bi-gear"></i>
+                    </div>
+                    <h4 class="card-title mb-3">Gestion Courses</h4>
+                    <p class="card-text text-muted mb-4">
+                        Menu complet : demandes, historique, SOS
+                    </p>
+                    <a href="{% url 'courses:menu' %}" 
+                       class="btn btn-success btn-lg w-100">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Accéder au menu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations utiles -->
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Conseils d'utilisation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Utilisez <strong>"Nouvelle Course"</strong> pour des demandes ponctuelles
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>"Demandes en Cours"</strong> affiche le suivi temps réel
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>"Gestion Courses"</strong> donne accès à toutes les fonctionnalités
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Le chat est disponible avec l'abonnement <strong>Mobility Plus</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-headset me-2"></i>
+                        Support et Assistance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-circle me-2"></i>
+                            Mon Profil
+                        </a>
+                        <button class="btn btn-outline-info" onclick="showHelpModal()">
+                            <i class="bi bi-question-circle me-2"></i>
+                            Aide & FAQ
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="showSOSInfo()">
+                            <i class="bi bi-shield-exclamation me-2"></i>
+                            Urgence / SOS
+                        </button>
                     </div>
                 </div>
-                {% endfor %}
             </div>
-            {% else %}
-            <div class="empty-state">
-                <i class="bi bi-inbox"></i>
-                <div class="empty-state-text">Aucune activité récente</div>
-                <p>Vos actions et notifications apparaîtront ici</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal d'aide -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-question-circle me-2"></i>
+                    Aide & Questions Fréquentes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            {% endif %}
+            <div class="modal-body">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                Comment demander une course ?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Cliquez sur "Nouvelle Course", remplissez le formulaire avec vos critères (lieu de départ, destination, heure souhaitée), puis validez. Les chauffeurs éligibles recevront votre demande.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Comment suivre ma course en temps réel ?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Une fois votre course acceptée, vous recevrez une notification avec un lien vers la page de suivi. Vous pourrez voir la position du chauffeur et communiquer avec lui si vous avez Mobility Plus.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Qu'est-ce que Mobility Plus ?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Mobility Plus est notre abonnement premium qui vous donne accès au chat en temps réel avec votre chauffeur, des notifications prioritaires et des fonctionnalités avancées de suivi.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+function showHelpModal() {
+    const modal = new bootstrap.Modal(document.getElementById('helpModal'));
+    modal.show();
+}
+
+function showSOSInfo() {
+    alert('En cas d\'urgence, utilisez le bouton SOS dans le menu "Gestion Courses" ou contactez directement les secours au 17 (Police) ou 18 (Pompiers).');
+}
+</script>
+{% endblock %}
+
+

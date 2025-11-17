@@ -3,6 +3,39 @@
 {% block dashboard_title %}Mes abonnements chauffeur{% endblock %}
 {% block dashboard_subtitle %}Gérez tous vos abonnements personnalisés avec les chauffeurs{% endblock %}
 
+{% block extra_css %}
+{{ block.super }}
+<style>
+    /* Responsive pour mobile - correction débordement */
+    @media (max-width: 767px) {
+        /* Boutons dans les cards */
+        .d-flex.gap-2 {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+        }
+        
+        .d-flex.gap-2 .btn {
+            width: 100% !important;
+            flex: none !important;
+        }
+        
+        /* Cards pleine largeur sur mobile */
+        .col-md-6 {
+            width: 100%;
+        }
+        
+        /* Ajuster les textes */
+        .card-body h6 {
+            font-size: 1rem;
+        }
+        
+        .small {
+            font-size: 0.8125rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block dashboard_actions %}
 <div class="btn-group">
     <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
