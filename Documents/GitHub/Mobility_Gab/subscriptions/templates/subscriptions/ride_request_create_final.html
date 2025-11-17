@@ -255,6 +255,119 @@
                         </div>
                     </div>
 
+                    <!-- Section Chauffeurs Disponibles -->
+                    {% if available_chauffeurs %}
+                    <div class="mb-4">
+                        <h5 class="ride-request-section-title mb-3">
+                            <i class="bi bi-people me-2"></i>
+                            Chauffeurs disponibles ({{ chauffeurs_count }})
+                        </h5>
+                        
+                        <div class="accordion" id="chauffeurs-accordion">
+                            {% for chauffeur in available_chauffeurs %}
+                            <div class="accordion-item border mb-2 rounded">
+                                <h2 class="accordion-header" id="heading-{{ chauffeur.id }}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ chauffeur.id }}">
+                                        <div class="d-flex align-items-center w-100">
+                                            <div class="me-3">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                    <i class="bi bi-person-fill fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold">{{ chauffeur.name }}</div>
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-car-front me-1"></i>
+                                                    {{ chauffeur.vehicle_make }} {{ chauffeur.vehicle_model }}
+                                                    <span class="ms-2">
+                                                        <i class="bi bi-star-fill text-warning me-1"></i>
+                                                        {{ chauffeur.reliability_score|floatformat:1 }}/5
+                                                        {% if chauffeur.total_ratings > 0 %}
+                                                        ({{ chauffeur.total_ratings }} avis)
+                                                        {% else %}
+                                                        (Nouveau)
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse-{{ chauffeur.id }}" class="accordion-collapse collapse" data-bs-parent="#chauffeurs-accordion">
+                                    <div class="accordion-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-light rounded">
+                                                    <h6 class="text-primary mb-3">
+                                                        <i class="bi bi-car-front me-2"></i>
+                                                        Véhicule
+                                                    </h6>
+                                                    <div class="mb-2">
+                                                        <span class="text-muted small">Marque/Modèle:</span>
+                                                        <div class="fw-semibold">{{ chauffeur.vehicle_make }} {{ chauffeur.vehicle_model }}</div>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <span class="text-muted small">Couleur:</span>
+                                                        <div class="fw-semibold">{{ chauffeur.vehicle_color }}</div>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-muted small">Plaque:</span>
+                                                        <div class="fw-semibold badge bg-secondary">{{ chauffeur.vehicle_plate }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-light rounded">
+                                                    <h6 class="text-primary mb-3">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        Informations
+                                                    </h6>
+                                                    <div class="mb-2">
+                                                        <span class="text-muted small">Zone d'activité:</span>
+                                                        <div class="fw-semibold">
+                                                            <i class="bi bi-geo-alt text-danger me-1"></i>
+                                                            {{ chauffeur.zone }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <span class="text-muted small">Note:</span>
+                                                        <div class="fw-semibold">
+                                                            {% for i in "12345" %}
+                                                                {% if forloop.counter <= chauffeur.reliability_score|floatformat:0 %}
+                                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                                {% else %}
+                                                                    <i class="bi bi-star text-muted"></i>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            <span class="ms-1">{{ chauffeur.reliability_score|floatformat:1 }}/5</span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-muted small">Contact:</span>
+                                                        <div class="fw-semibold">{{ chauffeur.phone }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 text-center">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick="selectChauffeur({{ chauffeur.id }}, '{{ chauffeur.name }}')">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Choisir ce chauffeur
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="alert alert-info border-0 mt-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Vous pouvez choisir un chauffeur spécifique ou laisser le système trouver le meilleur chauffeur pour vous.</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Section Instructions -->
                     <div class="mb-4">
                         <label class="form-label fw-semibold" for="{{ form.notes.id_for_label }}">
@@ -450,6 +563,37 @@ function reverseGeocode(lat, lon, type) {
     const input = document.getElementById(inputId);
     if (input) {
         input.value = mockAddress;
+    }
+}
+
+function selectChauffeur(chauffeurId, chauffeurName) {
+    // Pré-remplir le champ "Chauffeur suggéré" si disponible
+    const suggestedChauffeurSelect = document.getElementById('{{ form.suggested_chauffeur.id_for_label }}');
+    if (suggestedChauffeurSelect) {
+        // Chercher l'option correspondante
+        for (let i = 0; i < suggestedChauffeurSelect.options.length; i++) {
+            if (suggestedChauffeurSelect.options[i].value == chauffeurId) {
+                suggestedChauffeurSelect.selectedIndex = i;
+                break;
+            }
+        }
+        
+        // Fermer l'accordion
+        const collapseElement = document.getElementById('collapse-' + chauffeurId);
+        if (collapseElement) {
+            const bsCollapse = bootstrap.Collapse.getInstance(collapseElement);
+            if (bsCollapse) {
+                bsCollapse.hide();
+            } else {
+                new bootstrap.Collapse(collapseElement).hide();
+            }
+        }
+        
+        // Afficher une confirmation
+        showToast('✓ Chauffeur sélectionné: ' + chauffeurName, 'success');
+        
+        // Scroller vers le bouton de soumission
+        document.getElementById('submit-btn').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
 

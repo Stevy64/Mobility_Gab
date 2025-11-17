@@ -48,9 +48,44 @@ class AdvancedRideRequestCreateView(LoginRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request):
-        """Afficher le formulaire avancé avec géolocalisation."""
+        """Afficher le formulaire avancé avec géolocalisation et liste des chauffeurs."""
         form = RideRequestForm()
-        return render(request, self.template_name, {"form": form})
+        
+        # Récupérer tous les chauffeurs disponibles avec leurs infos complètes
+        from accounts.models import ChauffeurProfile
+        from django.db.models import Avg
+        
+        available_chauffeurs = []
+        chauffeurs = User.objects.filter(
+            role=UserRoles.CHAUFFEUR,
+            is_active=True,
+            chauffeur_profile__is_available=True
+        ).select_related('chauffeur_profile')
+        
+        for chauffeur in chauffeurs:
+            profile = chauffeur.chauffeur_profile
+            available_chauffeurs.append({
+                'id': chauffeur.id,
+                'name': chauffeur.get_full_name() or chauffeur.username,
+                'phone': chauffeur.phone_number or 'Non renseigné',
+                'vehicle_make': profile.vehicle_make or 'Non renseigné',
+                'vehicle_model': profile.vehicle_model or 'Non renseigné',
+                'vehicle_color': profile.vehicle_color or 'Non renseigné',
+                'vehicle_plate': profile.vehicle_plate or 'Non renseigné',
+                'zone': profile.zone or 'Toutes zones',
+                'reliability_score': float(profile.reliability_score) if profile.reliability_score else 5.0,
+                'total_ratings': profile.total_ratings,
+                'latitude': float(profile.current_latitude) if profile.current_latitude else None,
+                'longitude': float(profile.current_longitude) if profile.current_longitude else None,
+            })
+        
+        context = {
+            'form': form,
+            'available_chauffeurs': available_chauffeurs,
+            'chauffeurs_count': len(available_chauffeurs)
+        }
+        
+        return render(request, self.template_name, context)
 
     def post(self, request):
         """Traiter la demande et notifier les chauffeurs éligibles."""
