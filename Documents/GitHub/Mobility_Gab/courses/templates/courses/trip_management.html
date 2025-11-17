@@ -47,10 +47,14 @@
 /* Carte GPS */
 #map {
     height: 500px;
+    min-height: 500px;
+    width: 100%;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
     z-index: 1;
+    background: #f8f9fa;
+    position: relative;
 }
 
 /* Animation de la voiture sur la carte */
@@ -808,9 +812,9 @@
                     <i class="bi bi-check-circle"></i> Terminé
                                 </span>
                     {% endif %}
-                                </div>
-                                </div>
-                                </div>
+                </div>
+                            </div>
+                            </div>
 
     <div class="row">
         <!-- Colonne principale: Carte et progression -->
@@ -827,14 +831,14 @@
                     </h5>
                     <div id="refreshTimer" class="text-muted small">
                         Actualisation dans <span id="countdown">{{ has_mobility_plus|yesno:"15,60" }}</span>s
-                </div>
-            </div>
+                                </div>
+                                </div>
 
                 <div id="progressTimeline">
                     <!-- Timeline sera générée par JavaScript -->
                 </div>
-                    </div>
-                    
+            </div>
+
             <!-- Stats de la course -->
             {% if trip.status == 'in_progress' or trip.status == 'completed' %}
             <div class="row g-3 mb-4">
@@ -842,32 +846,32 @@
                     <div class="stat-card">
                         <div class="stat-icon">
                             <i class="bi bi-speedometer"></i>
-                        </div>
+                </div>
                         <div class="stat-value" id="distanceValue">
                             {{ trip.distance_km|default:"--" }}
-                    </div>
-                        <div class="stat-label">Kilomètres</div>
                         </div>
+                        <div class="stat-label">Kilomètres</div>
                     </div>
+                        </div>
                 <div class="col-6 col-md-3">
                     <div class="stat-card">
                         <div class="stat-icon">
                             <i class="bi bi-clock"></i>
-                </div>
+                    </div>
                         <div class="stat-value" id="durationValue">
                             {{ trip.duration_minutes|default:"--" }}
-            </div>
-                        <div class="stat-label">Minutes</div>
                         </div>
+                        <div class="stat-label">Minutes</div>
                     </div>
+                </div>
                 <div class="col-6 col-md-3">
                     <div class="stat-card">
                         <div class="stat-icon">
                             <i class="bi bi-geo-alt"></i>
-                </div>
+            </div>
                         <div class="stat-value" id="checkpointsValue">0</div>
                         <div class="stat-label">Points GPS</div>
-                    </div>
+                        </div>
                     </div>
                 <div class="col-6 col-md-3">
                     <div class="stat-card">
@@ -881,22 +885,22 @@
                             <span class="text-info">Fini</span>
                             {% else %}
                             --
-                {% endif %}
-            </div>
+                    {% endif %}
+                    </div>
                         <div class="stat-label">Statut</div>
-        </div>
+                </div>
                 </div>
             </div>
             {% endif %}
 
-            {% if messages %}
+            {% if has_mobility_plus or other_has_mobility_plus %}
             <!-- Chat Bubble Flottant (Style Chatbot moderne) -->
             <div class="chat-bubble-wrapper">
                 <button class="chat-bubble-button" id="chatBubbleBtn" onclick="toggleChatWindow()">
                     <i class="bi bi-chat-dots-fill"></i>
                     <span class="chat-notification-badge" id="chatNotificationBadge" style="display: none;">0</span>
                 </button>
-            </div>
+                    </div>
 
             <!-- Fenêtre de chat -->
             <div class="chat-window" id="chatWindow">
@@ -905,17 +909,17 @@
                     <div class="chat-window-header-info">
                         <div class="chat-window-avatar">
                             <i class="bi bi-person-fill"></i>
-                        </div>
-                        <div>
+                    </div>
+                    <div>
                             <div class="chat-window-title">{{ other_user.name }}</div>
                             <div class="chat-window-status">
                                 {% if has_mobility_plus %}
                                 <i class="bi bi-star-fill"></i> Mobility Plus actif
                                 {% else %}
                                 En ligne
-                                {% endif %}
-                            </div>
-                        </div>
+                {% endif %}
+            </div>
+        </div>
                     </div>
                     <button class="chat-window-close" onclick="toggleChatWindow()">
                         <i class="bi bi-x-lg"></i>
@@ -923,27 +927,27 @@
                 </div>
 
                 <!-- Container des messages -->
-                <div class="chat-container" id="chatContainer">
-                    <!-- Messages chargés via JavaScript -->
-                </div>
+                    <div class="chat-container" id="chatContainer">
+                        <!-- Messages chargés via JavaScript -->
+                    </div>
                 
                 {% if has_mobility_plus %}
                 <!-- Zone de saisie pour abonnés Mobility+ -->
                 <div class="chat-input-wrapper">
                     <div class="message-input-container">
-                        <input type="text" class="form-control" id="messageInput" 
+                            <input type="text" class="form-control" id="messageInput" 
                                placeholder="Tapez votre message..." maxlength="500" 
                                onkeypress="if(event.key === 'Enter') sendMessage()">
                         <button type="button" onclick="sendMessage()">
                             <i class="bi bi-send-fill"></i>
-                        </button>
-                    </div>
+                            </button>
                 </div>
-                {% else %}
+            </div>
+            {% else %}
                 <!-- Notification pour non-abonnés : ils peuvent voir mais pas répondre -->
                 <div class="chat-input-wrapper">
                     <div class="alert alert-warning border-0 mb-0 rounded-3">
-                        <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center">
                             <i class="bi bi-lock-fill me-3" style="font-size: 1.5rem;"></i>
                             <div class="flex-grow-1">
                                 <h6 class="alert-heading mb-1 fw-bold" style="font-size: 0.9rem;">
@@ -958,11 +962,11 @@
                                     S'abonner
                                 </a>
                             </div>
-                        </div>
                     </div>
                 </div>
-                {% endif %}
             </div>
+                        {% endif %}
+                    </div>
             {% elif not has_mobility_plus and not other_has_mobility_plus %}
             <!-- Aucun des deux n'a Mobility Plus -->
             <div class="alert alert-info border-0 shadow-sm d-flex align-items-center">
@@ -1153,14 +1157,33 @@ let previousCarPosition = null;
 let carAnimationInterval = null;
 
 function initMap() {
-    // Créer la carte centrée sur Libreville, Gabon par défaut
-    map = L.map('map').setView([0.4162, 9.4673], 13);
+    // Vérifier que l'élément existe
+    const mapElement = document.getElementById('map');
+    if (!mapElement) {
+        console.error('Élément #map non trouvé dans le DOM');
+        return;
+    }
+    
+    // Vérifier que Leaflet est chargé
+    if (typeof L === 'undefined') {
+        console.error('Leaflet n\'est pas chargé');
+        return;
+    }
+    
+    try {
+        // Créer la carte centrée sur Libreville, Gabon par défaut
+        map = L.map('map').setView([0.4162, 9.4673], 13);
 
-    // Ajouter la couche de carte
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19,
-    }).addTo(map);
+        // Ajouter la couche de carte
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+        }).addTo(map);
+        
+        console.log('Carte initialisée avec succès');
+    } catch (error) {
+        console.error('Erreur lors de l\'initialisation de la carte:', error);
+    }
 
     // Icône personnalisée pour le chauffeur
     const carIcon = L.divIcon({
@@ -1175,6 +1198,13 @@ function initMap() {
 }
 
 function loadGPSData() {
+    // Vérifier que la carte est initialisée
+    if (!map) {
+        console.warn('Carte non initialisée, tentative de réinitialisation');
+        initMap();
+        return;
+    }
+    
     showRefreshIndicator();
     
     fetch(`/courses/api/trip/${tripId}/gps-location/`)
@@ -1184,6 +1214,8 @@ function loadGPSData() {
                 updateMap(data);
                 updateProgressTimeline(data);
                 updateStats(data);
+            } else {
+                console.error('Erreur API GPS:', data.error || 'Erreur inconnue');
             }
         })
         .catch(error => console.error('Erreur GPS:', error))
@@ -1635,7 +1667,7 @@ function startRefreshCycle() {
 }
 
 // === Chat Bubble (Style Chatbot) ===
-{% if messages %}
+{% if has_mobility_plus or other_has_mobility_plus %}
 let chatWindowOpen = false;
 let unreadMessagesCount = 0;
 
