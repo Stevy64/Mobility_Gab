@@ -15,21 +15,77 @@
     margin-bottom: 2rem;
 }
 
-.profile-header::before {
+/* Bulles animées oranges */
+.profile-header::before,
+.profile-header::after {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
     border-radius: 50%;
-    animation: float 6s ease-in-out infinite;
+    background: rgba(255, 255, 255, 0.12);
+    animation: float-smooth 10s ease-in-out infinite;
 }
 
-@keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(-10px, -10px) scale(1.05); }
+.profile-header::before {
+    width: 160px;
+    height: 160px;
+    top: -35%;
+    right: 8%;
+    animation-delay: 0s;
+}
+
+.profile-header::after {
+    width: 110px;
+    height: 110px;
+    bottom: -25%;
+    left: 8%;
+    animation-delay: 3s;
+}
+
+.profile-bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    animation: float-smooth 12s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.profile-bubble:nth-child(1) {
+    width: 75px;
+    height: 75px;
+    top: 25%;
+    left: 18%;
+    animation-delay: 2s;
+}
+
+.profile-bubble:nth-child(2) {
+    width: 55px;
+    height: 55px;
+    top: 65%;
+    right: 18%;
+    animation-delay: 5s;
+}
+
+.profile-bubble:nth-child(3) {
+    width: 45px;
+    height: 45px;
+    top: 42%;
+    left: 72%;
+    animation-delay: 7s;
+}
+
+@keyframes float-smooth {
+    0%, 100% { 
+        transform: translate(0, 0) scale(1);
+        opacity: 0.3;
+    }
+    33% { 
+        transform: translate(15px, -20px) scale(1.08);
+        opacity: 0.5;
+    }
+    66% { 
+        transform: translate(-12px, -25px) scale(0.92);
+        opacity: 0.4;
+    }
 }
 
 .profile-photo-wrapper {
@@ -232,6 +288,11 @@
 <div class="container py-4">
     <!-- Header profil -->
     <div class="profile-header">
+        <!-- Bulles animées -->
+        <div class="profile-bubble"></div>
+        <div class="profile-bubble"></div>
+        <div class="profile-bubble"></div>
+        
         <div class="row align-items-center">
             <div class="col-md-8">
                 <div class="d-flex align-items-center gap-4">

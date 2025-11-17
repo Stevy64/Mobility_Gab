@@ -5,9 +5,9 @@
 
 {% block extra_css %}
 <style>
-/* === BANNIERE MODERNE === */
+/* === BANNIERE MODERNE BLEUE/VIOLETTE === */
 .page-header-banner {
-    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border-radius: 16px;
     padding: 2rem;
@@ -16,21 +16,89 @@
     margin-bottom: 2rem;
 }
 
-.page-header-banner::before {
+/* Bulles animées */
+.page-header-banner::before,
+.page-header-banner::after {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
     border-radius: 50%;
-    animation: float 6s ease-in-out infinite;
+    background: rgba(255, 255, 255, 0.1);
+    animation: float-bubble 8s ease-in-out infinite;
 }
 
-@keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(-10px, -10px) scale(1.05); }
+.page-header-banner::before {
+    width: 150px;
+    height: 150px;
+    top: -30%;
+    right: 10%;
+    animation-delay: 0s;
+}
+
+.page-header-banner::after {
+    width: 100px;
+    height: 100px;
+    bottom: -20%;
+    left: 5%;
+    animation-delay: 2s;
+}
+
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    animation: float-bubble 10s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.bubble:nth-child(1) {
+    width: 80px;
+    height: 80px;
+    top: 20%;
+    left: 15%;
+    animation-delay: 1s;
+}
+
+.bubble:nth-child(2) {
+    width: 60px;
+    height: 60px;
+    top: 60%;
+    right: 20%;
+    animation-delay: 3s;
+}
+
+.bubble:nth-child(3) {
+    width: 40px;
+    height: 40px;
+    top: 40%;
+    left: 70%;
+    animation-delay: 5s;
+}
+
+.bubble:nth-child(4) {
+    width: 90px;
+    height: 90px;
+    bottom: 10%;
+    right: 40%;
+    animation-delay: 7s;
+}
+
+@keyframes float-bubble {
+    0%, 100% { 
+        transform: translate(0, 0) scale(1);
+        opacity: 0.3;
+    }
+    25% { 
+        transform: translate(20px, -20px) scale(1.1);
+        opacity: 0.5;
+    }
+    50% { 
+        transform: translate(-15px, -30px) scale(0.9);
+        opacity: 0.4;
+    }
+    75% { 
+        transform: translate(10px, -15px) scale(1.05);
+        opacity: 0.6;
+    }
 }
 
 .header-icon-wrapper {
@@ -366,6 +434,12 @@
 <div class="container-fluid">
     <!-- Bannière moderne -->
     <div class="page-header-banner">
+        <!-- Bulles animées -->
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        
         <div class="row align-items-center">
             <div class="col-md-8">
                 <div class="d-flex align-items-center gap-3">

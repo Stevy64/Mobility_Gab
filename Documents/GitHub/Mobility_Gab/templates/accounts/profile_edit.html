@@ -14,21 +14,77 @@
     overflow: hidden;
 }
 
-.profile-edit-header::before {
+/* Bulles animées oranges */
+.profile-edit-header::before,
+.profile-edit-header::after {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
     border-radius: 50%;
-    animation: float 6s ease-in-out infinite;
+    background: rgba(255, 255, 255, 0.12);
+    animation: float-smooth 10s ease-in-out infinite;
 }
 
-@keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(-10px, -10px) scale(1.05); }
+.profile-edit-header::before {
+    width: 160px;
+    height: 160px;
+    top: -35%;
+    right: 8%;
+    animation-delay: 0s;
+}
+
+.profile-edit-header::after {
+    width: 110px;
+    height: 110px;
+    bottom: -25%;
+    left: 8%;
+    animation-delay: 3s;
+}
+
+.edit-bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    animation: float-smooth 12s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.edit-bubble:nth-child(1) {
+    width: 75px;
+    height: 75px;
+    top: 25%;
+    left: 18%;
+    animation-delay: 2s;
+}
+
+.edit-bubble:nth-child(2) {
+    width: 55px;
+    height: 55px;
+    top: 65%;
+    right: 18%;
+    animation-delay: 5s;
+}
+
+.edit-bubble:nth-child(3) {
+    width: 45px;
+    height: 45px;
+    top: 42%;
+    left: 72%;
+    animation-delay: 7s;
+}
+
+@keyframes float-smooth {
+    0%, 100% { 
+        transform: translate(0, 0) scale(1);
+        opacity: 0.3;
+    }
+    33% { 
+        transform: translate(15px, -20px) scale(1.08);
+        opacity: 0.5;
+    }
+    66% { 
+        transform: translate(-12px, -25px) scale(0.92);
+        opacity: 0.4;
+    }
 }
 
 .section-card {
@@ -183,6 +239,11 @@
     <div class="col-lg-10 col-xl-9">
         <div class="card shadow-lg border-0 mb-4">
             <div class="profile-edit-header">
+                <!-- Bulles animées -->
+                <div class="edit-bubble"></div>
+                <div class="edit-bubble"></div>
+                <div class="edit-bubble"></div>
+                
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h1 class="h3 fw-bold mb-2">
