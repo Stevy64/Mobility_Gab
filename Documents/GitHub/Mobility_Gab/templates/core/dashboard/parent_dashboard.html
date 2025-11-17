@@ -1,11 +1,156 @@
-{% extends 'core/dashboard/base.html' %}
+{% extends 'base.html' %}
 
-{% block dashboard_title %}Tableau de bord{% endblock %}
-{% block dashboard_subtitle %}{% endblock %}
+{% block page_title %}Tableau de bord - Mobility Gab{% endblock %}
 
 {% block extra_css %}
-{{ block.super }}
 <style>
+    /* === BANNIERE MODERNE ROSE/ROUGE === */
+    .page-header-banner {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    /* Particules animées */
+    .page-header-banner::before,
+    .page-header-banner::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+        animation: wave 14s ease-in-out infinite;
+        z-index: 1;
+    }
+
+    .page-header-banner::before {
+        width: 170px;
+        height: 170px;
+        top: -35%;
+        right: 12%;
+        animation-delay: 0s;
+    }
+
+    .page-header-banner::after {
+        width: 130px;
+        height: 130px;
+        bottom: -28%;
+        left: 12%;
+        animation-delay: 4s;
+    }
+
+    .page-header-banner .row {
+        position: relative;
+        z-index: 10;
+    }
+
+    .wave-particle {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        animation: wave 16s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .wave-particle:nth-child(1) {
+        width: 65px;
+        height: 65px;
+        top: 18%;
+        left: 22%;
+        animation-delay: 3s;
+    }
+
+    .wave-particle:nth-child(2) {
+        width: 48px;
+        height: 48px;
+        top: 68%;
+        right: 22%;
+        animation-delay: 6s;
+    }
+
+    .wave-particle:nth-child(3) {
+        width: 38px;
+        height: 38px;
+        top: 38%;
+        left: 68%;
+        animation-delay: 9s;
+    }
+
+    @keyframes wave {
+        0%, 100% { 
+            transform: translate(0, 0) scale(1);
+            opacity: 0.28;
+        }
+        25% { 
+            transform: translate(18px, -22px) scale(1.12);
+            opacity: 0.48;
+        }
+        50% { 
+            transform: translate(-18px, -28px) scale(0.88);
+            opacity: 0.38;
+        }
+        75% { 
+            transform: translate(12px, -18px) scale(1.06);
+            opacity: 0.52;
+        }
+    }
+
+    .header-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .header-icon-wrapper i {
+        font-size: 2.5rem;
+        color: white;
+    }
+
+    .header-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .header-subtitle {
+        font-size: 1rem;
+        opacity: 0.95;
+        font-weight: 300;
+    }
+
+    @media (max-width: 768px) {
+        .page-header-banner {
+            padding: 1.5rem;
+        }
+        
+        .header-icon-wrapper {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .header-icon-wrapper i {
+            font-size: 2rem;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+        }
+        
+        .header-subtitle {
+            font-size: 0.875rem;
+        }
+    }
+    
     /* Dashboard optimisé - réduction espaces */
     .dashboard {
         padding: 1rem 0 !important;
@@ -253,23 +398,62 @@
         }
     }
 </style>
+    
+    /* Cards KPI design */
+    .card-kpi {
+        padding: 1rem;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .card-kpi:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+</style>
 {% endblock %}
 
-{% block dashboard_actions %}
-<div class="btn-group" role="group">
-    <a href="{% url 'subscriptions:ride_request_advanced' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouvelle course
-    </a>
-    <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-outline-secondary">
-        <i class="bi bi-clock-history"></i> Historique
-    </a>
-    <a href="#" class="btn btn-success" onclick="triggerSOS()">
-        <i class="bi bi-shield-exclamation"></i> SOS
-    </a>
-</div>
-{% endblock %}
-
-{% block dashboard_content %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Bannière moderne -->
+    <div class="page-header-banner">
+        <!-- Particules animées -->
+        <div class="wave-particle"></div>
+        <div class="wave-particle"></div>
+        <div class="wave-particle"></div>
+        
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="header-icon-wrapper">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+                    <div>
+                        <h1 class="header-title mb-2">
+                            Tableau de bord
+                        </h1>
+                        <p class="header-subtitle mb-0">
+                            Bienvenue {{ user.get_full_name|default:user.username }}, gérez vos courses et abonnements
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="d-flex flex-column gap-2">
+                    <a href="{% url 'subscriptions:ride_request_advanced' %}" class="btn btn-light" style="font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Nouvelle course
+                    </a>
+                    <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-light" style="font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Historique
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 <div class="row g-4">
     <div class="col-md-4">
         <div class="card card-kpi shadow-sm border-0 p-3 h-100">
@@ -351,6 +535,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
 

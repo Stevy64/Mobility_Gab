@@ -23,6 +23,7 @@
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.12);
     animation: drift 12s ease-in-out infinite;
+    z-index: 1;
 }
 
 .page-header-banner::before {
@@ -41,12 +42,18 @@
     animation-delay: 3s;
 }
 
+.page-header-banner .row {
+    position: relative;
+    z-index: 10;
+}
+
 .particle {
     position: absolute;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
     animation: drift 15s ease-in-out infinite;
     pointer-events: none;
+    z-index: 1;
 }
 
 .particle:nth-child(1) {

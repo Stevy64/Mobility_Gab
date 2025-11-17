@@ -22,6 +22,7 @@
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.12);
     animation: float-smooth 10s ease-in-out infinite;
+    z-index: 1;
 }
 
 .profile-edit-header::before {
@@ -40,12 +41,18 @@
     animation-delay: 3s;
 }
 
+.profile-edit-header .row {
+    position: relative;
+    z-index: 10;
+}
+
 .edit-bubble {
     position: absolute;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
     animation: float-smooth 12s ease-in-out infinite;
     pointer-events: none;
+    z-index: 1;
 }
 
 .edit-bubble:nth-child(1) {

@@ -24,6 +24,7 @@
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
     animation: float-bubble 8s ease-in-out infinite;
+    z-index: 1;
 }
 
 .page-header-banner::before {
@@ -42,12 +43,18 @@
     animation-delay: 2s;
 }
 
+.page-header-banner .row {
+    position: relative;
+    z-index: 10;
+}
+
 .bubble {
     position: absolute;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.08);
     animation: float-bubble 10s ease-in-out infinite;
     pointer-events: none;
+    z-index: 1;
 }
 
 .bubble:nth-child(1) {
