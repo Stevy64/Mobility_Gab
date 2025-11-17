@@ -48,9 +48,51 @@ class AdvancedRideRequestCreateView(LoginRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request):
-        """Afficher le formulaire avancé avec géolocalisation."""
-        form = RideRequestForm()
-        return render(request, self.template_name, {"form": form})
+        """Afficher le formulaire avancé avec chauffeurs recommandés triés."""
+        # Récupérer tous les chauffeurs disponibles avec infos Mobility+
+        from .models import MobilityPlusSubscription
+        from decimal import Decimal
+        
+        chauffeurs = User.objects.filter(
+            role=UserRoles.CHAUFFEUR,
+            is_active=True,
+            chauffeur_profile__is_available=True
+        ).select_related('chauffeur_profile').prefetch_related('mobility_plus_subscription')
+        
+        # Préparer la liste avec infos Mobility+ et distance (si position dispo)
+        chauffeurs_list = []
+        for chauffeur in chauffeurs:
+            profile = chauffeur.chauffeur_profile
+            
+            # Vérifier Mobility+
+            has_mobility_plus = False
+            try:
+                mobility_plus = chauffeur.mobility_plus_subscription
+                has_mobility_plus = mobility_plus.is_active and mobility_plus.status == 'active'
+            except:
+                has_mobility_plus = False
+            
+            chauffeurs_list.append({
+                'user': chauffeur,
+                'has_mobility_plus': has_mobility_plus,
+                'latitude': float(profile.current_latitude) if profile.current_latitude else None,
+                'longitude': float(profile.current_longitude) if profile.current_longitude else None,
+                'reliability_score': float(profile.reliability_score) if profile.reliability_score else 5.0,
+            })
+        
+        # Trier : Mobility+ d'abord, puis par note (plus haute en premier)
+        chauffeurs_list.sort(key=lambda x: (-x['has_mobility_plus'], -x['reliability_score']))
+        
+        # Extraire juste les objets User pour le form
+        sorted_chauffeurs = [c['user'] for c in chauffeurs_list]
+        top_recommended = sorted_chauffeurs[:10]  # Top 10 recommandés
+        
+        # Instancier le form avec les chauffeurs recommandés
+        form = RideRequestForm(recommended_chauffeurs=top_recommended)
+        
+        return render(request, self.template_name, {
+            "form": form,
+        })
 
     def post(self, request):
         """Traiter la demande et notifier les chauffeurs éligibles."""

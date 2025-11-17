@@ -233,22 +233,12 @@
                         </h5>
 
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <div class="form-check p-3 option-card rounded">
                                     {{ form.accept_shared_ride }}
                                     <label class="form-check-label" for="{{ form.accept_shared_ride.id_for_label }}">
                                         <strong>Trajet partagé</strong>
                                         <div class="small text-muted">Réduction possible avec d'autres passagers</div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-check p-3 option-card rounded">
-                                    {{ form.need_child_seat }}
-                                    <label class="form-check-label" for="{{ form.need_child_seat.id_for_label }}">
-                                        <strong>Siège enfant requis</strong>
-                                        <div class="small text-muted">Pour enfants de moins de 10 ans</div>
                                     </label>
                                 </div>
                             </div>
@@ -378,15 +368,18 @@
                         <div class="form-text">Détails utiles pour le chauffeur (point de rendez-vous, etc.)</div>
                     </div>
 
-                    <!-- Chauffeur suggéré -->
+                    <!-- Chauffeurs recommandés -->
                     {% if form.suggested_chauffeur %}
                     <div class="mb-4">
                         <label class="form-label fw-semibold" for="{{ form.suggested_chauffeur.id_for_label }}">
-                            <i class="bi bi-person-check me-2 ride-request-section-title"></i>
-                            Chauffeur préféré (optionnel)
+                            <i class="bi bi-stars me-2 ride-request-section-title"></i>
+                            Chauffeurs recommandés (optionnel)
                         </label>
                         {{ form.suggested_chauffeur }}
-                        <div class="form-text">Si disponible, ce chauffeur sera prioritaire</div>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Triés par : Abonnés Mobility Plus en priorité, puis les plus proches de votre position
+                        </div>
                     </div>
                     {% endif %}
 

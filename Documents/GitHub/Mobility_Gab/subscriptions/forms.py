@@ -159,24 +159,40 @@ class RideRequestForm(forms.Form):
     
     # Chauffeur suggéré (optionnel)
     suggested_chauffeur = forms.ModelChoiceField(
-        label="Chauffeur préféré (optionnel)",
+        label="Chauffeurs recommandés (optionnel)",
         queryset=User.objects.filter(role=UserRoles.CHAUFFEUR, is_active=True),
         required=False,
-        empty_label="Aucune préférence",
+        empty_label="Laisser le système choisir",
         widget=forms.Select(attrs={"class": "form-select"}),
-        help_text="Si disponible, ce chauffeur sera prioritaire"
+        help_text="Triés par : Mobility Plus en priorité, puis proximité"
     )
     
     def __init__(self, *args, **kwargs):
-        """Initialise le formulaire avec les chauffeurs disponibles."""
+        """Initialise le formulaire avec les chauffeurs recommandés."""
+        # Extraire les chauffeurs recommandés si fournis
+        recommended_chauffeurs = kwargs.pop('recommended_chauffeurs', None)
+        
         super().__init__(*args, **kwargs)
         
-        # Mettre à jour la queryset des chauffeurs disponibles
-        self.fields['suggested_chauffeur'].queryset = User.objects.filter(
-            role=UserRoles.CHAUFFEUR,
-            is_active=True,
-            chauffeur_profile__is_available=True
-        ).select_related('chauffeur_profile')
+        # Utiliser les chauffeurs recommandés triés ou fallback sur tous
+        if recommended_chauffeurs:
+            # Préserver l'ordre des chauffeurs recommandés
+            self.fields['suggested_chauffeur'].queryset = User.objects.filter(
+                id__in=[c.id for c in recommended_chauffeurs]
+            ).select_related('chauffeur_profile')
+            
+            # Réordonner selon la liste recommandée
+            chauffeur_order = {c.id: i for i, c in enumerate(recommended_chauffeurs)}
+            chauffeurs_list = list(self.fields['suggested_chauffeur'].queryset)
+            chauffeurs_list.sort(key=lambda x: chauffeur_order.get(x.id, 999))
+            self.fields['suggested_chauffeur'].queryset = chauffeurs_list
+        else:
+            # Fallback : tous les chauffeurs disponibles
+            self.fields['suggested_chauffeur'].queryset = User.objects.filter(
+                role=UserRoles.CHAUFFEUR,
+                is_active=True,
+                chauffeur_profile__is_available=True
+            ).select_related('chauffeur_profile')
         
         # Valeur par défaut pour l'heure
         if not self.initial.get('requested_pickup_time'):
