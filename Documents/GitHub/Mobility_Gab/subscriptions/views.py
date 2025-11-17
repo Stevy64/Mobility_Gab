@@ -654,7 +654,11 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
         ).select_related('chauffeur_profile').prefetch_related('mobility_plus_subscription')
         
         for chauffeur in chauffeurs:
-            profile = chauffeur.chauffeur_profile
+            try:
+                profile = chauffeur.chauffeur_profile
+            except:
+                # Ignorer les chauffeurs sans profil
+                continue
             
             # Vérifier si le chauffeur a Mobility+
             has_mobility_plus = False
