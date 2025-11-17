@@ -339,14 +339,166 @@
     margin-bottom: 0.5rem;
 }
 
-/* Chat moderne (Mobility+) */
+/* Chat moderne (Mobility+) - Style Chatbot Bubble */
+.chat-bubble-wrapper {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+}
+
+.chat-bubble-button {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange-primary), var(--orange-light));
+    border: none;
+    box-shadow: 0 8px 24px rgba(255, 140, 0, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 26px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.chat-bubble-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 32px rgba(255, 140, 0, 0.5);
+}
+
+.chat-bubble-button.active {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.chat-notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #dc2626;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    border: 3px solid white;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.chat-window {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: 400px;
+    max-width: calc(100vw - 48px);
+    height: 600px;
+    max-height: calc(100vh - 140px);
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 9998;
+    animation: slideInUp 0.3s ease;
+}
+
+.chat-window.open {
+    display: flex;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.chat-window-header {
+    background: linear-gradient(135deg, var(--orange-primary), var(--orange-light));
+    color: white;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 20px 20px 0 0;
+}
+
+.chat-window-header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chat-window-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.chat-window-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.chat-window-status {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.chat-window-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chat-window-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 .chat-container {
-    height: 400px;
+    flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 1.5rem;
     background: #f8f9fa;
-    border-radius: 12px;
-    margin-bottom: 1rem;
+}
+
+.chat-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .message {
@@ -428,6 +580,46 @@
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.message-input-container button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.4);
+}
+
+.message-input-container button:active {
+    transform: scale(0.95);
+}
+
+.chat-input-wrapper {
+    padding: 1rem 1.5rem;
+    background: white;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Mobile responsive pour chat bubble */
+@media (max-width: 576px) {
+    .chat-window {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        border-radius: 0 !important;
+    }
+    
+    .chat-bubble-wrapper {
+        bottom: 16px !important;
+        right: 16px !important;
+    }
+    
+    .chat-bubble-button {
+        width: 56px !important;
+        height: 56px !important;
+        font-size: 22px !important;
+    }
 }
 
 .message-input-container button:hover {
@@ -698,53 +890,79 @@
             {% endif %}
 
             {% if messages %}
-            <!-- Chat (accessible si l'un des deux a Mobility Plus) -->
-            <div class="info-card">
-                <div class="info-card-header">
+            <!-- Chat Bubble Flottant (Style Chatbot moderne) -->
+            <div class="chat-bubble-wrapper">
+                <button class="chat-bubble-button" id="chatBubbleBtn" onclick="toggleChatWindow()">
                     <i class="bi bi-chat-dots-fill"></i>
-                    <h6>Chat avec {{ other_user.name }}</h6>
-            {% if has_mobility_plus %}
-                    <span class="mobility-plus-badge ms-auto">
-                        <i class="bi bi-star-fill"></i>
-                        Actif
-                    </span>
-                    {% endif %}
+                    <span class="chat-notification-badge" id="chatNotificationBadge" style="display: none;">0</span>
+                </button>
+            </div>
+
+            <!-- Fenêtre de chat -->
+            <div class="chat-window" id="chatWindow">
+                <!-- En-tête -->
+                <div class="chat-window-header">
+                    <div class="chat-window-header-info">
+                        <div class="chat-window-avatar">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div>
+                            <div class="chat-window-title">{{ other_user.name }}</div>
+                            <div class="chat-window-status">
+                                {% if has_mobility_plus %}
+                                <i class="bi bi-star-fill"></i> Mobility Plus actif
+                                {% else %}
+                                En ligne
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    <div class="chat-container" id="chatContainer">
-                        <!-- Messages chargés via JavaScript -->
-                    </div>
+                    <button class="chat-window-close" onclick="toggleChatWindow()">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Container des messages -->
+                <div class="chat-container" id="chatContainer">
+                    <!-- Messages chargés via JavaScript -->
+                </div>
                 
                 {% if has_mobility_plus %}
                 <!-- Zone de saisie pour abonnés Mobility+ -->
-                <div class="message-input-container">
-                            <input type="text" class="form-control" id="messageInput" 
-                                   placeholder="Tapez votre message..." maxlength="500">
-                    <button type="button" onclick="sendMessage()">
-                        <i class="bi bi-send-fill"></i>
-                            </button>
-            </div>
-            {% else %}
-                <!-- Notification pour non-abonnés : ils peuvent voir mais pas répondre -->
-                <div class="alert alert-warning border-0 mb-0 mt-3 rounded-3">
-                <div class="d-flex align-items-center">
-                        <i class="bi bi-lock-fill me-3" style="font-size: 1.5rem;"></i>
-                    <div>
-                            <h6 class="alert-heading mb-1 fw-bold">
-                                <i class="bi bi-star-fill text-warning"></i>
-                                Répondre avec Mobility Plus
-                            </h6>
-                            <p class="mb-2 small">
-                                Vous recevez les messages, mais ne pouvez pas répondre sans abonnement.
-                            </p>
-                            <a href="{% url 'subscriptions:new_subscription_system' %}" class="btn btn-sm btn-warning fw-bold">
-                                <i class="bi bi-star-fill me-1"></i>
-                                S'abonner à Mobility Plus
-                            </a>
+                <div class="chat-input-wrapper">
+                    <div class="message-input-container">
+                        <input type="text" class="form-control" id="messageInput" 
+                               placeholder="Tapez votre message..." maxlength="500" 
+                               onkeypress="if(event.key === 'Enter') sendMessage()">
+                        <button type="button" onclick="sendMessage()">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
                     </div>
                 </div>
-            </div>
-                        {% endif %}
+                {% else %}
+                <!-- Notification pour non-abonnés : ils peuvent voir mais pas répondre -->
+                <div class="chat-input-wrapper">
+                    <div class="alert alert-warning border-0 mb-0 rounded-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-lock-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading mb-1 fw-bold" style="font-size: 0.9rem;">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    Répondre avec Mobility Plus
+                                </h6>
+                                <p class="mb-2 small" style="font-size: 0.8rem;">
+                                    Vous recevez les messages, mais ne pouvez pas répondre.
+                                </p>
+                                <a href="{% url 'subscriptions:new_subscription_system' %}" class="btn btn-sm btn-warning fw-bold" style="font-size: 0.8rem;">
+                                    <i class="bi bi-star-fill me-1"></i>
+                                    S'abonner
+                                </a>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                {% endif %}
+            </div>
             {% elif not has_mobility_plus and not other_has_mobility_plus %}
             <!-- Aucun des deux n'a Mobility Plus -->
             <div class="alert alert-info border-0 shadow-sm d-flex align-items-center">
@@ -1416,8 +1634,53 @@ function startRefreshCycle() {
     refreshIntervalId = setInterval(loadGPSData, refreshInterval);
 }
 
-// === Chat (accessible si messages disponibles) ===
+// === Chat Bubble (Style Chatbot) ===
 {% if messages %}
+let chatWindowOpen = false;
+let unreadMessagesCount = 0;
+
+function toggleChatWindow() {
+    const chatWindow = document.getElementById('chatWindow');
+    const chatBubbleBtn = document.getElementById('chatBubbleBtn');
+    const chatNotificationBadge = document.getElementById('chatNotificationBadge');
+    
+    chatWindowOpen = !chatWindowOpen;
+    
+    if (chatWindowOpen) {
+        chatWindow.classList.add('open');
+        chatBubbleBtn.classList.add('active');
+        chatBubbleBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+        
+        // Réinitialiser le compteur de messages non lus
+        unreadMessagesCount = 0;
+        chatNotificationBadge.style.display = 'none';
+        
+        // Charger les messages
+        loadMessages();
+        
+        // Scroller en bas
+        setTimeout(() => {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 100);
+    } else {
+        chatWindow.classList.remove('open');
+        chatBubbleBtn.classList.remove('active');
+        chatBubbleBtn.innerHTML = '<i class="bi bi-chat-dots-fill"></i><span class="chat-notification-badge" id="chatNotificationBadge" style="display: none;">0</span>';
+    }
+}
+
+function updateChatNotification(count) {
+    if (!chatWindowOpen && count > 0) {
+        const badge = document.getElementById('chatNotificationBadge');
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = 'flex';
+            unreadMessagesCount = count;
+        }
+    }
+}
+
 function loadMessages() {
     fetch(`/courses/api/trip/${tripId}/messages/`)
         .then(response => response.json())
