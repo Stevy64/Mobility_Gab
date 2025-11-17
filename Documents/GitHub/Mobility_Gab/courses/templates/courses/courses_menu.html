@@ -4,6 +4,123 @@
 
 {% block extra_css %}
 <style>
+/* === BANNIERE MODERNE === */
+.page-header-banner {
+    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    color: white;
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.page-header-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-10px, -10px) scale(1.05); }
+}
+
+.header-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.header-icon-wrapper i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.header-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.header-subtitle {
+    font-size: 1rem;
+    opacity: 0.95;
+    font-weight: 300;
+}
+
+.header-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.stat-number {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .page-header-banner {
+        padding: 1.5rem;
+    }
+    
+    .header-icon-wrapper {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .header-icon-wrapper i {
+        font-size: 2rem;
+    }
+    
+    .header-title {
+        font-size: 1.5rem;
+    }
+    
+    .header-subtitle {
+        font-size: 0.875rem;
+    }
+    
+    .header-stats {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    
+    .stat-item {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .stat-number {
+        font-size: 1rem;
+    }
+}
+
 .courses-menu-card {
     border: none;
     border-radius: 1rem;
@@ -90,20 +207,49 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- En-tête -->
-    <div class="row mb-4">
-        <div class="col-12 text-center">
-            <h2 class="h3 mb-2">
-                <i class="bi bi-car-front me-2"></i>
-                Gestion des Courses
-            </h2>
-            <p class="text-muted">
-                {% if is_chauffeur %}
-                    Gérez vos courses et communiquez avec vos passagers
-                {% else %}
-                    Suivez vos courses et communiquez avec vos chauffeurs
-                {% endif %}
-            </p>
+    <!-- Bannière moderne -->
+    <div class="page-header-banner">
+        <div class="row align-items-center">
+            <div class="col-12">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="header-icon-wrapper">
+                        <i class="bi bi-car-front-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h1 class="header-title mb-2">
+                            Gestion des Courses
+                        </h1>
+                        <p class="header-subtitle mb-0">
+                            {% if is_chauffeur %}
+                                Gérez vos courses et communiquez avec vos passagers
+                            {% else %}
+                                Suivez vos courses et communiquez avec vos chauffeurs
+                            {% endif %}
+                        </p>
+                        <div class="header-stats">
+                            {% if active_trips_count > 0 %}
+                            <div class="stat-item">
+                                <i class="bi bi-play-circle-fill"></i>
+                                <span class="stat-number">{{ active_trips_count }}</span>
+                                <span>en cours</span>
+                            </div>
+                            {% endif %}
+                            {% if pending_requests_count > 0 %}
+                            <div class="stat-item">
+                                <i class="bi bi-bell-fill"></i>
+                                <span class="stat-number">{{ pending_requests_count }}</span>
+                                <span>en attente</span>
+                            </div>
+                            {% endif %}
+                            <div class="stat-item">
+                                <i class="bi bi-clock-history"></i>
+                                <span class="stat-number">{{ completed_trips_count }}</span>
+                                <span>terminée{{ completed_trips_count|pluralize }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

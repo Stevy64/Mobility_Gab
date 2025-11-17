@@ -5,6 +5,98 @@
 
 {% block extra_css %}
 <style>
+/* === BANNIERE MODERNE === */
+.page-header-banner {
+    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    color: white;
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.page-header-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-10px, -10px) scale(1.05); }
+}
+
+.header-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.header-icon-wrapper i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.header-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.header-subtitle {
+    font-size: 1rem;
+    opacity: 0.95;
+    font-weight: 300;
+}
+
+.header-badge {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .page-header-banner {
+        padding: 1.5rem;
+    }
+    
+    .header-icon-wrapper {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .header-icon-wrapper i {
+        font-size: 2rem;
+    }
+    
+    .header-title {
+        font-size: 1.5rem;
+    }
+    
+    .header-subtitle {
+        font-size: 0.875rem;
+    }
+}
+
 .subscription-card {
     border: none;
     border-radius: 1rem;
@@ -272,30 +364,44 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- En-tête -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-1">
-                        <i class="bi bi-credit-card me-2"></i>
-                        Gestion des Abonnements
-                    </h1>
-                    <p class="text-muted mb-0">Gérez vos abonnements Mobility Plus et chauffeurs</p>
+    <!-- Bannière moderne -->
+    <div class="page-header-banner">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="header-icon-wrapper">
+                        <i class="bi bi-credit-card-2-front-fill"></i>
+                    </div>
+                    <div>
+                        <h1 class="header-title mb-2">
+                            Gestion des Abonnements
+                        </h1>
+                        <p class="header-subtitle mb-2">
+                            Gérez vos abonnements Mobility Plus et vos chauffeurs personnels
+                        </p>
+                        {% if has_mobility_plus %}
+                        <span class="header-badge">
+                            <i class="bi bi-star-fill"></i>
+                            Abonné Mobility Plus
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
-                {% if user.role == 'parent' %}
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary action-btn" data-bs-toggle="modal" data-bs-target="#mobilityPlusModal">
+            </div>
+            {% if user.role == 'parent' %}
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-light action-btn" data-bs-toggle="modal" data-bs-target="#mobilityPlusModal" style="font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                         <i class="bi bi-star me-2"></i>
                         Mobility Plus
                     </button>
-                    <button class="btn btn-success action-btn" data-bs-toggle="modal" data-bs-target="#chauffeurRequestModal">
+                    <button class="btn btn-light action-btn" data-bs-toggle="modal" data-bs-target="#chauffeurRequestModal" style="font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                         <i class="bi bi-person-plus me-2"></i>
                         Demander un chauffeur
                     </button>
                 </div>
-                {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
 
