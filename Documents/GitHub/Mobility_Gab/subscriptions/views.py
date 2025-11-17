@@ -643,7 +643,7 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
     template_name = 'subscriptions/new_subscription_system.html'
     
     def get_context_data(self, **kwargs):
-        """Ajouter les chauffeurs disponibles au contexte."""
+        """Ajouter les chauffeurs disponibles au contexte avec priorisation Mobility+."""
         context = super().get_context_data(**kwargs)
         
         # Récupérer tous les chauffeurs disponibles avec leurs infos complètes
@@ -652,10 +652,19 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
             role=UserRoles.CHAUFFEUR,
             is_active=True,
             chauffeur_profile__is_available=True
-        ).select_related('chauffeur_profile')
+        ).select_related('chauffeur_profile').prefetch_related('mobility_plus_subscription')
         
         for chauffeur in chauffeurs:
             profile = chauffeur.chauffeur_profile
+            
+            # Vérifier si le chauffeur a Mobility+
+            has_mobility_plus = False
+            try:
+                mobility_plus = chauffeur.mobility_plus_subscription
+                has_mobility_plus = mobility_plus.is_active and mobility_plus.status == 'active'
+            except:
+                has_mobility_plus = False
+            
             available_chauffeurs.append({
                 'id': chauffeur.id,
                 'name': chauffeur.get_full_name() or chauffeur.username,
@@ -667,10 +676,15 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
                 'zone': profile.zone or 'Toutes zones',
                 'reliability_score': float(profile.reliability_score) if profile.reliability_score else 5.0,
                 'total_ratings': profile.total_ratings,
+                'has_mobility_plus': has_mobility_plus,
             })
+        
+        # Trier : Mobility+ en premier, puis par note
+        available_chauffeurs.sort(key=lambda x: (-x['has_mobility_plus'], -x['reliability_score']))
         
         context['chauffeurs_available'] = available_chauffeurs
         context['chauffeurs_count'] = len(available_chauffeurs)
+        context['mobility_plus_count'] = sum(1 for c in available_chauffeurs if c['has_mobility_plus'])
         
         return context
     

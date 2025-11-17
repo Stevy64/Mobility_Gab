@@ -75,9 +75,166 @@
     color: #28a745;
 }
 
+/* === CARTES CHAUFFEURS MODERNES === */
+.chauffeur-card {
+    background: white;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.chauffeur-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #FF8C00, #FFA500);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.chauffeur-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(255, 140, 0, 0.2) !important;
+}
+
+.chauffeur-card:hover::before {
+    transform: scaleX(1);
+}
+
+.chauffeur-card.selected {
+    border: 2px solid #FF8C00;
+    box-shadow: 0 8px 25px rgba(255, 140, 0, 0.3) !important;
+}
+
+.chauffeur-card.selected::before {
+    transform: scaleX(1);
+    height: 6px;
+}
+
+.mobility-plus-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, #FFC107, #FFB300);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4); }
+    50% { box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6); }
+}
+
+.chauffeur-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.info-item i {
+    font-size: 1.2rem;
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.select-btn {
+    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    color: white;
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.chauffeur-card:hover .select-btn {
+    background: linear-gradient(135deg, #FFA500, #FFB733);
+    transform: scale(1.02);
+}
+
+.selected-chauffeur-banner {
+    animation: slideInDown 0.3s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === FORMULAIRE MODERNE === */
+.modern-form .form-control,
+.modern-form .form-select {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+}
+
+.modern-form .form-control:focus,
+.modern-form .form-select:focus {
+    border-color: #FF8C00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.15);
+}
+
+.modern-form .form-control-lg {
+    padding: 14px 18px;
+    font-size: 1.1rem;
+}
+
+.modern-form label {
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.modern-form label i {
+    color: #6c757d;
+}
+
 @media (max-width: 768px) {
     .subscription-card {
         margin-bottom: 1rem;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
     }
     
     /* Correction du débordement de l'en-tête "Gestion des Abonnements" */
@@ -510,43 +667,66 @@
 
 <!-- Modal Demande Chauffeur -->
 <div class="modal fade" id="chauffeurRequestModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-person-plus me-2"></i>
-                    Demander un abonnement chauffeur
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #FF8C00, #FFA500);">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-car-front-fill me-2"></i>
+                    Choisir votre chauffeur
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4" style="max-height: 75vh; overflow-y: auto;">
                 <!-- Section Chauffeurs Disponibles -->
                 {% if chauffeurs_available %}
-                <div class="mb-4">
-                    <h6 class="text-primary mb-3">
-                        <i class="bi bi-people-fill me-2"></i>
-                        Chauffeurs disponibles ({{ chauffeurs_count }})
-                    </h6>
+                <div class="mb-5">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="mb-1 fw-bold" style="color: #FF8C00;">
+                                <i class="bi bi-people-fill me-2"></i>
+                                {{ chauffeurs_count }} Chauffeur{{ chauffeurs_count|pluralize }} disponible{{ chauffeurs_count|pluralize }}
+                            </h5>
+                            {% if mobility_plus_count > 0 %}
+                            <small class="text-muted">
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                {{ mobility_plus_count }} avec Mobility Plus
+                            </small>
+                            {% endif %}
+                        </div>
+                        <span class="badge bg-light text-dark px-3 py-2 border">
+                            <i class="bi bi-funnel me-1"></i>
+                            Triés par pertinence
+                        </span>
+                    </div>
                     
-                    <div class="accordion" id="chauffeurs-accordion-modal">
+                    <div class="row g-3 mb-4">
                         {% for chauffeur in chauffeurs_available %}
-                        <div class="accordion-item border mb-2 rounded-3">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#chauffeur-{{ chauffeur.id }}">
-                                    <div class="d-flex align-items-center w-100">
-                                        <div class="me-3">
-                                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                                                <i class="bi bi-person-fill fs-5"></i>
-                                            </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="chauffeur-card h-100 border-0 shadow-sm" id="card-{{ chauffeur.id }}" onclick="selectChauffeurModal({{ chauffeur.id }}, '{{ chauffeur.name }}')">
+                                {% if chauffeur.has_mobility_plus %}
+                                <div class="mobility-plus-badge">
+                                    <i class="bi bi-star-fill"></i>
+                                    Plus
+                                </div>
+                                {% endif %}
+                                
+                                <div class="p-3">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="chauffeur-avatar">
+                                            <i class="bi bi-person-fill"></i>
                                         </div>
-                                        <div class="flex-grow-1">
-                                            <div class="fw-bold">{{ chauffeur.name }}</div>
-                                            <div class="small text-muted">
-                                                <i class="bi bi-car-front me-1"></i>
-                                                {{ chauffeur.vehicle_make }} {{ chauffeur.vehicle_model }}
-                                                <span class="ms-2">
-                                                    <i class="bi bi-star-fill text-warning me-1"></i>
-                                                    {{ chauffeur.reliability_score|floatformat:1 }}/5
+                                        <div class="ms-3 flex-grow-1">
+                                            <h6 class="mb-0 fw-bold">{{ chauffeur.name }}</h6>
+                                            <div class="rating-stars small">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= chauffeur.reliability_score|floatformat:0 %}
+                                                        <i class="bi bi-star-fill text-warning"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star text-muted"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <span class="text-muted small ms-1">
+                                                    {{ chauffeur.reliability_score|floatformat:1 }}
                                                     {% if chauffeur.total_ratings > 0 %}
                                                     ({{ chauffeur.total_ratings }})
                                                     {% else %}
@@ -556,106 +736,146 @@
                                             </div>
                                         </div>
                                     </div>
-                                </button>
-                            </h2>
-                            <div id="chauffeur-{{ chauffeur.id }}" class="accordion-collapse collapse">
-                                <div class="accordion-body bg-light p-3">
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <small class="text-muted d-block">Véhicule</small>
-                                            <strong class="d-block">{{ chauffeur.vehicle_make }}</strong>
-                                            <small>{{ chauffeur.vehicle_model }}</small>
+                                    
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <i class="bi bi-car-front text-primary"></i>
+                                            <div>
+                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Véhicule</small>
+                                                <strong class="d-block">{{ chauffeur.vehicle_make }}</strong>
+                                                <small>{{ chauffeur.vehicle_model }}</small>
+                                            </div>
                                         </div>
-                                        <div class="col-6">
-                                            <small class="text-muted d-block">Couleur</small>
-                                            <strong>{{ chauffeur.vehicle_color }}</strong>
+                                        
+                                        <div class="info-item">
+                                            <i class="bi bi-paint-bucket text-success"></i>
+                                            <div>
+                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Couleur</small>
+                                                <strong>{{ chauffeur.vehicle_color }}</strong>
+                                            </div>
                                         </div>
-                                        <div class="col-6">
-                                            <small class="text-muted d-block">Plaque</small>
-                                            <span class="badge bg-secondary">{{ chauffeur.vehicle_plate }}</span>
+                                        
+                                        <div class="info-item">
+                                            <i class="bi bi-hash text-danger"></i>
+                                            <div>
+                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Plaque</small>
+                                                <span class="badge bg-dark">{{ chauffeur.vehicle_plate }}</span>
+                                            </div>
                                         </div>
-                                        <div class="col-6">
-                                            <small class="text-muted d-block">Zone</small>
-                                            <strong><i class="bi bi-geo-alt text-danger"></i> {{ chauffeur.zone }}</strong>
-                                        </div>
-                                        <div class="col-12">
-                                            <small class="text-muted d-block">Contact</small>
-                                            <strong>{{ chauffeur.phone }}</strong>
+                                        
+                                        <div class="info-item">
+                                            <i class="bi bi-geo-alt text-warning"></i>
+                                            <div>
+                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Zone</small>
+                                                <strong>{{ chauffeur.zone }}</strong>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="mt-2 text-center">
-                                        <button type="button" class="btn btn-sm btn-success" onclick="selectChauffeurModal({{ chauffeur.id }}, '{{ chauffeur.name }}')">
-                                            <i class="bi bi-check-circle me-1"></i>
-                                            Choisir ce chauffeur
-                                        </button>
+                                    
+                                    <div class="select-btn">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        Sélectionner
                                     </div>
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
-                    
-                    <div class="alert alert-info border-0 mt-3 mb-0">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <small>Consultez les détails pour choisir votre chauffeur, puis remplissez le formulaire ci-dessous.</small>
+                </div>
+                
+                <div class="selected-chauffeur-banner bg-light border rounded-3 p-3 mb-4" id="selectedBanner" style="display: none;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill text-success fs-4 me-3"></i>
+                        <div class="flex-grow-1">
+                            <strong>Chauffeur sélectionné :</strong>
+                            <span id="selected-chauffeur-display" class="text-success fw-bold ms-2"></span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Changer
+                        </button>
                     </div>
                 </div>
+                
                 <hr class="my-4">
+                {% else %}
+                <div class="alert alert-warning border-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Aucun chauffeur disponible pour le moment.
+                </div>
                 {% endif %}
                 
-                <form id="chauffeurRequestForm">
+                <h5 class="mb-4 fw-bold">
+                    <i class="bi bi-file-text me-2" style="color: #FF8C00;"></i>
+                    Détails de votre demande
+                </h5>
+                
+                <form id="chauffeurRequestForm" class="modern-form">
                     {% csrf_token %}
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="chauffeur" class="form-label">
-                                <i class="bi bi-person-check me-1"></i>
-                                Chauffeur souhaité
+                    <!-- Chauffeur ID caché -->
+                    <input type="hidden" id="chauffeur" name="chauffeur" required>
+                    
+                    <div class="row g-3">
+                        <div class="col-12 mb-2">
+                            <label for="title" class="form-label fw-semibold">
+                                <i class="bi bi-pencil me-2"></i>
+                                Titre de la demande
                             </label>
-                            <select class="form-select" id="chauffeur" name="chauffeur" required>
-                                <option value="">Sélectionnez un chauffeur</option>
-                                {% for chauffeur in chauffeurs_available %}
-                                <option value="{{ chauffeur.id }}">{{ chauffeur.name }} - {{ chauffeur.vehicle_make }}</option>
-                                {% endfor %}
-                            </select>
-                            <small class="form-text text-muted">Sélectionné : <span id="selected-chauffeur-name" class="fw-bold text-success">Aucun</span></small>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="title" class="form-label">Titre de la demande</label>
-                            <input type="text" class="form-control" id="title" name="title" 
+                            <input type="text" class="form-control form-control-lg" id="title" name="title" 
                                    placeholder="Ex: Transport scolaire matin/soir" required>
                         </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description détaillée</label>
-                        <textarea class="form-control" id="description" name="description" rows="3" 
-                                  placeholder="Décrivez vos besoins spécifiques..."></textarea>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label for="description" class="form-label fw-semibold">
+                                <i class="bi bi-chat-left-text me-2"></i>
+                                Description de vos besoins
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="Décrivez vos besoins spécifiques..."></textarea>
+                        </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="pickup_location" class="form-label">Point de départ</label>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="pickup_location" class="form-label fw-semibold">
+                                <i class="bi bi-geo-alt me-2 text-success"></i>
+                                Point de départ
+                            </label>
                             <input type="text" class="form-control" id="pickup_location" name="pickup_location" 
-                                   placeholder="Ex: Bastos, Yaoundé" required>
+                                   placeholder="Ex: Bastos, Libreville" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="dropoff_location" class="form-label">Destination</label>
+                        <div class="col-md-6">
+                            <label for="dropoff_location" class="form-label fw-semibold">
+                                <i class="bi bi-geo me-2 text-danger"></i>
+                                Destination
+                            </label>
                             <input type="text" class="form-control" id="dropoff_location" name="dropoff_location" 
-                                   placeholder="Ex: Melen, Yaoundé" required>
+                                   placeholder="Ex: Melen, Libreville" required>
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="pickup_time" class="form-label">Heure de départ</label>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="pickup_time" class="form-label fw-semibold">
+                                <i class="bi bi-clock me-2"></i>
+                                Heure départ
+                            </label>
                             <input type="time" class="form-control" id="pickup_time" name="pickup_time" required>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="return_time" class="form-label">Heure de retour (optionnel)</label>
+                        <div class="col-md-4">
+                            <label for="return_time" class="form-label fw-semibold">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Retour (opt.)
+                            </label>
                             <input type="time" class="form-control" id="return_time" name="return_time">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="frequency" class="form-label">Fréquence</label>
+                        <div class="col-md-4">
+                            <label for="frequency" class="form-label fw-semibold">
+                                <i class="bi bi-calendar-week me-2"></i>
+                                Fréquence
+                            </label>
                             <select class="form-select" id="frequency" name="frequency">
                                 <option value="weekdays">Jours de semaine</option>
                                 <option value="daily">Quotidien</option>
@@ -665,30 +885,45 @@
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="proposed_price_monthly" class="form-label">Prix mensuel proposé (FCFA)</label>
-                            <input type="number" class="form-control" id="proposed_price_monthly" name="proposed_price_monthly" 
-                                   min="10000" step="1000" placeholder="50000" required>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="proposed_price_monthly" class="form-label fw-semibold">
+                                <i class="bi bi-cash-coin me-2 text-success"></i>
+                                Prix mensuel (FCFA)
+                            </label>
+                            <input type="number" class="form-control form-control-lg" id="proposed_price_monthly" name="proposed_price_monthly" 
+                                   min="10000" step="1000" placeholder="50 000" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="child_name" class="form-label">Nom de l'enfant (optionnel)</label>
+                        <div class="col-md-6">
+                            <label for="child_name" class="form-label fw-semibold">
+                                <i class="bi bi-person-hearts me-2"></i>
+                                Nom enfant (opt.)
+                            </label>
                             <input type="text" class="form-control" id="child_name" name="child_name" 
-                                   placeholder="Nom de l'enfant qui sera transporté">
+                                   placeholder="Nom de l'enfant transporté">
                         </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="special_requirements" class="form-label">Exigences spéciales</label>
-                        <textarea class="form-control" id="special_requirements" name="special_requirements" rows="2" 
-                                  placeholder="Siège enfant, climatisation, musique, etc."></textarea>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label for="special_requirements" class="form-label fw-semibold">
+                                <i class="bi bi-star me-2"></i>
+                                Exigences spéciales (optionnel)
+                            </label>
+                            <textarea class="form-control" id="special_requirements" name="special_requirements" rows="2" 
+                                      placeholder="Siège enfant, climatisation, musique..."></textarea>
+                        </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-success" onclick="submitChauffeurRequest()">
-                    <i class="bi bi-send me-2"></i>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-lg btn-light" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-lg px-5" onclick="submitChauffeurRequest()" 
+                        style="background: linear-gradient(135deg, #FF8C00, #FFA500); color: white; border: none; font-weight: 600;">
+                    <i class="bi bi-send-fill me-2"></i>
                     Envoyer la demande
                 </button>
             </div>
@@ -699,35 +934,72 @@
 
 {% block extra_js %}
 <script>
+// Variable globale pour stocker l'ID du chauffeur sélectionné
+let selectedChauffeurId = null;
+
 function selectChauffeurModal(chauffeurId, chauffeurName) {
-    // Pré-remplir le dropdown de sélection
+    // Empêcher la propagation du clic
+    event.stopPropagation();
+    
+    // Désélectionner toutes les cartes
+    document.querySelectorAll('.chauffeur-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Sélectionner la nouvelle carte
+    const selectedCard = document.getElementById('card-' + chauffeurId);
+    if (selectedCard) {
+        selectedCard.classList.add('selected');
+    }
+    
+    // Stocker l'ID sélectionné
+    selectedChauffeurId = chauffeurId;
+    
+    // Pré-remplir le dropdown
     const chauffeurSelect = document.getElementById('chauffeur');
     if (chauffeurSelect) {
         chauffeurSelect.value = chauffeurId;
+    }
+    
+    // Afficher la bannière de sélection
+    const banner = document.getElementById('selectedBanner');
+    const displaySpan = document.getElementById('selected-chauffeur-display');
+    if (banner && displaySpan) {
+        displaySpan.textContent = chauffeurName;
+        banner.style.display = 'block';
         
-        // Mettre à jour l'affichage du nom sélectionné
-        const selectedNameSpan = document.getElementById('selected-chauffeur-name');
-        if (selectedNameSpan) {
-            selectedNameSpan.textContent = chauffeurName;
-        }
-        
-        // Fermer l'accordion
-        const collapseElement = document.getElementById('chauffeur-' + chauffeurId);
-        if (collapseElement) {
-            const bsCollapse = bootstrap.Collapse.getInstance(collapseElement);
-            if (bsCollapse) {
-                bsCollapse.hide();
-            }
-        }
-        
-        // Scroll vers le formulaire
-        chauffeurSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Highlight temporaire du select
-        chauffeurSelect.classList.add('border-success', 'border-3');
+        // Scroll vers la bannière
         setTimeout(() => {
-            chauffeurSelect.classList.remove('border-success', 'border-3');
-        }, 2000);
+            banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
+}
+
+function clearSelection() {
+    // Désélectionner toutes les cartes
+    document.querySelectorAll('.chauffeur-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Reset le dropdown
+    const chauffeurSelect = document.getElementById('chauffeur');
+    if (chauffeurSelect) {
+        chauffeurSelect.value = '';
+    }
+    
+    // Cacher la bannière
+    const banner = document.getElementById('selectedBanner');
+    if (banner) {
+        banner.style.display = 'none';
+    }
+    
+    // Reset la variable globale
+    selectedChauffeurId = null;
+    
+    // Scroll vers le haut de la liste
+    const chauffeursList = document.querySelector('.row.g-3');
+    if (chauffeursList) {
+        chauffeursList.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 
@@ -778,8 +1050,24 @@ function unsubscribeMobilityPlus() {
 }
 
 function submitChauffeurRequest() {
+    // Vérifier qu'un chauffeur est sélectionné
+    if (!selectedChauffeurId) {
+        alert('⚠️ Veuillez sélectionner un chauffeur avant de soumettre votre demande.');
+        // Scroll vers les cartes de chauffeurs
+        const chauffeursList = document.querySelector('.row.g-3');
+        if (chauffeursList) {
+            chauffeursList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+    }
+    
     const form = document.getElementById('chauffeurRequestForm');
     const formData = new FormData(form);
+    
+    // Désactiver le bouton pendant l'envoi
+    const submitBtn = event.target;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Envoi en cours...';
     
     fetch('{% url "subscriptions:new_subscription_system" %}', {
         method: 'POST',
@@ -791,15 +1079,24 @@ function submitChauffeurRequest() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
-            location.reload();
+            // Animation de succès
+            submitBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Demande envoyée !';
+            submitBtn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
         } else {
-            alert('Erreur: ' + data.error);
+            alert('❌ Erreur: ' + data.error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Envoyer la demande';
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Une erreur est survenue');
+        alert('❌ Une erreur est survenue lors de l\'envoi de votre demande.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Envoyer la demande';
     });
 }
 
