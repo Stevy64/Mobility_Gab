@@ -642,6 +642,38 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
     """
     template_name = 'subscriptions/new_subscription_system.html'
     
+    def get_context_data(self, **kwargs):
+        """Ajouter les chauffeurs disponibles au contexte."""
+        context = super().get_context_data(**kwargs)
+        
+        # Récupérer tous les chauffeurs disponibles avec leurs infos complètes
+        available_chauffeurs = []
+        chauffeurs = User.objects.filter(
+            role=UserRoles.CHAUFFEUR,
+            is_active=True,
+            chauffeur_profile__is_available=True
+        ).select_related('chauffeur_profile')
+        
+        for chauffeur in chauffeurs:
+            profile = chauffeur.chauffeur_profile
+            available_chauffeurs.append({
+                'id': chauffeur.id,
+                'name': chauffeur.get_full_name() or chauffeur.username,
+                'phone': chauffeur.phone_number or 'Non renseigné',
+                'vehicle_make': profile.vehicle_make or 'Non renseigné',
+                'vehicle_model': profile.vehicle_model or 'Non renseigné',
+                'vehicle_color': profile.vehicle_color or 'Non renseigné',
+                'vehicle_plate': profile.vehicle_plate or 'Non renseigné',
+                'zone': profile.zone or 'Toutes zones',
+                'reliability_score': float(profile.reliability_score) if profile.reliability_score else 5.0,
+                'total_ratings': profile.total_ratings,
+            })
+        
+        context['chauffeurs_available'] = available_chauffeurs
+        context['chauffeurs_count'] = len(available_chauffeurs)
+        
+        return context
+    
     def post(self, request, *args, **kwargs):
         """Gérer les demandes d'abonnement chauffeur."""
         if request.user.role != UserRoles.PARENT:

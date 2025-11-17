@@ -520,17 +520,104 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- Section Chauffeurs Disponibles -->
+                {% if chauffeurs_available %}
+                <div class="mb-4">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-people-fill me-2"></i>
+                        Chauffeurs disponibles ({{ chauffeurs_count }})
+                    </h6>
+                    
+                    <div class="accordion" id="chauffeurs-accordion-modal">
+                        {% for chauffeur in chauffeurs_available %}
+                        <div class="accordion-item border mb-2 rounded-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#chauffeur-{{ chauffeur.id }}">
+                                    <div class="d-flex align-items-center w-100">
+                                        <div class="me-3">
+                                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                                <i class="bi bi-person-fill fs-5"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold">{{ chauffeur.name }}</div>
+                                            <div class="small text-muted">
+                                                <i class="bi bi-car-front me-1"></i>
+                                                {{ chauffeur.vehicle_make }} {{ chauffeur.vehicle_model }}
+                                                <span class="ms-2">
+                                                    <i class="bi bi-star-fill text-warning me-1"></i>
+                                                    {{ chauffeur.reliability_score|floatformat:1 }}/5
+                                                    {% if chauffeur.total_ratings > 0 %}
+                                                    ({{ chauffeur.total_ratings }})
+                                                    {% else %}
+                                                    (Nouveau)
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="chauffeur-{{ chauffeur.id }}" class="accordion-collapse collapse">
+                                <div class="accordion-body bg-light p-3">
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Véhicule</small>
+                                            <strong class="d-block">{{ chauffeur.vehicle_make }}</strong>
+                                            <small>{{ chauffeur.vehicle_model }}</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Couleur</small>
+                                            <strong>{{ chauffeur.vehicle_color }}</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Plaque</small>
+                                            <span class="badge bg-secondary">{{ chauffeur.vehicle_plate }}</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Zone</small>
+                                            <strong><i class="bi bi-geo-alt text-danger"></i> {{ chauffeur.zone }}</strong>
+                                        </div>
+                                        <div class="col-12">
+                                            <small class="text-muted d-block">Contact</small>
+                                            <strong>{{ chauffeur.phone }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 text-center">
+                                        <button type="button" class="btn btn-sm btn-success" onclick="selectChauffeurModal({{ chauffeur.id }}, '{{ chauffeur.name }}')">
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            Choisir ce chauffeur
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="alert alert-info border-0 mt-3 mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>Consultez les détails pour choisir votre chauffeur, puis remplissez le formulaire ci-dessous.</small>
+                    </div>
+                </div>
+                <hr class="my-4">
+                {% endif %}
+                
                 <form id="chauffeurRequestForm">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="chauffeur" class="form-label">Chauffeur souhaité</label>
+                            <label for="chauffeur" class="form-label">
+                                <i class="bi bi-person-check me-1"></i>
+                                Chauffeur souhaité
+                            </label>
                             <select class="form-select" id="chauffeur" name="chauffeur" required>
                                 <option value="">Sélectionnez un chauffeur</option>
                                 {% for chauffeur in chauffeurs_available %}
-                                <option value="{{ chauffeur.id }}">{{ chauffeur.get_full_name }}</option>
+                                <option value="{{ chauffeur.id }}">{{ chauffeur.name }} - {{ chauffeur.vehicle_make }}</option>
                                 {% endfor %}
                             </select>
+                            <small class="form-text text-muted">Sélectionné : <span id="selected-chauffeur-name" class="fw-bold text-success">Aucun</span></small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="title" class="form-label">Titre de la demande</label>
@@ -612,6 +699,38 @@
 
 {% block extra_js %}
 <script>
+function selectChauffeurModal(chauffeurId, chauffeurName) {
+    // Pré-remplir le dropdown de sélection
+    const chauffeurSelect = document.getElementById('chauffeur');
+    if (chauffeurSelect) {
+        chauffeurSelect.value = chauffeurId;
+        
+        // Mettre à jour l'affichage du nom sélectionné
+        const selectedNameSpan = document.getElementById('selected-chauffeur-name');
+        if (selectedNameSpan) {
+            selectedNameSpan.textContent = chauffeurName;
+        }
+        
+        // Fermer l'accordion
+        const collapseElement = document.getElementById('chauffeur-' + chauffeurId);
+        if (collapseElement) {
+            const bsCollapse = bootstrap.Collapse.getInstance(collapseElement);
+            if (bsCollapse) {
+                bsCollapse.hide();
+            }
+        }
+        
+        // Scroll vers le formulaire
+        chauffeurSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Highlight temporaire du select
+        chauffeurSelect.classList.add('border-success', 'border-3');
+        setTimeout(() => {
+            chauffeurSelect.classList.remove('border-success', 'border-3');
+        }, 2000);
+    }
+}
+
 function subscribeMobilityPlus() {
     fetch('{% url "subscriptions:mobility_plus_subscribe" %}', {
         method: 'POST',
