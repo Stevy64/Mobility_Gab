@@ -389,7 +389,7 @@ def get_messages(request, trip_id):
     chat_notifications = NotificationLog.objects.filter(
         user=request.user,
         notification_type="chat_message",
-        is_read=False
+        read=False
     )
     
     # Filtrer les notifications liées à ce trajet
@@ -397,8 +397,8 @@ def get_messages(request, trip_id):
         try:
             metadata = json.loads(notif.metadata) if isinstance(notif.metadata, str) else notif.metadata
             if metadata and metadata.get('trip_id') == trip.id:
-                notif.is_read = True
-                notif.save(update_fields=['is_read'])
+                notif.read = True
+                notif.save(update_fields=['read'])
         except:
             pass
     
