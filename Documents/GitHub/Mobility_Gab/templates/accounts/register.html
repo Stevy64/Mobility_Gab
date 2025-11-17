@@ -1,87 +1,461 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block page_title %}Créer un compte - Mobility Gab{% endblock %}
 
+{% block extra_css %}
+<style>
+    .register-page {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-2xl) var(--space-md);
+        background: 
+            linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 15, 0.92) 100%),
+            url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop') center/cover fixed;
+        position: relative;
+    }
+    
+    .register-page::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 70% 50%, rgba(255, 152, 0, 0.15) 0%, transparent 60%);
+        pointer-events: none;
+    }
+    
+    .register-container {
+        width: 100%;
+        max-width: 600px;
+        position: relative;
+        z-index: 2;
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .register-card {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-xl);
+        padding: var(--space-2xl);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .register-header {
+        text-align: center;
+        margin-bottom: var(--space-xl);
+    }
+    
+    .register-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto var(--space-lg);
+        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: var(--mg-white);
+        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4);
+    }
+    
+    .register-title {
+        font-size: var(--font-size-3xl);
+        font-weight: 800;
+        color: var(--mg-secondary);
+        margin-bottom: var(--space-sm);
+    }
+    
+    .register-subtitle {
+        font-size: var(--font-size-base);
+        color: var(--mg-gray-600);
+    }
+    
+    /* Role Selector */
+    .role-selector {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-md);
+        margin-bottom: var(--space-xl);
+    }
+    
+    .role-option {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-lg);
+        border: 3px solid var(--mg-gray-300);
+        border-radius: var(--radius-lg);
+        background: var(--mg-white);
+        cursor: pointer;
+        transition: all var(--transition-base);
+        text-decoration: none;
+        color: var(--mg-gray-800);
+        min-height: 120px;
+    }
+    
+    .role-option:hover {
+        border-color: var(--mg-primary);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.2);
+        color: var(--mg-gray-800);
+    }
+    
+    .role-option.active {
+        border-color: var(--mg-primary);
+        background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(245, 124, 0, 0.1));
+        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+    }
+    
+    .role-option i {
+        font-size: 2.5rem;
+        margin-bottom: var(--space-sm);
+        color: var(--mg-primary);
+    }
+    
+    .role-option-title {
+        font-size: var(--font-size-lg);
+        font-weight: 700;
+    }
+    
+    /* Form Styles */
+    .register-form .form-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+        margin-bottom: var(--space-lg);
+    }
+    
+    @media (min-width: 768px) {
+        .register-form .form-row-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    
+    .register-form .form-group {
+        margin-bottom: var(--space-lg);
+    }
+    
+    .register-form .form-label {
+        display: block;
+        margin-bottom: var(--space-sm);
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        color: var(--mg-gray-800);
+    }
+    
+    .register-form .form-control,
+    .register-form select {
+        width: 100%;
+        padding: var(--space-md) var(--space-lg);
+        font-size: var(--font-size-base);
+        color: var(--mg-gray-900);
+        background: var(--mg-white);
+        border: 2px solid var(--mg-gray-300);
+        border-radius: var(--radius-md);
+        transition: all var(--transition-base);
+        min-height: 52px;
+    }
+    
+    .register-form .form-control:focus,
+    .register-form select:focus {
+        border-color: var(--mg-primary);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
+    }
+    
+    .register-form .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: var(--space-sm) 0 0 0;
+    }
+    
+    .register-form .errorlist li {
+        color: var(--mg-danger);
+        font-size: var(--font-size-sm);
+        padding: var(--space-xs) var(--space-sm);
+        background: rgba(244, 67, 54, 0.1);
+        border-radius: var(--radius-sm);
+        margin-top: var(--space-xs);
+    }
+    
+    .register-form .helptext {
+        display: block;
+        margin-top: var(--space-xs);
+        font-size: var(--font-size-xs);
+        color: var(--mg-gray-500);
+    }
+    
+    .register-btn {
+        width: 100%;
+        padding: var(--space-lg) var(--space-xl);
+        font-size: var(--font-size-lg);
+        font-weight: 700;
+        color: var(--mg-white);
+        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        border: none;
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        transition: all var(--transition-base);
+        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+    }
+    
+    .register-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(255, 152, 0, 0.4);
+    }
+    
+    .register-btn:active {
+        transform: translateY(0);
+    }
+    
+    .register-footer {
+        text-align: center;
+        margin-top: var(--space-xl);
+        padding-top: var(--space-xl);
+        border-top: 1px solid var(--mg-gray-200);
+    }
+    
+    .register-footer-text {
+        font-size: var(--font-size-sm);
+        color: var(--mg-gray-600);
+    }
+    
+    .register-footer-link {
+        color: var(--mg-primary);
+        font-weight: 600;
+        text-decoration: none;
+        transition: color var(--transition-fast);
+    }
+    
+    .register-footer-link:hover {
+        color: var(--mg-primary-dark);
+        text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+        .register-page {
+            background-attachment: scroll;
+            padding: var(--space-lg) var(--space-sm);
+        }
+        
+        .register-card {
+            padding: var(--space-xl) var(--space-lg);
+        }
+        
+        .role-selector {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-7 col-lg-6 col-xl-5">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4 p-md-5">
-                <h2 class="h4 text-center mb-3">Créer un compte</h2>
-                <p class="text-muted text-center mb-4">Sélectionnez votre profil pour personnaliser l'inscription.</p>
-
-                <div class="btn-group mb-4 w-100" role="group">
-                    <a href="?role=parent" class="btn btn-outline-primary {% if form.initial.role == 'parent' or form.fields.role.initial == 'parent' %}active{% endif %}">
-                        <i class="bi bi-people"></i> Particulier
-                    </a>
-                    <a href="?role=chauffeur" class="btn btn-outline-primary {% if form.initial.role == 'chauffeur' or form.fields.role.initial == 'chauffeur' %}active{% endif %}">
-                        <i class="bi bi-steering-wheel"></i> Chauffeur
-                    </a>
+<div class="register-page">
+    <div class="register-container">
+        <div class="register-card">
+            <div class="register-header">
+                <div class="register-icon">
+                    <i class="bi bi-person-plus-fill"></i>
                 </div>
-
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    {{ form.role }}
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
-                            {{ form.username }}
-                            {{ form.username.errors }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
-                            {{ form.first_name }}
-                            {{ form.first_name.errors }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
-                            {{ form.last_name }}
-                            {{ form.last_name.errors }}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
-                            {{ form.email }}
-                            {{ form.email.errors }}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label" for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
-                            {{ form.phone }}
-                            {{ form.phone.errors }}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label" for="{{ form.address.id_for_label }}">{{ form.address.label }}</label>
-                            {{ form.address }}
-                            {{ form.address.errors }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
-                            {{ form.password1 }}
-                            {{ form.password1.errors }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
-                            {{ form.password2 }}
-                            {{ form.password2.errors }}
-                        </div>
-
-                        {% if form.fields.vehicle_placeholder %}
-                        <div class="col-12">
-                            <label class="form-label" for="{{ form.vehicle_placeholder.id_for_label }}">{{ form.vehicle_placeholder.label }}</label>
-                            {{ form.vehicle_placeholder }}
-                            {% if form.vehicle_placeholder.help_text %}
-                                <div class="form-text">{{ form.vehicle_placeholder.help_text }}</div>
-                            {% endif %}
-                            {{ form.vehicle_placeholder.errors }}
-                        </div>
+                <h1 class="register-title">Créer un compte</h1>
+                <p class="register-subtitle">Rejoignez Mobility Gab en quelques clics</p>
+            </div>
+            
+            <!-- Role Selector -->
+            <div class="role-selector">
+                <a href="?role=chauffeur" class="role-option {% if form.initial.role == 'chauffeur' or form.fields.role.initial == 'chauffeur' %}active{% endif %}">
+                    <i class="bi bi-steering-wheel"></i>
+                    <span class="role-option-title">Chauffeur</span>
+                </a>
+                <a href="?role=parent" class="role-option {% if form.initial.role == 'parent' or form.fields.role.initial == 'parent' %}active{% endif %}">
+                    <i class="bi bi-shield-check"></i>
+                    <span class="role-option-title">Superviseur</span>
+                </a>
+            </div>
+            
+            <form method="post" class="register-form" novalidate>
+                {% csrf_token %}
+                {{ form.role }}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        {% for error in form.non_field_errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">
+                        <i class="bi bi-person-fill"></i> {{ form.username.label }}
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.username.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <!-- First & Last Name -->
+                <div class="form-row form-row-2">
+                    <div class="form-group">
+                        <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                            {{ form.first_name.label }}
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.first_name.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
                         {% endif %}
                     </div>
-
-                    <button type="submit" class="btn btn-success w-100 mt-4">Créer mon compte</button>
-                </form>
-                <p class="text-center mt-3 mb-0 small">Déjà inscrit ? <a href="{% url 'accounts:login' %}">Connexion</a></p>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                            {{ form.last_name.label }}
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.last_name.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">
+                        <i class="bi bi-envelope-fill"></i> {{ form.email.label }}
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.email.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <!-- Phone -->
+                <div class="form-group">
+                    <label for="{{ form.phone.id_for_label }}" class="form-label">
+                        <i class="bi bi-telephone-fill"></i> {{ form.phone.label }}
+                    </label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.phone.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <!-- Address -->
+                <div class="form-group">
+                    <label for="{{ form.address.id_for_label }}" class="form-label">
+                        <i class="bi bi-geo-alt-fill"></i> {{ form.address.label }}
+                    </label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.address.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <!-- Passwords -->
+                <div class="form-row form-row-2">
+                    <div class="form-group">
+                        <label for="{{ form.password1.id_for_label }}" class="form-label">
+                            <i class="bi bi-lock-fill"></i> {{ form.password1.label }}
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.password1.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.password2.id_for_label }}" class="form-label">
+                            <i class="bi bi-lock-fill"></i> {{ form.password2.label }}
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.password2.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Vehicle Placeholder (pour chauffeur) -->
+                {% if form.vehicle_placeholder %}
+                <div class="form-group">
+                    <label for="{{ form.vehicle_placeholder.id_for_label }}" class="form-label">
+                        <i class="bi bi-car-front-fill"></i> {{ form.vehicle_placeholder.label }}
+                    </label>
+                    {{ form.vehicle_placeholder }}
+                    {% if form.vehicle_placeholder.help_text %}
+                        <span class="helptext">{{ form.vehicle_placeholder.help_text }}</span>
+                    {% endif %}
+                    {% if form.vehicle_placeholder.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.vehicle_placeholder.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <button type="submit" class="register-btn">
+                    <i class="bi bi-rocket-takeoff-fill"></i>
+                    <span>Créer mon compte</span>
+                </button>
+            </form>
+            
+            <div class="register-footer">
+                <p class="register-footer-text">
+                    Déjà inscrit ? 
+                    <a href="{% url 'accounts:login' %}" class="register-footer-link">
+                        Se connecter
+                    </a>
+                </p>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-

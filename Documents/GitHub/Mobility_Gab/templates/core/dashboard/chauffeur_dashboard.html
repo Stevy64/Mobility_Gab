@@ -1,142 +1,675 @@
-{% extends 'core/dashboard/base.html' %}
+{% extends 'base.html' %}
+{% load static %}
 
-{% block dashboard_title %}Bonjour {{ user.first_name|default:user.email }}{% endblock %}
-{% block dashboard_subtitle %}Vos abonnés, trajets et performances.{% endblock %}
+{% block page_title %}Dashboard Chauffeur - Mobility Gab{% endblock %}
 
-{% block dashboard_actions %}
-<div class="btn-group">
-    <a href="/subscriptions/chauffeur_ride_requests_realtime/" class="btn btn-primary position-relative">
-        <i class="bi bi-bell"></i> Demandes temps réel
-        <span id="pending-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
-            0
-        </span>
-    </a>
-    <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-outline-secondary">
-        <i class="bi bi-clock-history"></i> Historique
-    </a>
-    <a href="#" class="btn btn-danger" onclick="triggerSOS()"><i class="bi bi-shield-exclamation"></i> SOS</a>
-</div>
+{% block extra_css %}
+<style>
+    .dashboard-page {
+        padding: var(--space-2xl) 0;
+        background: linear-gradient(180deg, var(--mg-gray-100) 0%, var(--mg-white) 100%);
+        min-height: calc(100vh - 200px);
+    }
+    
+    /* Dashboard Header */
+    .dashboard-header {
+        margin-bottom: var(--space-2xl);
+        animation: fadeInDown 0.5s ease-out;
+    }
+    
+    .dashboard-title {
+        font-size: clamp(1.75rem, 4vw, 2.5rem);
+        font-weight: 800;
+        color: var(--mg-secondary);
+        margin-bottom: var(--space-sm);
+    }
+    
+    .dashboard-subtitle {
+        font-size: var(--font-size-lg);
+        color: var(--mg-gray-600);
+    }
+    
+    /* Action Buttons */
+    .dashboard-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-md);
+        margin-top: var(--space-lg);
+    }
+    
+    .action-btn {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-md) var(--space-xl);
+        font-size: var(--font-size-base);
+        font-weight: 600;
+        border-radius: var(--radius-full);
+        transition: all var(--transition-base);
+        text-decoration: none;
+        border: 2px solid transparent;
+        min-height: 48px;
+    }
+    
+    .action-btn-primary {
+        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        color: var(--mg-white);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .action-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: var(--mg-white);
+    }
+    
+    .action-btn-outline {
+        background: var(--mg-white);
+        color: var(--mg-gray-800);
+        border-color: var(--mg-gray-300);
+    }
+    
+    .action-btn-outline:hover {
+        border-color: var(--mg-primary);
+        color: var(--mg-primary);
+        transform: translateY(-2px);
+    }
+    
+    .action-btn-danger {
+        background: var(--mg-danger);
+        color: var(--mg-white);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .action-btn-danger:hover {
+        background: #D32F2F;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: var(--mg-white);
+    }
+    
+    .action-btn i {
+        font-size: 1.25rem;
+    }
+    
+    .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--font-size-xs);
+        font-weight: 700;
+        color: var(--mg-white);
+        background: var(--mg-danger);
+        border-radius: var(--radius-full);
+        box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    /* KPI Cards Grid */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+        margin-bottom: var(--space-2xl);
+    }
+    
+    @media (min-width: 768px) {
+        .kpi-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    .kpi-card {
+        background: var(--mg-white);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--mg-gray-200);
+        transition: all var(--transition-base);
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .kpi-card:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+    
+    .kpi-card:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .kpi-content {
+        display: flex;
+        align-items: center;
+        gap: var(--space-lg);
+    }
+    
+    .kpi-icon {
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-md);
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    
+    .kpi-icon-primary {
+        background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(245, 124, 0, 0.2));
+        color: var(--mg-primary);
+    }
+    
+    .kpi-icon-success {
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(56, 142, 60, 0.2));
+        color: var(--mg-success);
+    }
+    
+    .kpi-icon-info {
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(25, 118, 210, 0.2));
+        color: var(--mg-info);
+    }
+    
+    .kpi-details {
+        flex: 1;
+    }
+    
+    .kpi-label {
+        font-size: var(--font-size-sm);
+        color: var(--mg-gray-600);
+        margin-bottom: var(--space-xs);
+    }
+    
+    .kpi-value {
+        font-size: var(--font-size-3xl);
+        font-weight: 800;
+        color: var(--mg-gray-900);
+        line-height: 1;
+    }
+    
+    /* Content Grid */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-xl);
+    }
+    
+    @media (min-width: 1024px) {
+        .content-grid {
+            grid-template-columns: 2fr 1fr;
+        }
+    }
+    
+    /* Modern Card */
+    .modern-card {
+        background: var(--mg-white);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--mg-gray-200);
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .modern-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-lg);
+    }
+    
+    .modern-card-title {
+        font-size: var(--font-size-xl);
+        font-weight: 700;
+        color: var(--mg-gray-900);
+    }
+    
+    .modern-card-badge {
+        padding: var(--space-xs) var(--space-md);
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+        color: var(--mg-white);
+        background: var(--mg-primary);
+        border-radius: var(--radius-full);
+    }
+    
+    /* Trip Info Box */
+    .trip-info-box {
+        background: linear-gradient(135deg, var(--mg-gray-100), var(--mg-gray-200));
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-lg);
+    }
+    
+    .trip-info-row {
+        display: flex;
+        align-items: start;
+        gap: var(--space-md);
+        margin-bottom: var(--space-md);
+    }
+    
+    .trip-info-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .trip-info-label {
+        font-weight: 600;
+        color: var(--mg-gray-800);
+        min-width: 80px;
+    }
+    
+    .trip-info-value {
+        color: var(--mg-gray-700);
+        flex: 1;
+    }
+    
+    /* Checkpoint Buttons */
+    .checkpoint-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+        margin-top: var(--space-lg);
+    }
+    
+    .checkpoint-btn {
+        flex: 1;
+        min-width: 120px;
+        padding: var(--space-sm) var(--space-md);
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        border: 2px solid;
+        border-radius: var(--radius-md);
+        background: var(--mg-white);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+    
+    .checkpoint-btn-success {
+        border-color: var(--mg-success);
+        color: var(--mg-success);
+    }
+    
+    .checkpoint-btn-success:hover {
+        background: var(--mg-success);
+        color: var(--mg-white);
+    }
+    
+    .checkpoint-btn-primary {
+        border-color: var(--mg-primary);
+        color: var(--mg-primary);
+    }
+    
+    .checkpoint-btn-primary:hover {
+        background: var(--mg-primary);
+        color: var(--mg-white);
+    }
+    
+    .checkpoint-btn-warning {
+        border-color: var(--mg-warning);
+        color: var(--mg-warning);
+    }
+    
+    .checkpoint-btn-warning:hover {
+        background: var(--mg-warning);
+        color: var(--mg-white);
+    }
+    
+    .checkpoint-btn-dark {
+        border-color: var(--mg-gray-800);
+        color: var(--mg-gray-800);
+    }
+    
+    .checkpoint-btn-dark:hover {
+        background: var(--mg-gray-800);
+        color: var(--mg-white);
+    }
+    
+    /* Table */
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .modern-table thead th {
+        padding: var(--space-md) var(--space-sm);
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        color: var(--mg-gray-600);
+        text-align: left;
+        border-bottom: 2px solid var(--mg-gray-200);
+    }
+    
+    .modern-table tbody td {
+        padding: var(--space-md) var(--space-sm);
+        font-size: var(--font-size-sm);
+        color: var(--mg-gray-800);
+        border-bottom: 1px solid var(--mg-gray-200);
+    }
+    
+    .modern-table tbody tr:hover {
+        background: var(--mg-gray-100);
+    }
+    
+    .table-badge {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        background: var(--mg-gray-200);
+        color: var(--mg-gray-800);
+    }
+    
+    .rating-stars {
+        color: var(--mg-accent);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: var(--space-2xl);
+        color: var(--mg-gray-500);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: var(--space-md);
+        opacity: 0.5;
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-actions {
+            flex-direction: column;
+        }
+        
+        .action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .checkpoint-buttons {
+            flex-direction: column;
+        }
+        
+        .checkpoint-btn {
+            width: 100%;
+        }
+        
+        .modern-table {
+            font-size: var(--font-size-sm);
+        }
+        
+        .modern-table thead th,
+        .modern-table tbody td {
+            padding: var(--space-sm) var(--space-xs);
+        }
+    }
+</style>
 {% endblock %}
 
-{% block dashboard_content %}
-<div class="row g-4">
-    <div class="col-md-4">
-        <div class="card card-kpi shadow-sm border-0 p-3 h-100">
-            <div class="d-flex align-items-center">
-                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
-                    <i class="bi bi-people fs-4"></i>
-                </div>
-                <div class="ms-3">
-                    <p class="text-muted small mb-1">Abonnés actifs</p>
-                    <h3 class="mb-0">{{ active_subscribers|default:0 }}</h3>
-                </div>
+{% block content %}
+<div class="dashboard-page">
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">
+                <i class="bi bi-speedometer2"></i>
+                Bonjour {{ user.first_name|default:user.email }}
+            </h1>
+            <p class="dashboard-subtitle">
+                Gérez vos abonnés, trajets et performances en temps réel
+            </p>
+            
+            <!-- Action Buttons -->
+            <div class="dashboard-actions">
+                <a href="/subscriptions/chauffeur_ride_requests_realtime/" class="action-btn action-btn-primary">
+                    <i class="bi bi-bell-fill"></i>
+                    <span>Demandes temps réel</span>
+                    <span id="pending-badge" class="notification-badge" style="display: none;">0</span>
+                </a>
+                <a href="{% url 'subscriptions:trip_history' %}" class="action-btn action-btn-outline">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Historique</span>
+                </a>
+                <a href="{% url 'subscriptions:manage_chauffeur_subscriptions' %}" class="action-btn action-btn-outline">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Mes Abonnés</span>
+                </a>
+                <button class="action-btn action-btn-danger" onclick="triggerSOS()">
+                    <i class="bi bi-shield-exclamation"></i>
+                    <span>SOS</span>
+                </button>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card card-kpi shadow-sm border-0 p-3 h-100">
-            <div class="d-flex align-items-center">
-                <div class="bg-success bg-opacity-10 text-success rounded-circle p-3">
-                    <i class="bi bi-star fs-4"></i>
-                </div>
-                <div class="ms-3">
-                    <p class="text-muted small mb-1">Note moyenne</p>
-                    <h3 class="mb-0">{{ avg_rating|default:'--' }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card card-kpi shadow-sm border-0 p-3 h-100">
-            <div class="d-flex align-items-center">
-                <div class="bg-info bg-opacity-10 text-info rounded-circle p-3">
-                    <i class="bi bi-award fs-4"></i>
-                </div>
-                <div class="ms-3">
-                    <p class="text-muted small mb-1">Badges</p>
-                    <h3 class="mb-0">{{ badges_count|default:0 }}</h3>
+        
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-content">
+                    <div class="kpi-icon kpi-icon-primary">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Abonnés actifs</div>
+                        <div class="kpi-value">{{ active_subscribers|default:0 }}</div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4 mt-1">
-    <div class="col-lg-7">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body">
-                <h5 class="fw-bold">Trajet du jour</h5>
-                <div class="rounded bg-light p-3">
-                    <p class="mb-1"><strong>Abonné :</strong> {{ current_trip.parent.get_full_name|default:"Non assigné" }}</p>
-                    <p class="mb-1"><strong>Adresses :</strong> {{ current_trip.pickup_location|default:'-' }} ➡ {{ current_trip.dropoff_location|default:'-' }}</p>
-                    <p class="mb-2"><strong>Status :</strong> {{ current_trip.status|default:'Planifié' }}</p>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-success btn-sm" data-checkpoint="en_route">EN ROUTE</button>
-                        <button class="btn btn-outline-primary btn-sm" data-checkpoint="arrived">ARRIVÉ</button>
-                        <button class="btn btn-outline-warning btn-sm" data-checkpoint="child_dropped">ENFANT DÉPOSÉ</button>
-                        <button class="btn btn-outline-dark btn-sm" data-checkpoint="completed">TERMINÉ</button>
+            
+            <div class="kpi-card">
+                <div class="kpi-content">
+                    <div class="kpi-icon kpi-icon-success">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Note moyenne</div>
+                        <div class="kpi-value">{{ avg_rating|default:'--' }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-content">
+                    <div class="kpi-icon kpi-icon-info">
+                        <i class="bi bi-award-fill"></i>
+                    </div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Badges</div>
+                        <div class="kpi-value">{{ badges_count|default:0 }}</div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <h5 class="fw-bold">Historique des trajets</h5>
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle">
-                        <thead>
-                            <tr class="text-muted">
-                                <th>Date</th>
-                                <th>Parent</th>
-                                <th>Status</th>
-                                <th>Note</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for trip in recent_trips %}
-                            <tr>
-                                <td>{{ trip.scheduled_date|date:'d/m' }}</td>
-                                <td>{{ trip.parent.get_full_name|default:trip.parent.email }}</td>
-                                <td><span class="badge bg-light text-dark">{{ trip.status }}</span></td>
-                                <td>{{ trip.rating.score|default:'--' }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted">Aucun trajet récent.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Main Column -->
+            <div>
+                <!-- Current Trip Card -->
+                <div class="modern-card" style="margin-bottom: var(--space-xl);">
+                    <div class="modern-card-header">
+                        <h2 class="modern-card-title">
+                            <i class="bi bi-car-front-fill"></i>
+                            Trajet du jour
+                        </h2>
+                        <span class="modern-card-badge">Aujourd'hui</span>
+                    </div>
+                    
+                    {% if current_trip %}
+                    <div class="trip-info-box">
+                        <div class="trip-info-row">
+                            <span class="trip-info-label">Abonné :</span>
+                            <span class="trip-info-value">{{ current_trip.parent.get_full_name|default:"Non assigné" }}</span>
+                        </div>
+                        <div class="trip-info-row">
+                            <span class="trip-info-label">Départ :</span>
+                            <span class="trip-info-value">{{ current_trip.pickup_location|default:'-' }}</span>
+                        </div>
+                        <div class="trip-info-row">
+                            <span class="trip-info-label">Arrivée :</span>
+                            <span class="trip-info-value">{{ current_trip.dropoff_location|default:'-' }}</span>
+                        </div>
+                        <div class="trip-info-row">
+                            <span class="trip-info-label">Status :</span>
+                            <span class="trip-info-value">
+                                <span class="table-badge">{{ current_trip.status|default:'Planifié' }}</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="checkpoint-buttons">
+                        <button class="checkpoint-btn checkpoint-btn-success" data-checkpoint="en_route">
+                            <i class="bi bi-play-circle-fill"></i> En route
+                        </button>
+                        <button class="checkpoint-btn checkpoint-btn-primary" data-checkpoint="arrived">
+                            <i class="bi bi-geo-alt-fill"></i> Arrivé
+                        </button>
+                        <button class="checkpoint-btn checkpoint-btn-warning" data-checkpoint="child_dropped">
+                            <i class="bi bi-check-circle-fill"></i> Déposé
+                        </button>
+                        <button class="checkpoint-btn checkpoint-btn-dark" data-checkpoint="completed">
+                            <i class="bi bi-flag-fill"></i> Terminé
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-calendar-x"></i>
+                        <p>Aucun trajet prévu pour aujourd'hui</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Recent Trips Card -->
+                <div class="modern-card">
+                    <div class="modern-card-header">
+                        <h2 class="modern-card-title">
+                            <i class="bi bi-clock-history"></i>
+                            Historique récent
+                        </h2>
+                    </div>
+                    
+                    {% if recent_trips %}
+                    <div style="overflow-x: auto;">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Parent</th>
+                                    <th>Status</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trip in recent_trips %}
+                                <tr>
+                                    <td>{{ trip.scheduled_date|date:'d/m/Y' }}</td>
+                                    <td>{{ trip.parent.get_full_name|default:trip.parent.email }}</td>
+                                    <td><span class="table-badge">{{ trip.status }}</span></td>
+                                    <td>
+                                        {% if trip.rating %}
+                                            <span class="rating-stars">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= trip.rating %}
+                                                        <i class="bi bi-star-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Aucun trajet récent</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="col-lg-5">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body">
-                <h5 class="fw-bold">Abonnés assignés</h5>
-                <ul class="list-group list-group-flush small">
-                    {% for subscription in assigned_subscriptions %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ subscription.parent.get_full_name|default:subscription.parent.email }}</strong>
-                            <div class="text-muted">Plan: {{ subscription.plan.name }}</div>
+            
+            <!-- Sidebar Column -->
+            <div>
+                <!-- Notifications Card -->
+                <div class="modern-card" style="margin-bottom: var(--space-xl);">
+                    <div class="modern-card-header">
+                        <h2 class="modern-card-title">
+                            <i class="bi bi-bell-fill"></i>
+                            Notifications
+                        </h2>
+                    </div>
+                    
+                    {% if notifications %}
+                        {% for notif in notifications %}
+                        <div style="padding: var(--space-md); border-bottom: 1px solid var(--mg-gray-200);">
+                            <div style="font-size: var(--font-size-sm); color: var(--mg-gray-800); margin-bottom: var(--space-xs);">
+                                {{ notif.message }}
+                            </div>
+                            <div style="font-size: var(--font-size-xs); color: var(--mg-gray-500);">
+                                {{ notif.created_at|timesince }} ago
+                            </div>
                         </div>
-                        <span class="badge bg-success rounded-pill">{{ subscription.status }}</span>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item text-muted">Aucun abonné assigné.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <h5 class="fw-bold">Badges</h5>
-                <div class="d-flex flex-wrap gap-2">
-                    {% for badge in badges %}
-                    <span class="badge bg-primary bg-opacity-10 text-primary p-2"><i class="bi {{ badge.badge.icon|default:'bi-award' }}"></i> {{ badge.badge.name }}</span>
-                    {% empty %}
-                    <p class="text-muted small mb-0">Pas encore de badge.</p>
-                    {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-bell-slash"></i>
+                        <p>Aucune notification</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Quick Stats Card -->
+                <div class="modern-card">
+                    <div class="modern-card-header">
+                        <h2 class="modern-card-title">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            Stats rapides
+                        </h2>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: var(--space-lg);">
+                        <div>
+                            <div style="font-size: var(--font-size-sm); color: var(--mg-gray-600); margin-bottom: var(--space-xs);">
+                                Trajets ce mois
+                            </div>
+                            <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--mg-primary);">
+                                {{ monthly_trips|default:0 }}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div style="font-size: var(--font-size-sm); color: var(--mg-gray-600); margin-bottom: var(--space-xs);">
+                                Taux de ponctualité
+                            </div>
+                            <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--mg-success);">
+                                {{ punctuality_rate|default:0 }}%
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div style="font-size: var(--font-size-sm); color: var(--mg-gray-600); margin-bottom: var(--space-xs);">
+                                Revenus estimés
+                            </div>
+                            <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--mg-info);">
+                                {{ estimated_earnings|default:0 }} FCFA
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -145,44 +678,36 @@
 {% endblock %}
 
 {% block extra_js %}
-{{ block.super }}
 <script>
-    // Mise à jour automatique du compteur de demandes en attente
-    function updatePendingRequestsCount() {
-        fetch('/subscriptions/api/chauffeur/pending-count/')
-            .then(response => response.json())
-            .then(data => {
-                const badge = document.getElementById('pending-badge');
-                if (data.total_count > 0) {
-                    badge.textContent = data.total_count;
-                    badge.style.display = 'inline-block';
-                    
-                    // Animation de pulsation pour attirer l'attention
-                    badge.style.animation = 'pulse 1.5s ease-in-out infinite';
-                } else {
-                    badge.style.display = 'none';
-                }
-            })
-            .catch(error => console.error('Erreur lors de la récupération du compteur:', error));
+    // Fetch pending requests count
+    async function updatePendingCount() {
+        try {
+            const response = await fetch('/subscriptions/api/chauffeur/pending-count/');
+            const data = await response.json();
+            
+            const badge = document.getElementById('pending-badge');
+            if (data.total > 0) {
+                badge.textContent = data.total;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error fetching pending count:', error);
+        }
     }
     
-    // Mettre à jour immédiatement
-    updatePendingRequestsCount();
+    // Update every 15 seconds
+    updatePendingCount();
+    setInterval(updatePendingCount, 15000);
     
-    // Puis mettre à jour toutes les 15 secondes
-    setInterval(updatePendingRequestsCount, 15000);
+    // Checkpoint buttons (to be implemented with AJAX)
+    document.querySelectorAll('.checkpoint-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const checkpoint = this.dataset.checkpoint;
+            console.log('Checkpoint:', checkpoint);
+            // TODO: Implement AJAX call to update trip status
+        });
+    });
 </script>
-
-<style>
-    @keyframes pulse {
-        0%, 100% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        50% {
-            opacity: 0.8;
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-    }
-</style>
 {% endblock %}

@@ -1,76 +1,501 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block page_title %}Mobility Gab - Abonnements transport sécurisés{% endblock %}
+{% block page_title %}Mobility Gab - Transport Premium et Sécurisé{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section - Full Screen avec Image de fond */
+    .landing-hero {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: 
+            linear-gradient(135deg, rgba(26, 26, 46, 0.92) 0%, rgba(15, 15, 15, 0.88) 100%),
+            url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+        background-attachment: fixed;
+        color: var(--mg-white);
+        overflow: hidden;
+        margin-top: calc(-1 * var(--space-md));
+    }
+    
+    /* Animated particles overlay */
+    .landing-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 30%, rgba(255, 152, 0, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(255, 152, 0, 0.1) 0%, transparent 50%);
+        animation: pulse 8s ease-in-out infinite;
+        pointer-events: none;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: var(--space-2xl) var(--space-md);
+        text-align: center;
+        animation: fadeInUp 1s ease-out;
+    }
+    
+    .hero-logo {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto var(--space-xl);
+        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--mg-white);
+        box-shadow: 0 20px 60px rgba(255, 152, 0, 0.4);
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+    
+    .hero-title {
+        font-size: clamp(2.5rem, 8vw, 4.5rem);
+        font-weight: 800;
+        margin-bottom: var(--space-lg);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, var(--mg-white), var(--mg-primary-light));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: fadeInUp 1s ease-out 0.2s both;
+    }
+    
+    .hero-subtitle {
+        font-size: clamp(1.125rem, 3vw, 1.5rem);
+        color: rgba(255, 255, 255, 0.85);
+        margin-bottom: var(--space-2xl);
+        line-height: 1.6;
+        font-weight: 400;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        animation: fadeInUp 1s ease-out 0.4s both;
+    }
+    
+    .hero-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-lg);
+        max-width: 500px;
+        margin: 0 auto;
+        animation: fadeInUp 1s ease-out 0.6s both;
+    }
+    
+    .hero-btn {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-md);
+        padding: var(--space-xl) var(--space-2xl);
+        font-size: var(--font-size-lg);
+        font-weight: 700;
+        text-decoration: none;
+        border-radius: var(--radius-xl);
+        transition: all var(--transition-base);
+        overflow: hidden;
+        border: 3px solid transparent;
+        min-height: 70px;
+    }
+    
+    .hero-btn-chauffeur {
+        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        color: var(--mg-white);
+        box-shadow: 0 10px 40px rgba(255, 152, 0, 0.4);
+    }
+    
+    .hero-btn-chauffeur:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 20px 60px rgba(255, 152, 0, 0.6);
+        color: var(--mg-white);
+        border-color: var(--mg-accent);
+    }
+    
+    .hero-btn-superviseur {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        color: var(--mg-white);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+    }
+    
+    .hero-btn-superviseur:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 20px 60px rgba(255, 255, 255, 0.2);
+        color: var(--mg-white);
+    }
+    
+    .hero-btn i {
+        font-size: 2rem;
+    }
+    
+    .hero-btn-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+    
+    .hero-btn-title {
+        font-size: var(--font-size-xl);
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    
+    .hero-btn-desc {
+        font-size: var(--font-size-sm);
+        font-weight: 400;
+        opacity: 0.9;
+    }
+    
+    /* Features Section - Modernisée */
+    .features-section {
+        padding: var(--space-4xl) 0;
+        background: linear-gradient(180deg, var(--mg-white) 0%, var(--mg-gray-100) 100%);
+    }
+    
+    .section-header {
+        text-align: center;
+        max-width: 700px;
+        margin: 0 auto var(--space-3xl);
+    }
+    
+    .section-title {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        color: var(--mg-secondary);
+        margin-bottom: var(--space-md);
+    }
+    
+    .section-subtitle {
+        font-size: var(--font-size-lg);
+        color: var(--mg-gray-600);
+        line-height: 1.7;
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-xl);
+        margin-top: var(--space-2xl);
+    }
+    
+    @media (min-width: 768px) {
+        .features-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .features-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    .feature-card {
+        background: var(--mg-white);
+        border-radius: var(--radius-lg);
+        padding: var(--space-2xl);
+        box-shadow: var(--shadow-md);
+        transition: all var(--transition-base);
+        border: 1px solid var(--mg-gray-200);
+        text-align: center;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--mg-primary);
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto var(--space-lg);
+        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: var(--mg-white);
+        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+        transition: transform var(--transition-base);
+    }
+    
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+    
+    .feature-title {
+        font-size: var(--font-size-xl);
+        font-weight: 700;
+        color: var(--mg-gray-900);
+        margin-bottom: var(--space-md);
+    }
+    
+    .feature-desc {
+        font-size: var(--font-size-base);
+        color: var(--mg-gray-600);
+        line-height: 1.7;
+    }
+    
+    /* CTA Section - Premium */
+    .cta-section {
+        padding: var(--space-4xl) 0;
+        background: linear-gradient(135deg, var(--mg-secondary) 0%, var(--mg-gray-900) 100%);
+        color: var(--mg-white);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(255, 152, 0, 0.3) 0%, transparent 70%);
+        top: -300px;
+        right: -300px;
+        animation: pulse 6s ease-in-out infinite;
+    }
+    
+    .cta-content {
+        position: relative;
+        z-index: 2;
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 0 var(--space-md);
+    }
+    
+    .cta-title {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        margin-bottom: var(--space-lg);
+    }
+    
+    .cta-text {
+        font-size: var(--font-size-lg);
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: var(--space-2xl);
+        line-height: 1.7;
+    }
+    
+    .cta-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-lg) var(--space-2xl);
+        font-size: var(--font-size-lg);
+        font-weight: 700;
+        color: var(--mg-secondary);
+        background: var(--mg-white);
+        text-decoration: none;
+        border-radius: var(--radius-full);
+        box-shadow: 0 10px 40px rgba(255, 255, 255, 0.3);
+        transition: all var(--transition-base);
+    }
+    
+    .cta-btn:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 20px 60px rgba(255, 255, 255, 0.5);
+        color: var(--mg-secondary);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .landing-hero {
+            background-attachment: scroll;
+            min-height: 90vh;
+        }
+        
+        .hero-buttons {
+            padding: 0 var(--space-sm);
+        }
+        
+        .hero-btn {
+            padding: var(--space-lg) var(--space-xl);
+            min-height: 80px;
+        }
+    }
+    
+    /* Scroll indicator */
+    .scroll-indicator {
+        position: absolute;
+        bottom: var(--space-2xl);
+        left: 50%;
+        transform: translateX(-50%);
+        animation: bounce 2s ease-in-out infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 100% {
+            transform: translateX(-50%) translateY(0);
+        }
+        50% {
+            transform: translateX(-50%) translateY(10px);
+        }
+    }
+    
+    .scroll-indicator i {
+        font-size: 2rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="py-5 text-center">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <h1 class="display-5 fw-bold text-primary">Transport scolaire &amp; personnel simplifié</h1>
-            <p class="lead text-muted">Mobility Gab connecte parents et chauffeurs fiables pour des trajets quotidiens sécurisés, avec suivi temps réel, notifications et paiements automatisés.</p>
-            <div class="d-flex justify-content-center gap-3 mt-4">
-                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">Commencer maintenant</a>
-                <a href="#features" class="btn btn-outline-primary btn-lg">Découvrir les fonctionnalités</a>
+<!-- Hero Section - Premium Fullscreen -->
+<section class="landing-hero">
+    <div class="hero-content">
+        <div class="hero-logo">
+            <i class="bi bi-car-front-fill"></i>
+        </div>
+        
+        <h1 class="hero-title">Mobility Gab</h1>
+        
+        <p class="hero-subtitle">
+            Plateforme premium de transport sécurisé avec suivi en temps réel. 
+            Rejoignez-nous en tant que chauffeur professionnel ou superviseur.
+        </p>
+        
+        <div class="hero-buttons">
+            <a href="{% url 'accounts:register' %}?role=chauffeur" class="hero-btn hero-btn-chauffeur">
+                <i class="bi bi-steering-wheel"></i>
+                <div class="hero-btn-content">
+                    <span class="hero-btn-title">Chauffeur</span>
+                    <span class="hero-btn-desc">Développez votre activité</span>
+                </div>
+            </a>
+            
+            <a href="{% url 'accounts:register' %}?role=parent" class="hero-btn hero-btn-superviseur">
+                <i class="bi bi-shield-check"></i>
+                <div class="hero-btn-content">
+                    <span class="hero-btn-title">Superviseur</span>
+                    <span class="hero-btn-desc">Transport sécurisé pour vos proches</span>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <div class="scroll-indicator">
+        <i class="bi bi-chevron-down"></i>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Pourquoi Mobility Gab ?</h2>
+            <p class="section-subtitle">
+                Une plateforme moderne qui révolutionne le transport avec 
+                sécurité, fiabilité et transparence.
+            </p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card animate-fade-in-up">
+                <div class="feature-icon">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <h3 class="feature-title">Suivi GPS</h3>
+                <p class="feature-desc">
+                    Suivi en temps réel de tous vos trajets avec historique détaillé et partage de localisation.
+                </p>
+            </div>
+            
+            <div class="feature-card animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="feature-icon">
+                    <i class="bi bi-shield-fill-check"></i>
+                </div>
+                <h3 class="feature-title">Sécurité Max</h3>
+                <p class="feature-desc">
+                    Chauffeurs vérifiés, alertes SOS prioritaires et système de notifications instantanées.
+                </p>
+            </div>
+            
+            <div class="feature-card animate-fade-in-up" style="animation-delay: 0.2s;">
+                <div class="feature-icon">
+                    <i class="bi bi-credit-card-fill"></i>
+                </div>
+                <h3 class="feature-title">Paiements Auto</h3>
+                <p class="feature-desc">
+                    Mobile Money, cartes bancaires et gestion automatique des abonnements mensuels.
+                </p>
+            </div>
+            
+            <div class="feature-card animate-fade-in-up" style="animation-delay: 0.3s;">
+                <div class="feature-icon">
+                    <i class="bi bi-bell-fill"></i>
+                </div>
+                <h3 class="feature-title">Notifications</h3>
+                <p class="feature-desc">
+                    Restez informé à chaque instant avec des alertes email, SMS et push personnalisées.
+                </p>
+            </div>
+            
+            <div class="feature-card animate-fade-in-up" style="animation-delay: 0.4s;">
+                <div class="feature-icon">
+                    <i class="bi bi-star-fill"></i>
+                </div>
+                <h3 class="feature-title">Évaluations</h3>
+                <p class="feature-desc">
+                    Système de notation transparent pour choisir les meilleurs chauffeurs en toute confiance.
+                </p>
+            </div>
+            
+            <div class="feature-card animate-fade-in-up" style="animation-delay: 0.5s;">
+                <div class="feature-icon">
+                    <i class="bi bi-phone-fill"></i>
+                </div>
+                <h3 class="feature-title">Mobile Ready</h3>
+                <p class="feature-desc">
+                    Interface optimisée pour mobile et WebView, expérience fluide sur tous les appareils.
+                </p>
             </div>
         </div>
     </div>
 </section>
 
-<section id="features" class="py-5">
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center">
-                    <i class="bi bi-geo-alt-fill text-success display-6"></i>
-                    <h5 class="mt-3">Suivi temps réel</h5>
-                    <p class="text-muted">Visualisez la position du chauffeur et recevez des checkpoints en direct.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center">
-                    <i class="bi bi-credit-card text-primary display-6"></i>
-                    <h5 class="mt-3">Paiements sécurisés</h5>
-                    <p class="text-muted">Mobile Money &amp; Stripe avec relances automatiques en cas de retard.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center">
-                    <i class="bi bi-award text-warning display-6"></i>
-                    <h5 class="mt-3">Notation &amp; badges</h5>
-                    <p class="text-muted">Évaluez vos chauffeurs, attribuez des badges et suivez la fiabilité.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="py-5 bg-white rounded-4 shadow-sm">
-    <div class="row align-items-center">
-        <div class="col-md-6">
-            <h2 class="fw-bold">Pensé pour vos besoins quotidiens</h2>
-            <ul class="list-unstyled mt-4 text-muted">
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Alertes SOS prioritaires et partage de trajet</li>
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Admin dashboard avec KPIs temps réel</li>
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> API REST prête pour votre future app mobile</li>
-            </ul>
-        </div>
-        <div class="col-md-6 text-center">
-            <img src="{% static 'core/img/hero-mobility.svg' %}" alt="Mobility Gab" class="img-fluid">
-        </div>
-    </div>
-</section>
-
-<section class="py-5 text-center">
-    <div class="col-lg-8 mx-auto">
-        <h3 class="fw-bold">Rejoignez la communauté Mobility Gab</h3>
-        <p class="text-muted">Gérez vos trajets, assurez la sécurité de vos proches et optimisez votre flotte de chauffeurs.</p>
-        <a href="{% url 'accounts:register' %}" class="btn btn-success btn-lg">Créer mon compte</a>
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="cta-content">
+        <h3 class="cta-title">Rejoignez-nous dès aujourd'hui</h3>
+        <p class="cta-text">
+            Que vous soyez chauffeur cherchant à développer votre activité ou 
+            particulier en quête de transport fiable, Mobility Gab est fait pour vous.
+        </p>
+        <a href="{% url 'accounts:register' %}" class="cta-btn">
+            <i class="bi bi-rocket-takeoff-fill"></i>
+            <span>Commencer maintenant</span>
+        </a>
     </div>
 </section>
 {% endblock %}
-

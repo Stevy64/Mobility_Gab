@@ -3,138 +3,607 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block page_title %}Mobility Gab{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FF9800">
+    <title>{% block page_title %}Mobility Gab - Transport Premium{% endblock %}</title>
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Modern Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{% static 'core/css/styles.css' %}">
+    
+    <!-- Modern Theme CSS -->
+    <link rel="stylesheet" href="{% static 'core/css/theme.css' %}">
+    
+    <style>
+        /* Additional base layout styles */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        /* Modern Navbar - Mobile First */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: var(--z-sticky);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--mg-gray-200);
+            padding: var(--space-md) 0;
+            transition: all var(--transition-base);
+        }
+        
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-md);
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-family: var(--font-secondary);
+            font-size: var(--font-size-xl);
+            font-weight: 800;
+            color: var(--mg-primary);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+        
+        .navbar-brand:hover {
+            color: var(--mg-primary-dark);
+            transform: scale(1.02);
+        }
+        
+        .navbar-brand i {
+            font-size: 1.5rem;
+        }
+        
+        .navbar-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: transparent;
+            color: var(--mg-gray-900);
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+        
+        .navbar-toggle:hover {
+            background: var(--mg-gray-200);
+        }
+        
+        .navbar-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 85%;
+            max-width: 400px;
+            height: 100vh;
+            background: var(--mg-white);
+            box-shadow: var(--shadow-xl);
+            padding: var(--space-xl);
+            overflow-y: auto;
+            transition: right var(--transition-base);
+            z-index: var(--z-modal);
+        }
+        
+        .navbar-menu.active {
+            right: 0;
+        }
+        
+        .navbar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-base);
+            z-index: calc(var(--z-modal) - 1);
+        }
+        
+        .navbar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .navbar-close {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .navbar-close button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--mg-gray-200);
+            color: var(--mg-gray-900);
+            border-radius: 50%;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .navbar-close button:hover {
+            background: var(--mg-gray-300);
+            transform: rotate(90deg);
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+        
+        .nav-item {
+            width: 100%;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md) var(--space-lg);
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: var(--mg-gray-800);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+        
+        .nav-link:hover {
+            background: var(--mg-gray-100);
+            color: var(--mg-primary);
+            transform: translateX(4px);
+        }
+        
+        .nav-link i {
+            font-size: 1.25rem;
+        }
+        
+        .nav-link-primary {
+            background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+            color: var(--mg-white);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .nav-link-primary:hover {
+            color: var(--mg-white);
+            transform: translateX(4px) scale(1.02);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Desktop Navigation */
+        @media (min-width: 1024px) {
+            .navbar-toggle {
+                display: none;
+            }
+            
+            .navbar-menu {
+                position: static;
+                width: auto;
+                max-width: none;
+                height: auto;
+                background: transparent;
+                box-shadow: none;
+                padding: 0;
+                overflow: visible;
+            }
+            
+            .navbar-close {
+                display: none;
+            }
+            
+            .nav-list {
+                flex-direction: row;
+                align-items: center;
+                gap: var(--space-sm);
+            }
+            
+            .nav-item {
+                width: auto;
+            }
+            
+            .nav-link {
+                padding: var(--space-sm) var(--space-lg);
+                border-radius: var(--radius-full);
+            }
+            
+            .nav-link:hover {
+                transform: translateY(-2px);
+            }
+            
+            .nav-link-primary:hover {
+                transform: translateY(-2px) scale(1.05);
+            }
+        }
+        
+        /* Modern Footer */
+        footer {
+            background: var(--mg-secondary);
+            color: rgba(255, 255, 255, 0.9);
+            padding: var(--space-2xl) 0 var(--space-xl);
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+            text-align: center;
+        }
+        
+        .footer-brand {
+            font-family: var(--font-secondary);
+            font-size: var(--font-size-2xl);
+            font-weight: 800;
+            color: var(--mg-primary);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .footer-text {
+            font-size: var(--font-size-sm);
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .footer-features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: var(--space-lg);
+            font-size: var(--font-size-sm);
+        }
+        
+        .footer-feature {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .footer-feature i {
+            color: var(--mg-primary);
+        }
+        
+        @media (min-width: 768px) {
+            .footer-content {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                text-align: left;
+            }
+        }
+        
+        /* Messages/Alerts - Modern style */
+        .messages-wrapper {
+            position: sticky;
+            top: 80px;
+            z-index: var(--z-fixed);
+            padding: var(--space-md) 0;
+        }
+        
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md) var(--space-lg);
+            margin-bottom: var(--space-md);
+            border-radius: var(--radius-md);
+            border-left: 4px solid;
+            background: var(--mg-white);
+            box-shadow: var(--shadow-md);
+            animation: fadeInDown 0.3s ease-out;
+        }
+        
+        .alert-success {
+            border-left-color: var(--mg-success);
+            color: var(--mg-success);
+        }
+        
+        .alert-info {
+            border-left-color: var(--mg-info);
+            color: var(--mg-info);
+        }
+        
+        .alert-warning {
+            border-left-color: var(--mg-warning);
+            color: var(--mg-warning);
+        }
+        
+        .alert-danger,
+        .alert-error {
+            border-left-color: var(--mg-danger);
+            color: var(--mg-danger);
+        }
+        
+        .alert i {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        
+        .alert-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity var(--transition-fast);
+        }
+        
+        .alert-close:hover {
+            opacity: 1;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--mg-white);
+            animation: spin 0.8s linear infinite;
+        }
+    </style>
+    
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-    <div class="container-fluid py-2 py-lg-0">
-        <a class="navbar-brand fw-bold text-primary" href="/">
-            Mobility Gab
-            {% if user.is_authenticated %}
-                {% load subscriptions_extras %}
-                {% user_has_mobility_plus user as has_mobility_plus %}
-                {% if has_mobility_plus %}
-                    <i class="bi bi-star-fill text-warning ms-1" title="Mobility Plus"></i>
-                {% endif %}
-            {% endif %}
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav nav-grid ms-lg-auto align-items-lg-center gap-lg-2">
-                <li class="nav-item">
-                    <a class="nav-link nav-pill" href="/">
-                        <i class="bi bi-house nav-icon"></i>
-                        <span>Accueil</span>
-                    </a>
-                </li>
-                {% if user.is_authenticated %}
-                {% if user.is_staff %}
-                <li class="nav-item">
-                    <a class="nav-link nav-pill" href="{% url 'accounts:admin_dashboard' %}">
-                        <i class="bi bi-shield-lock nav-icon"></i>
-                        <span>Espace admin</span>
-                    </a>
-                </li>
-                {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link nav-pill" href="{% url 'core:dashboard' %}">
-                        <i class="bi bi-speedometer2 nav-icon"></i>
-                        <span>Tableau</span>
-                    </a>
-                </li>
-                {% if user.role == 'parent' %}
-                <li class="nav-item">
-                    <a class="nav-link nav-pill" href="{% url 'core:particulier_dashboard' %}">
-                        <i class="bi bi-house-heart nav-icon"></i>
-                        <span>Espace Particulier</span>
-                    </a>
-                </li>
-                {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link nav-pill" href="{% url 'subscriptions:new_subscription_system' %}">
-                        <i class="bi bi-credit-card nav-icon"></i>
-                        <span>Abonnements</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-pill" href="{% url 'courses:menu' %}">
-                        <i class="bi bi-car-front nav-icon"></i>
-                        <span>Courses</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-pill" href="{% url 'accounts:profile' %}">
-                        <i class="bi bi-person-circle nav-icon"></i>
-                        <span>Profil</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-pill nav-pill-outline" href="{% url 'accounts:logout' %}">
-                        <i class="bi bi-box-arrow-right nav-icon"></i>
-                        <span>Déconnexion</span>
-                    </a>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link nav-pill nav-pill-outline" href="{% url 'accounts:login' %}">
-                        <i class="bi bi-box-arrow-in-right nav-icon"></i>
-                        <span>Connexion</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-pill nav-pill-accent" href="{% url 'accounts:register' %}">
-                        <i class="bi bi-person-plus nav-icon"></i>
-                        <span>Créer un compte</span>
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<main class="container py-4">
-    {% csrf_token %}
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<body>
+    <!-- Modern Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-container">
+                <a href="/" class="navbar-brand">
+                    <i class="bi bi-car-front-fill"></i>
+                    <span>Mobility Gab</span>
+                    {% if user.is_authenticated %}
+                        {% load subscriptions_extras %}
+                        {% user_has_mobility_plus user as has_mobility_plus %}
+                        {% if has_mobility_plus %}
+                            <i class="bi bi-star-fill" style="color: var(--mg-accent); font-size: 1rem;" title="Mobility Plus"></i>
+                        {% endif %}
+                    {% endif %}
+                </a>
+                
+                <button class="navbar-toggle" id="navbarToggle" aria-label="Toggle navigation">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <div class="navbar-menu" id="navbarMenu">
+                    <div class="navbar-close">
+                        <button id="navbarClose" aria-label="Close menu">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="/" class="nav-link">
+                                <i class="bi bi-house-door-fill"></i>
+                                <span>Accueil</span>
+                            </a>
+                        </li>
+                        
+                        {% if user.is_authenticated %}
+                            {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a href="{% url 'accounts:admin_dashboard' %}" class="nav-link">
+                                    <i class="bi bi-shield-lock-fill"></i>
+                                    <span>Admin</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="nav-item">
+                                <a href="{% url 'core:dashboard' %}" class="nav-link">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Tableau de bord</span>
+                                </a>
+                            </li>
+                            
+                            {% if user.role == 'parent' %}
+                            <li class="nav-item">
+                                <a href="{% url 'core:particulier_dashboard' %}" class="nav-link">
+                                    <i class="bi bi-person-circle"></i>
+                                    <span>Mon Espace</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="nav-item">
+                                <a href="{% url 'subscriptions:new_subscription_system' %}" class="nav-link">
+                                    <i class="bi bi-credit-card-fill"></i>
+                                    <span>Abonnements</span>
+                                </a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a href="{% url 'courses:menu' %}" class="nav-link">
+                                    <i class="bi bi-car-front-fill"></i>
+                                    <span>Courses</span>
+                                </a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a href="{% url 'accounts:profile' %}" class="nav-link">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                    <span>Profil</span>
+                                </a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a href="{% url 'accounts:logout' %}" class="nav-link">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>Déconnexion</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a href="{% url 'accounts:login' %}" class="nav-link">
+                                    <i class="bi bi-box-arrow-in-right"></i>
+                                    <span>Connexion</span>
+                                </a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a href="{% url 'accounts:register' %}" class="nav-link nav-link-primary">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                    <span>Créer un compte</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
                 </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    {% block content %}{% endblock %}
-</main>
-
-<footer class="bg-white border-top py-4 mt-auto">
-    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
-        <p class="mb-0 text-muted">&copy; {{ now|default:2025|date:'Y' }} Mobility Gab. Tous droits réservés.</p>
-        <div class="d-flex align-items-center gap-3">
-            <div class="small text-muted">
-                <i class="bi bi-shield-lock"></i> Sécurité • <i class="bi bi-geo"></i> Suivi temps réel
             </div>
-            {% if user.is_authenticated %}
-            <button class="btn btn-sm btn-outline-danger" onclick="triggerSOS()" title="Urgence - Signaler un problème">
-                <i class="bi bi-shield-exclamation"></i> SOS
-            </button>
-            {% endif %}
         </div>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-<script src="{% static 'core/js/mock_gps.js' %}"></script>
-{% block extra_js %}{% endblock %}
+    </nav>
+    
+    <!-- Navbar Overlay for Mobile -->
+    <div class="navbar-overlay" id="navbarOverlay"></div>
+    
+    <!-- Main Content -->
+    <main>
+        {% csrf_token %}
+        
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages-wrapper">
+            <div class="container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+                        <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'error' or message.tags == 'danger' %}x-circle-fill{% elif message.tags == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+                        <span>{{ message }}</span>
+                        <button class="alert-close" onclick="this.parentElement.remove()">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Modern Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <div class="footer-brand">Mobility Gab</div>
+                    <p class="footer-text">&copy; {{ now|default:2025|date:'Y' }} Tous droits réservés.</p>
+                </div>
+                
+                <div class="footer-features">
+                    <div class="footer-feature">
+                        <i class="bi bi-shield-check"></i>
+                        <span>Sécurité maximale</span>
+                    </div>
+                    <div class="footer-feature">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span>Suivi temps réel</span>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <div class="footer-feature">
+                        <button class="btn btn-sm" onclick="triggerSOS()" style="background: var(--mg-danger); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-full); font-weight: 600; cursor: pointer;">
+                            <i class="bi bi-shield-exclamation"></i> SOS
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="{% static 'core/js/mock_gps.js' %}"></script>
+    <script>
+        // Mobile Menu Toggle
+        const navbarToggle = document.getElementById('navbarToggle');
+        const navbarClose = document.getElementById('navbarClose');
+        const navbarMenu = document.getElementById('navbarMenu');
+        const navbarOverlay = document.getElementById('navbarOverlay');
+        
+        function openMenu() {
+            navbarMenu.classList.add('active');
+            navbarOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMenu() {
+            navbarMenu.classList.remove('active');
+            navbarOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        if (navbarToggle) {
+            navbarToggle.addEventListener('click', openMenu);
+        }
+        
+        if (navbarClose) {
+            navbarClose.addEventListener('click', closeMenu);
+        }
+        
+        if (navbarOverlay) {
+            navbarOverlay.addEventListener('click', closeMenu);
+        }
+        
+        // Close menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeMenu();
+            }
+        });
+        
+        // Close menu when clicking on a link (mobile)
+        if (window.innerWidth < 1024) {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', closeMenu);
+            });
+        }
+        
+        // Auto-dismiss alerts after 5 seconds
+        document.querySelectorAll('.alert').forEach(alert => {
+            setTimeout(() => {
+                alert.style.animation = 'fadeInUp 0.3s ease-out reverse';
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
-

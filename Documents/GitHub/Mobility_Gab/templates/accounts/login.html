@@ -1,32 +1,275 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block page_title %}Connexion - Mobility Gab{% endblock %}
 
+{% block extra_css %}
+<style>
+    .login-page {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-2xl) var(--space-md);
+        background: 
+            linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 15, 0.92) 100%),
+            url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop') center/cover fixed;
+        position: relative;
+    }
+    
+    .login-page::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 30% 50%, rgba(255, 152, 0, 0.1) 0%, transparent 60%);
+        pointer-events: none;
+    }
+    
+    .login-container {
+        width: 100%;
+        max-width: 480px;
+        position: relative;
+        z-index: 2;
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .login-card {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-xl);
+        padding: var(--space-2xl);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .login-header {
+        text-align: center;
+        margin-bottom: var(--space-2xl);
+    }
+    
+    .login-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto var(--space-lg);
+        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: var(--mg-white);
+        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4);
+    }
+    
+    .login-title {
+        font-size: var(--font-size-3xl);
+        font-weight: 800;
+        color: var(--mg-secondary);
+        margin-bottom: var(--space-sm);
+    }
+    
+    .login-subtitle {
+        font-size: var(--font-size-base);
+        color: var(--mg-gray-600);
+    }
+    
+    .login-form .form-group {
+        margin-bottom: var(--space-lg);
+    }
+    
+    .login-form .form-label {
+        display: block;
+        margin-bottom: var(--space-sm);
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        color: var(--mg-gray-800);
+    }
+    
+    .login-form .form-control {
+        width: 100%;
+        padding: var(--space-md) var(--space-lg);
+        font-size: var(--font-size-base);
+        color: var(--mg-gray-900);
+        background: var(--mg-white);
+        border: 2px solid var(--mg-gray-300);
+        border-radius: var(--radius-md);
+        transition: all var(--transition-base);
+        min-height: 52px;
+    }
+    
+    .login-form .form-control:focus {
+        border-color: var(--mg-primary);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
+    }
+    
+    .login-form .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: var(--space-sm) 0 0 0;
+    }
+    
+    .login-form .errorlist li {
+        color: var(--mg-danger);
+        font-size: var(--font-size-sm);
+        padding: var(--space-xs) var(--space-sm);
+        background: rgba(244, 67, 54, 0.1);
+        border-radius: var(--radius-sm);
+        margin-top: var(--space-xs);
+    }
+    
+    .login-btn {
+        width: 100%;
+        padding: var(--space-lg) var(--space-xl);
+        font-size: var(--font-size-lg);
+        font-weight: 700;
+        color: var(--mg-white);
+        background: linear-gradient(135deg, var(--mg-primary), var(--mg-primary-dark));
+        border: none;
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        transition: all var(--transition-base);
+        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+    }
+    
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(255, 152, 0, 0.4);
+    }
+    
+    .login-btn:active {
+        transform: translateY(0);
+    }
+    
+    .login-footer {
+        text-align: center;
+        margin-top: var(--space-xl);
+        padding-top: var(--space-xl);
+        border-top: 1px solid var(--mg-gray-200);
+    }
+    
+    .login-footer-text {
+        font-size: var(--font-size-sm);
+        color: var(--mg-gray-600);
+    }
+    
+    .login-footer-link {
+        color: var(--mg-primary);
+        font-weight: 600;
+        text-decoration: none;
+        transition: color var(--transition-fast);
+    }
+    
+    .login-footer-link:hover {
+        color: var(--mg-primary-dark);
+        text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+        .login-page {
+            background-attachment: scroll;
+            padding: var(--space-lg) var(--space-sm);
+        }
+        
+        .login-card {
+            padding: var(--space-xl) var(--space-lg);
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <h2 class="h4 text-center mb-4">Connexion</h2>
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    {{ form.non_field_errors }}
-                    <div class="mb-3">
-                        <label for="id_username" class="form-label">Nom d'utilisateur</label>
-                        {{ form.username }}
-                        {{ form.username.errors }}
+<div class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <i class="bi bi-person-lock"></i>
+                </div>
+                <h1 class="login-title">Connexion</h1>
+                <p class="login-subtitle">Accédez à votre espace Mobility Gab</p>
+            </div>
+            
+            <form method="post" class="login-form" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        {% for error in form.non_field_errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
                     </div>
-                    <div class="mb-3">
-                        <label for="id_password" class="form-label">Mot de passe</label>
-                        {{ form.password }}
-                        {{ form.password.errors }}
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Se connecter</button>
-                </form>
-                <p class="text-center mt-3 mb-0 small">Pas encore de compte ? <a href="{% url 'accounts:register' %}">Inscrivez-vous</a></p>
+                {% endif %}
+                
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">
+                        <i class="bi bi-person-fill"></i> Nom d'utilisateur
+                    </label>
+                    <input 
+                        type="text" 
+                        name="{{ form.username.name }}" 
+                        id="{{ form.username.id_for_label }}"
+                        class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                        placeholder="Entrez votre nom d'utilisateur"
+                        required
+                        autocomplete="username"
+                        value="{{ form.username.value|default:'' }}"
+                    >
+                    {% if form.username.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.username.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">
+                        <i class="bi bi-lock-fill"></i> Mot de passe
+                    </label>
+                    <input 
+                        type="password" 
+                        name="{{ form.password.name }}" 
+                        id="{{ form.password.id_for_label }}"
+                        class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                        placeholder="Entrez votre mot de passe"
+                        required
+                        autocomplete="current-password"
+                    >
+                    {% if form.password.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.password.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="login-btn">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>Se connecter</span>
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p class="login-footer-text">
+                    Pas encore de compte ? 
+                    <a href="{% url 'accounts:register' %}" class="login-footer-link">
+                        Créer un compte
+                    </a>
+                </p>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-
