@@ -1,55 +1,289 @@
 {% extends 'base.html' %}
 
-{% block page_title %}Modifier mon profil{% endblock %}
+{% block page_title %}Modifier mon profil - Mobility Gab{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Design moderne profil */
+.profile-edit-header {
+    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    color: white;
+    border-radius: 16px 16px 0 0;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-edit-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-10px, -10px) scale(1.05); }
+}
+
+.section-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.section-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #FF8C00;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title i {
+    font-size: 1.5rem;
+}
+
+.photo-preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.05), rgba(255, 165, 0, 0.05));
+    border-radius: 16px;
+    border: 2px dashed #FF8C00;
+    margin-bottom: 1rem;
+}
+
+.photo-preview-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid white;
+    box-shadow: 0 4px 16px rgba(255, 140, 0, 0.3);
+}
+
+.photo-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 3rem;
+    box-shadow: 0 4px 16px rgba(255, 140, 0, 0.3);
+}
+
+.form-control, .form-select {
+    border-radius: 10px;
+    border: 2px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #FF8C00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.15);
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #FF8C00, #FFA500);
+    border: none;
+    color: white;
+    padding: 0.75rem 2.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+}
+
+.btn-save:hover {
+    background: linear-gradient(135deg, #FFA500, #FFB733);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
+    color: white;
+}
+
+.btn-cancel {
+    border: 2px solid #e5e7eb;
+    background: white;
+    color: #6b7280;
+    padding: 0.75rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+    border-color: #FF8C00;
+    color: #FF8C00;
+    background: rgba(255, 140, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+    .profile-edit-header {
+        padding: 1.5rem;
+    }
+    
+    .section-card {
+        padding: 1rem;
+    }
+    
+    .photo-preview-img, .photo-placeholder {
+        width: 100px;
+        height: 100px;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8 col-xl-7">
-        <div class="card shadow-sm border-0 mb-4">
+    <div class="col-lg-10 col-xl-9">
+        <div class="card shadow-lg border-0 mb-4">
+            <div class="profile-edit-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="h3 fw-bold mb-2">
+                            <i class="bi bi-person-gear me-2"></i>
+                            Modifier mon profil
+                        </h1>
+                        <p class="mb-0 opacity-90">
+                            Personnalisez vos informations et préférences
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <div class="d-flex align-items-center justify-content-md-end gap-2">
+                            {% if user.profile.photo %}
+                                <img src="{{ user.profile.photo.url }}" alt="Photo" class="rounded-circle" width="60" height="60" style="border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                            {% else %}
+                                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                                    <i class="bi bi-person-fill fs-4"></i>
+                                </div>
+                            {% endif %}
+                            <div class="text-md-end">
+                                <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                                <small class="opacity-90">{{ user.get_role_display }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="card-body p-4 p-md-5">
-                <h2 class="h4 fw-bold mb-4">Mes informations</h2>
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <div class="mb-4">
-                        <h5 class="fw-semibold">Compte</h5>
+                    
+                    <!-- Section Compte -->
+                    <div class="section-card">
+                        <h5 class="section-title">
+                            <i class="bi bi-person-badge"></i>
+                            Informations du compte
+                        </h5>
                         <div class="row g-3">
                             {% for field in user_form %}
                             <div class="col-md-6">
-                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
                                 {{ field }}
-                                {{ field.errors }}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <h5 class="fw-semibold">Profil</h5>
+                    <!-- Section Profil avec Photo -->
+                    <div class="section-card">
+                        <h5 class="section-title">
+                            <i class="bi bi-person-circle"></i>
+                            Profil & Photo
+                        </h5>
+                        
+                        <!-- Prévisualisation photo -->
+                        <div class="photo-preview-container" id="photoPreviewContainer">
+                            {% if user.profile.photo %}
+                                <img src="{{ user.profile.photo.url }}" alt="Photo de profil" class="photo-preview-img" id="photoPreview">
+                            {% else %}
+                                <div class="photo-placeholder" id="photoPlaceholder">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                            {% endif %}
+                            <div class="text-center">
+                                <label for="id_photo" class="btn btn-sm" style="background: linear-gradient(135deg, #FF8C00, #FFA500); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 8px; cursor: pointer;">
+                                    <i class="bi bi-camera-fill me-2"></i>
+                                    Changer la photo
+                                </label>
+                                <input type="file" id="id_photo" name="photo" class="d-none" accept="image/*" onchange="previewPhoto(this)">
+                                <div class="small text-muted mt-2">JPG, PNG, GIF (max 5MB)</div>
+                            </div>
+                        </div>
+                        
                         <div class="row g-3">
                             {% for field in profile_form %}
-                            <div class="col-md-6">
-                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {% if field.widget.input_type == 'checkbox' %}
-                                    <div class="form-check">{{ field }} {{ field.errors }}</div>
-                                {% else %}
-                                    {{ field }}
-                                    {{ field.errors }}
+                                {% if field.name != 'photo' %}
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                                        {{ field.label }}
+                                    </label>
+                                    {% if field.widget.input_type == 'checkbox' %}
+                                        <div class="form-check">
+                                            {{ field }}
+                                            <label class="form-check-label" for="{{ field.id_for_label }}">
+                                                {% if field.help_text %}{{ field.help_text }}{% endif %}
+                                            </label>
+                                        </div>
+                                    {% else %}
+                                        {{ field }}
+                                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
                                 {% endif %}
-                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                            </div>
                             {% endfor %}
                         </div>
                     </div>
 
                     {% if parent_form %}
-                    <div class="mb-4">
-                        <h5 class="fw-semibold">Contacts d'urgence</h5>
+                    <!-- Section Contacts d'urgence -->
+                    <div class="section-card">
+                        <h5 class="section-title">
+                            <i class="bi bi-telephone-forward"></i>
+                            Contacts d'urgence
+                        </h5>
                         <div class="row g-3">
                             {% for field in parent_form %}
                             <div class="col-md-6">
-                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
                                 {{ field }}
-                                {{ field.errors }}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>
@@ -57,14 +291,31 @@
                     {% endif %}
 
                     {% if chauffeur_form %}
-                    <div class="mb-4">
-                        <h5 class="fw-semibold">Informations véhicule</h5>
+                    <!-- Section Véhicule -->
+                    <div class="section-card">
+                        <h5 class="section-title">
+                            <i class="bi bi-car-front-fill"></i>
+                            Informations véhicule
+                        </h5>
                         <div class="row g-3">
                             {% for field in chauffeur_form %}
                             <div class="col-md-6">
-                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {{ field }}
-                                {{ field.errors }}
+                                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+                                {% if field.widget.input_type == 'checkbox' %}
+                                    <div class="form-check">
+                                        {{ field }}
+                                        <label class="form-check-label" for="{{ field.id_for_label }}">
+                                            Disponible pour les courses
+                                        </label>
+                                    </div>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>
@@ -72,28 +323,80 @@
                     {% endif %}
 
                     {% if password_form %}
-                    <div class="mb-4">
-                        <h5 class="fw-semibold">Sécurité</h5>
+                    <!-- Section Sécurité -->
+                    <div class="section-card">
+                        <h5 class="section-title">
+                            <i class="bi bi-shield-lock"></i>
+                            Sécurité & Mot de passe
+                        </h5>
+                        <div class="alert alert-info border-0 mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Laissez les champs vides si vous ne souhaitez pas changer votre mot de passe.
+                        </div>
                         <div class="row g-3">
                             {% for field in password_form %}
                             <div class="col-md-6">
-                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
                                 {{ field }}
-                                {{ field.errors }}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>
-                        <p class="text-muted small mt-2">Laissez les champs vides si vous ne souhaitez pas changer votre mot de passe.</p>
                     </div>
                     {% endif %}
 
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">Annuler</a>
-                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <!-- Boutons d'action -->
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-cancel">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-save">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Enregistrer les modifications
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Prévisualisation de la photo
+function previewPhoto(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            // Cacher le placeholder s'il existe
+            const placeholder = document.getElementById('photoPlaceholder');
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+            
+            // Afficher ou créer l'image
+            let preview = document.getElementById('photoPreview');
+            if (!preview) {
+                preview = document.createElement('img');
+                preview.id = 'photoPreview';
+                preview.className = 'photo-preview-img';
+                preview.alt = 'Aperçu photo';
+                const container = document.getElementById('photoPreviewContainer');
+                container.insertBefore(preview, container.firstChild);
+            }
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 {% endblock %}

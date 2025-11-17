@@ -99,7 +99,7 @@ class ProfileEditView(LoginRequiredMixin, TemplateView):
             if user.role == UserRoles.PARENT and hasattr(user, "parent_profile"):
                 parent_form = ParentProfileUpdateForm(self.request.POST, instance=user.parent_profile)
             if user.role == UserRoles.CHAUFFEUR and hasattr(user, "chauffeur_profile"):
-                chauffeur_form = ChauffeurProfileUpdateForm(self.request.POST, instance=user.chauffeur_profile)
+                chauffeur_form = ChauffeurProfileUpdateForm(self.request.POST, self.request.FILES, instance=user.chauffeur_profile)
         else:
             user_form = UserUpdateForm(instance=user)
             profile_form = ProfileUpdateForm(instance=user.profile)
