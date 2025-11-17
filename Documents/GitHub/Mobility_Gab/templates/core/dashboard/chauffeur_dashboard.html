@@ -4,8 +4,8 @@
 {% block dashboard_subtitle %}Vos abonnés, trajets et performances.{% endblock %}
 
 {% block dashboard_actions %}
-<div class="btn-group">
-    <a href="/subscriptions/chauffeur_ride_requests_realtime/" class="btn btn-primary position-relative">
+<div class="btn-group" style="width: auto !important; flex-wrap: nowrap !important;">
+    <a href="/subscriptions/chauffeur_ride_requests_realtime/" class="btn btn-primary position-relative" style="white-space: nowrap !important; overflow: visible !important; flex: 0 0 auto !important;">
         <i class="bi bi-bell"></i>
         <span class="btn-text-full">Demandes temps réel</span>
         <span class="btn-text-short" style="display: none;">Demandes</span>
@@ -13,12 +13,12 @@
             0
         </span>
     </a>
-    <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-outline-secondary">
+    <a href="{% url 'subscriptions:trip_history' %}" class="btn btn-outline-secondary" style="white-space: nowrap !important; overflow: visible !important; flex: 0 0 auto !important;">
         <i class="bi bi-clock-history"></i>
         <span class="btn-text-full">Historique</span>
         <span class="btn-text-short" style="display: none;">Hist.</span>
     </a>
-    <a href="#" class="btn btn-danger" onclick="triggerSOS()">
+    <a href="#" class="btn btn-danger" onclick="triggerSOS()" style="white-space: nowrap !important; overflow: visible !important; flex: 0 0 auto !important;">
         <i class="bi bi-shield-exclamation"></i>
         <span>SOS</span>
     </a>
@@ -154,34 +154,38 @@
 {% block extra_css %}
 {{ block.super }}
 <style>
-    /* Style desktop par défaut - texte complet visible */
-    .dashboard-actions .btn-group .btn {
-        white-space: nowrap !important;
-        overflow: visible !important;
-        text-overflow: clip !important;
-        padding: 0.625rem 1.25rem !important;
-        flex: 0 1 auto !important;
-        min-width: auto !important;
-    }
-    
-    .dashboard-actions .btn .btn-text-short {
-        display: none;
-    }
-    
-    .dashboard-actions .btn .btn-text-full {
-        display: inline;
-    }
-    
-    /* Badge de notification sur desktop */
-    .dashboard-actions .btn .badge {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-    }
-    
-    /* Permettre au btn-group de s'adapter au contenu */
-    .dashboard-actions .btn-group {
-        width: auto !important;
-        flex-wrap: nowrap !important;
+    /* Style desktop par défaut - texte complet visible - FORCER */
+    @media (min-width: 768px) {
+        .dashboard-actions .btn-group {
+            width: auto !important;
+            flex-wrap: nowrap !important;
+            display: flex !important;
+        }
+        
+        .dashboard-actions .btn-group .btn {
+            white-space: nowrap !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            padding: 0.625rem 1.25rem !important;
+            flex: 0 0 auto !important;
+            min-width: auto !important;
+            max-width: none !important;
+            width: auto !important;
+        }
+        
+        .dashboard-actions .btn .btn-text-short {
+            display: none !important;
+        }
+        
+        .dashboard-actions .btn .btn-text-full {
+            display: inline !important;
+        }
+        
+        /* Badge de notification sur desktop */
+        .dashboard-actions .btn .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
     }
     
     /* Responsive pour mobile - boutons du trajet */
