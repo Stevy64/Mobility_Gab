@@ -646,12 +646,11 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
         """Ajouter les chauffeurs disponibles au contexte avec priorisation Mobility+."""
         context = super().get_context_data(**kwargs)
         
-        # Récupérer tous les chauffeurs disponibles avec leurs infos complètes
+        # Récupérer tous les chauffeurs actifs (même non disponibles, car abonnement mensuel)
         available_chauffeurs = []
         chauffeurs = User.objects.filter(
             role=UserRoles.CHAUFFEUR,
             is_active=True,
-            chauffeur_profile__is_available=True
         ).select_related('chauffeur_profile').prefetch_related('mobility_plus_subscription')
         
         for chauffeur in chauffeurs:
@@ -716,20 +715,18 @@ class NewSubscriptionSystemView(LoginRequiredMixin, TemplateView):
             
             chauffeur = get_object_or_404(User, id=chauffeur_id, role=UserRoles.CHAUFFEUR)
 
-            # Empêcher les doublons de demandes actives pour ce chauffeur
+            # Empêcher les doublons uniquement si une demande ACTIVE existe
             if ChauffeurSubscriptionRequest.objects.filter(
                 parent=request.user,
                 chauffeur=chauffeur,
                 status__in=[
                     SubscriptionRequestStatus.PENDING,
-                    SubscriptionRequestStatus.PAYMENT_PENDING,
                     SubscriptionRequestStatus.ACCEPTED,
-                    SubscriptionRequestStatus.ACTIVE,
                 ],
             ).exists():
                 return JsonResponse({
                     'success': False,
-                    'error': "Une demande est déjà en cours avec ce chauffeur."
+                    'error': "Une demande est déjà en attente avec ce chauffeur. Veuillez attendre sa réponse."
                 })
 
             # Créer la demande d'abonnement
