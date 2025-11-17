@@ -656,15 +656,21 @@ def get_trip_gps_location(request, trip_id):
     # Récupérer le profil chauffeur
     chauffeur_profile = trip.chauffeur.chauffeur_profile
     
+    # Récupérer tous les checkpoints de la course
+    checkpoints = trip.checkpoints.all().order_by('timestamp')
+    
+    # Utiliser le dernier checkpoint pour déterminer la dernière mise à jour
+    last_checkpoint = checkpoints.last()
+    last_update = last_checkpoint.timestamp if last_checkpoint else None
+    
     # Position actuelle du chauffeur
     current_location = {
         'latitude': float(chauffeur_profile.current_latitude) if chauffeur_profile.current_latitude else None,
         'longitude': float(chauffeur_profile.current_longitude) if chauffeur_profile.current_longitude else None,
-        'last_update': chauffeur_profile.last_location_update.isoformat() if chauffeur_profile.last_location_update else None,
+        'last_update': last_update.isoformat() if last_update else None,
     }
     
-    # Récupérer tous les checkpoints de la course
-    checkpoints = trip.checkpoints.all().order_by('timestamp')
+    # Formater les checkpoints pour la réponse
     checkpoints_data = [{
         'id': cp.id,
         'type': cp.checkpoint_type,
